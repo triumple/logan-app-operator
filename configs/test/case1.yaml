@@ -1,4 +1,4 @@
-## Java应用默认配置
+## JavaBoot Config
 java:
   settings:
     registry: "registry.logan.local"
