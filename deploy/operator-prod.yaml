@@ -16,7 +16,7 @@ spec:
       containers:
         - name: logan-app-operator
           # Replace this with the built image name
-          image: logancloud/logan-app-operator:0.2.0-latest
+          image: logancloud/logan-app-operator:latest
           command:
             - logan-app-operator
           args: ["--config", "/etc/logan/config.yaml", "--zap-devel", "--zap-level", "info"]

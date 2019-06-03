@@ -1,12 +1,10 @@
 # Image URL to use all building/pushing image targets
-IMG ?= logancloud/logan-app-operator:0.2.0-latest
+IMG ?= logancloud/logan-app-operator:latest
 
 all: test
 
 # Run tests
 test:
-#	go test ./pkg/... ./cmd/...
-# http://onsi.github.io/ginkgo/#the-ginkgo-cli
 	ginkgo -r -p
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
