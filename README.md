@@ -1,1 +1,1 @@
-## logan-app-operator
+# Logan App Operator [![Build Status](https://travis-ci.org/logancloud/logan-app-operator.svg?branch=master)](https://travis-ci.org/logancloud/logan-app-operator) 
