@@ -16,7 +16,7 @@ git:
 go_import_path: logancloud/logan-app-operator
 
 before_install:
-  - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+  - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
 
 install:
   - go get -u github.com/golang/dep/cmd/dep
