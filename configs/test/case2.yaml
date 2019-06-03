@@ -1,0 +1,24 @@
+## Java应用默认配置
+java:
+  settings:
+    registry: "registry.logan.local"
+  oEnvs:
+    app:
+      test:
+        port: 8082
+        replicas: 2
+        health: /health2
+        env:
+            # Podpreset
+            - name: SPRING_ZIPKIN_ENABLED2
+              value: "true"
+        nodeSelector:
+          logan/env: test
+        resources:
+          limits:
+            cpu: "2"
+            memory: "2Gi"
+          requests:
+            cpu: "1"
+            memory: "1Gi"
+        subDomain: "2exp.logan.local"

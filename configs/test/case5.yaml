@@ -1,0 +1,20 @@
+## Java应用默认配置
+java:
+  settings:
+    registry: "registry.logan.local"
+  oEnvs:
+    app:
+      test:
+        env:
+          # Podpreset
+          - name: SPRING_ZIPKIN_ENABLED
+            value: "false"
+          - name: MY_OENV_APP
+            value: "B"
+  app:
+    env:
+      # Podpreset
+      - name: SPRING_ZIPKIN_ENABLED
+        value: "true"
+      - name: MY_ENV_APP
+        value: "A"

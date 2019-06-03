@@ -1,0 +1,128 @@
+## 1. Java
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: logan-app-java-admin-edit
+  labels:
+    # Grant permissions to default roles: "admin" and "edit"
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+rules:
+  - apiGroups: ["app.logancloud.com"]
+    resources: ["javaboots"]
+    # Specify the verbs that represent the permissions that are granted to the role.
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "deletecollection"]
+
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: logan-app-java-admin-view
+  labels:
+    # Grant permissions to default roles: "view" and "cluster-view"
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+    rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
+rules:
+  - apiGroups: ["app.logancloud.com"]
+    resources: ["javaboots"]
+    verbs: ["get", "list", "watch"]
+
+## 2. PHP
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: logan-app-php-admin-edit
+  labels:
+    # Grant permissions to default roles: "admin" and "edit"
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+rules:
+  - apiGroups: ["app.logancloud.com"]
+    resources: ["phpboots"]
+    # Specify the verbs that represent the permissions that are granted to the role.
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "deletecollection"]
+
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: logan-app-php-admin-view
+  labels:
+    # Grant permissions to default roles: "view" and "cluster-view"
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+    rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
+rules:
+  - apiGroups: ["app.logancloud.com"]
+    resources: ["phpboots"]
+    verbs: ["get", "list", "watch"]
+
+## 3. Python
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: logan-app-python-admin-edit
+  labels:
+    # Grant permissions to default roles: "admin" and "edit"
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+rules:
+  - apiGroups: ["app.logancloud.com"]
+    resources: ["pythonboots"]
+    # Specify the verbs that represent the permissions that are granted to the role.
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "deletecollection"]
+
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: logan-app-python-admin-view
+  labels:
+    # Grant permissions to default roles: "view" and "cluster-view"
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+    rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
+rules:
+  - apiGroups: ["app.logancloud.com"]
+    resources: ["pythonboots"]
+    verbs: ["get", "list", "watch"]
+
+## 4. NodeJS
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: logan-app-nodejs-admin-edit
+  labels:
+    # Grant permissions to default roles: "admin" and "edit"
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+rules:
+  - apiGroups: ["app.logancloud.com"]
+    resources: ["nodejsboots"]
+    # Specify the verbs that represent the permissions that are granted to the role.
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "deletecollection"]
+
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: logan-app-nodejs-admin-view
+  labels:
+    # Grant permissions to default roles: "view" and "cluster-view"
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+    rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
+rules:
+  - apiGroups: ["app.logancloud.com"]
+    resources: ["nodejsboots"]
+    verbs: ["get", "list", "watch"]
+
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: logan-app-webhook
+rules:
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
+    verbs: ["get", "list", "watch", "create", "update"]

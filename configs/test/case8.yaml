@@ -1,0 +1,9 @@
+php:
+  settings:
+    registry: "registry.logan.local"
+
+  sidecarServices:
+    - name: ${APP}-sidecar
+      port: 5678
+
+

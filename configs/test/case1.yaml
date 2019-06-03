@@ -1,0 +1,7 @@
+## Java应用默认配置
+java:
+  settings:
+    registry: "registry.logan.local"
+  oEnvs:
+    app:
+

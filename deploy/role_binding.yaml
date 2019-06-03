@@ -1,0 +1,28 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: logan-app-operator
+subjects:
+- kind: ServiceAccount
+  name: logan-app-operator
+  # Replace this with the namespace the operator is deployed in.
+  namespace: logan
+roleRef:
+  kind: ClusterRole
+  name: logan-app-operator
+  apiGroup: rbac.authorization.k8s.io
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: logan-app-operator-webhook
+subjects:
+  - kind: ServiceAccount
+    name: logan-app-operator
+    # Replace this with the namespace the operator is deployed in.
+    namespace: logan
+roleRef:
+  kind: ClusterRole
+  name: logan-app-webhook
+  apiGroup: rbac.authorization.k8s.io
