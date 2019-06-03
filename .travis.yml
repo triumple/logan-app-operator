@@ -4,7 +4,7 @@ language: go
 
 os:
   - linux
-  - osx
+#  - osx
 
 go:
   - "1.12"
