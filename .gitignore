@@ -14,7 +14,6 @@ configs/config.yaml
 .idea/
 *.coverprofile
 # Created by https://www.gitignore.io/api/go,vim,emacs,visualstudiocode
-bin
 ### Emacs ###
 # -*- mode: gitignore; -*-
 *~
