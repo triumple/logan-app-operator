@@ -10,9 +10,6 @@ go:
 services:
   - docker
 
-git:
-  depth: 3
-
 go_import_path: logancloud/logan-app-operator
 
 before_install:
