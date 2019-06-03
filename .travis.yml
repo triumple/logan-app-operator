@@ -5,22 +5,24 @@ os:
   - osx
 
 go:
-  - "1.11"
+  - "1.12"
+
+services:
+  - docker
 
 git:
   depth: 3
 
-go_import_path: sigs.k8s.io/controller-runtime
+go_import_path: logancloud/logan-app-operator
+
+before_install:
+  - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
 
 install:
   - go get -u github.com/golang/dep/cmd/dep
-  #- go get -u golang.org/x/lint/golint
-  - go get -u gopkg.in/alecthomas/gometalinter.v2 && gometalinter.v2 --install
 
 script:
-  - TRACE=1 ./hack/check-everything.sh
-
-
-# TBD. Suppressing for now.
-notifications:
-  email: false
+  - make build
+  - if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
+    make push;
+    fi
