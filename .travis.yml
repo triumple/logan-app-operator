@@ -16,6 +16,11 @@ git:
 go_import_path: logancloud/logan-app-operator
 
 before_install:
+  - wget https://github.com/operator-framework/operator-sdk/releases/download/v0.8.1/operator-sdk-v0.8.1-x86_64-linux-gnu
+  - mkdir -p $HOME/bin
+  - mv operator-sdk-v0.8.1-x86_64-linux-gnu $HOME/bin/operator-sdk
+  - chmod +x $HOME/bin/operator-sdk
+  - export PATH="$HOME/bin:$PATH"
   - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
 
 install:
