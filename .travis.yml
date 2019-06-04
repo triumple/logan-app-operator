@@ -28,8 +28,8 @@ install:
 
 jobs:
   include:
-    - stage: BDD Test
-      script: make test
+#    - stage: BDD Test
+#      script: make test
     - stage: Push Docker Image
     - script: make docker-build
     - script: if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
