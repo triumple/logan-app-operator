@@ -27,12 +27,14 @@ install:
 
 jobs:
   include:
-    - stage: Docker Build
-      script: make docker-build
+    - stage: BDD Test
+      script: make test
     - stage: Push Docker Image
-      script: if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
+      - script: make docker-build
+      - script: if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
         make docker-push;
         fi
+
 #script:
 #  - make docker-build
 #  - if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
