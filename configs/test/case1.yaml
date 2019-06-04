@@ -1,4 +1,3 @@
-## JavaBoot Config
 java:
   settings:
     registry: "registry.logan.local"
