@@ -25,8 +25,16 @@ before_install:
 install:
   - go get -u github.com/golang/dep/cmd/dep
 
-script:
-  - make docker-build
-  - if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
-    make docker-push;
-    fi
+jobs:
+  include:
+    - stage: Docker Build
+      script: make docker-build
+    - stage: Push Docker Image
+      script: if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
+        make docker-push;
+        fi
+#script:
+#  - make docker-build
+#  - if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
+#    make docker-push;
+#    fi
