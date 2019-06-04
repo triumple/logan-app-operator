@@ -210,7 +210,7 @@ func (vHandler *BootValidator) CheckEnvKeys(boot *v1.Boot, operation admssionv1b
 				}
 			}
 
-			// 2. Manual Add key of Env: If key exists in global settings, and valid not equal, valid is false.
+			// 2. Manual Add key of Env: If key exists in global settings, and value not equal, valid is false.
 			for _, env := range added {
 				if env.Name == cfgEnvName {
 					if env.Value != cfgEnvValue {
@@ -220,7 +220,7 @@ func (vHandler *BootValidator) CheckEnvKeys(boot *v1.Boot, operation admssionv1b
 				}
 			}
 
-			// 3. Manual Modify value of Env: If key exists in global settings, and valid not equal, valid is false.
+			// 3. Manual Modify value of Env: If key exists in global settings, and value not equal, valid is false.
 			for _, env := range modified {
 				if env.Name == cfgEnvName {
 					if env.Value != cfgEnvValue {
