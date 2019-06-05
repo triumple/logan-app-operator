@@ -36,3 +36,7 @@ script:
   - if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then
     make docker-push;
     fi
+  - make travis-build
+
+after_script:
+  -   docker logout

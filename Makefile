@@ -51,6 +51,9 @@ docker-build:
 docker-push:
 	docker push ${IMG}
 
+travis-build:
+	./scripts/travis-push-docker-image.sh
+
 # Redploy configmap
 recm:
 	oc delete configmap logan-app-operator-config --ignore-not-found=true
