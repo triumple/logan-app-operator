@@ -6,10 +6,10 @@ os:
   - linux
 #  - osx
 
-branches:
-  only:
-    - master
-    - develop
+#branches:
+#  only:
+#    - master
+#    - develop
 
 go:
   - "1.12"
