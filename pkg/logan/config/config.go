@@ -259,8 +259,27 @@ func applyDefault(operatorCfg *operatorConfig, appSpec *AppSpec, bootType string
 		appSpec.Settings = &SettingsConfig{}
 	}
 
-	//1. Merge Operator's Settings
+	// 1. Merge oEnv's settings: app
+	appEnvDefault := operatorCfg.OEnvs[OperatorAppKey][logan.OperDev]
+	err := util.MergeOverride(appSpec, appEnvDefault)
+	if err != nil {
+		log.Error(err, "env config merge error.", "type", bootType)
+	}
+
+	// 2. Merge Operator's Settings
+	// 2.1 Envs -> Global Settings
 	oSettings := operatorCfg.Settings
+	envSettings := appEnvDefault.Settings
+	if envSettings != nil && oSettings != nil {
+		if envSettings.Registry != "" {
+			oSettings.Registry = envSettings.Registry
+		}
+		if envSettings.AppHealthPort > 0 {
+			oSettings.AppHealthPort = envSettings.AppHealthPort
+		}
+	}
+
+	// 2.2 Global Settings-> App Settings
 	if oSettings != nil {
 		// No use Mergo to avoid the whole struct override.
 		if oSettings.Registry != "" {
@@ -270,13 +289,6 @@ func applyDefault(operatorCfg *operatorConfig, appSpec *AppSpec, bootType string
 		if oSettings.AppHealthPort > 0 {
 			appSpec.Settings.AppHealthPort = oSettings.AppHealthPort
 		}
-	}
-
-	// 2. Merge oEnv's settings: app
-	appEnvDefault := operatorCfg.OEnvs[OperatorAppKey][logan.OperDev]
-	err := util.MergeOverride(appSpec, appEnvDefault)
-	if err != nil {
-		log.Error(err, "env config merge error.", "type", bootType)
 	}
 }
 

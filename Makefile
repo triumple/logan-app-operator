@@ -18,7 +18,7 @@ rundebug: fmt vet
 
 rundev:
 #	operator-sdk up local --namespace=logan
-	operator-sdk up local --namespace=logan-dev --operator-flags "--config=configs/config.yaml --zap-devel"
+	LOGAN_ENV=dev WATCH_NAMESPACE=logan-dev operator-sdk up local --namespace=logan-dev --operator-flags "--config=configs/config.yaml --zap-devel"
 
 # Install CRDs into a cluster
 install:

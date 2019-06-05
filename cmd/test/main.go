@@ -36,11 +36,14 @@ func printObj(cfg *config.BootConfig, bootType string) {
 	fmt.Println("	registry: ", cfg.AppSpec.Settings.Registry)
 	fmt.Println("	subDomain: ", cfg.AppSpec.SubDomain)
 	fmt.Println("	appHealthPort: ", cfg.AppSpec.Settings.AppHealthPort)
+	fmt.Println("	registry: ", cfg.AppSpec.Settings.Registry)
+	fmt.Println("	request.memory: ", cfg.AppSpec.Resources.Requests.Memory())
+	fmt.Println("	request.cpu: ", cfg.AppSpec.Resources.Requests.Cpu())
 	fmt.Println("")
 }
 
 func main() {
-	logan.OperDev = "test"
+	logan.OperDev = "dev"
 	logf.SetLogger(logf.ZapLoggerTo(os.Stderr, true)) //Debug Output
 
 	file := "logan-app-operator/configs/config.yaml"
@@ -54,8 +57,8 @@ func main() {
 		panic(err)
 	}
 
-	printObj(config.JavaConfig, "java")
+	//printObj(config.JavaConfig, "java")
 	printObj(config.PhpConfig, "php")
-	printObj(config.PythonConfig, "python")
-	printObj(config.NodeJSConfig, "nodejs")
+	//printObj(config.PythonConfig, "python")
+	//printObj(config.NodeJSConfig, "nodejs")
 }
