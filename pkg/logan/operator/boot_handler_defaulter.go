@@ -46,20 +46,23 @@ func (handler *BootHandler) DefaultValue() bool {
 	//resources.limits
 	if len(bootSpec.Resources.Limits) == 0 {
 		resourcesList := appConfigSpec.Resources.Limits
-
-		logger.Info("Defaulters", "type", "resources.limits", "spec", bootSpec.Resources.Limits,
-			"default", resourcesList)
-		bootSpec.Resources.Limits = resourcesList
-		changed = true
+		if len(resourcesList) > 0 {
+			logger.Info("Defaulters", "type", "resources.limits", "spec", bootSpec.Resources.Limits,
+				"default", resourcesList)
+			bootSpec.Resources.Limits = resourcesList
+			changed = true
+		}
 	}
 
 	//resources.request
 	if len(bootSpec.Resources.Requests) == 0 {
 		resourcesList := appConfigSpec.Resources.Requests
-		logger.Info("Defaulters", "type", "resources.requests", "spec", bootSpec.Resources.Requests,
-			"default", resourcesList)
-		bootSpec.Resources.Requests = resourcesList
-		changed = true
+		if len(resourcesList) > 0 {
+			logger.Info("Defaulters", "type", "resources.requests", "spec", bootSpec.Resources.Requests,
+				"default", resourcesList)
+			bootSpec.Resources.Requests = resourcesList
+			changed = true
+		}
 	}
 
 	//check cpu limits and request:  cpu request>limit, set request=limit
