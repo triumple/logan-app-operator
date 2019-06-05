@@ -39,6 +39,8 @@ func printObj(cfg *config.BootConfig, bootType string) {
 	fmt.Println("	registry: ", cfg.AppSpec.Settings.Registry)
 	fmt.Println("	request.memory: ", cfg.AppSpec.Resources.Requests.Memory())
 	fmt.Println("	request.cpu: ", cfg.AppSpec.Resources.Requests.Cpu())
+	fmt.Println("	limits.memory: ", cfg.AppSpec.Resources.Limits.Memory())
+	fmt.Println("	limits.cpu: ", cfg.AppSpec.Resources.Limits.Cpu())
 	fmt.Println("")
 }
 
@@ -57,8 +59,8 @@ func main() {
 		panic(err)
 	}
 
-	//printObj(config.JavaConfig, "java")
+	printObj(config.JavaConfig, "java")
 	printObj(config.PhpConfig, "php")
-	//printObj(config.PythonConfig, "python")
-	//printObj(config.NodeJSConfig, "nodejs")
+	printObj(config.PythonConfig, "python")
+	printObj(config.NodeJSConfig, "nodejs")
 }

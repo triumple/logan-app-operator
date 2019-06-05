@@ -31,14 +31,14 @@ type BootConfig struct {
 
 // AppSpec define the App spec
 type AppSpec struct {
-	Type         string                   `json:"type"`
-	Port         int32                    `json:"port"`
-	Replicas     int32                    `json:"replicas"`
-	Health       string                   `json:"health"`
-	Env          []corev1.EnvVar          `json:"env"`
-	Resources    *v1.ResourceRequirements `json:"resources"`
-	NodeSelector map[string]string        `json:"nodeSelector"`
-	SubDomain    string                   `json:"subDomain"`
+	Type         string                  `json:"type"`
+	Port         int32                   `json:"port"`
+	Replicas     int32                   `json:"replicas"`
+	Health       string                  `json:"health"`
+	Env          []corev1.EnvVar         `json:"env"`
+	Resources    v1.ResourceRequirements `json:"resources"`
+	NodeSelector map[string]string       `json:"nodeSelector"`
+	SubDomain    string                  `json:"subDomain"`
 
 	PodSpec   *corev1.PodSpec   `json:"podSpec"`
 	Container *corev1.Container `json:"container"`
@@ -251,9 +251,9 @@ func applyDefault(operatorCfg *operatorConfig, appSpec *AppSpec, bootType string
 		appSpec.Health = DefaultHealth
 	}
 
-	if appSpec.Resources == nil {
-		appSpec.Resources = &v1.ResourceRequirements{}
-	}
+	//if appSpec.Resources == nil {
+	//	appSpec.Resources = &v1.ResourceRequirements{}
+	//}
 
 	if appSpec.Settings == nil {
 		appSpec.Settings = &SettingsConfig{}
