@@ -44,31 +44,71 @@ func (handler *BootHandler) DefaultValue() bool {
 	}
 
 	//resources.limits
-	if len(bootSpec.Resources.Limits) == 0 {
-		resourcesList := appConfigSpec.Resources.Limits
-		if len(resourcesList) > 0 {
+	limitResources := appConfigSpec.Resources.Limits
+	if len(limitResources) > 0 {
+		if len(bootSpec.Resources.Limits) == 0 {
 			logger.Info("Defaulters", "type", "resources.limits", "spec", bootSpec.Resources.Limits,
-				"default", resourcesList)
-			bootSpec.Resources.Limits = resourcesList
+				"default", limitResources)
+			bootSpec.Resources.Limits = limitResources
 			changed = true
+		} else {
+			// boot's limits mem is empty
+			bootSpecMem := bootSpec.Resources.Limits.Memory()
+			if bootSpecMem.CmpInt64(0) == 0 {
+				logger.Info("Defaulters", "type", "resources.limits.memory",
+					"spec", bootSpec.Resources.Limits.Memory(),
+					"default", bootSpecMem)
+				bootSpec.Resources.Limits[corev1.ResourceMemory] = *limitResources.Memory()
+				changed = true
+			}
+
+			// boot's limits cpu is empty
+			bootSpecCpu := bootSpec.Resources.Limits.Cpu()
+			if bootSpecCpu.CmpInt64(0) == 0 {
+				logger.Info("Defaulters", "type", "resources.limits.cpu",
+					"spec", bootSpec.Resources.Limits.Cpu(),
+					"default", bootSpecCpu)
+				bootSpec.Resources.Limits[corev1.ResourceCPU] = *limitResources.Cpu()
+				changed = true
+			}
 		}
 	}
 
-	//resources.request
-	if len(bootSpec.Resources.Requests) == 0 {
-		resourcesList := appConfigSpec.Resources.Requests
-		if len(resourcesList) > 0 {
+	//resources.requests
+	requestResources := appConfigSpec.Resources.Requests
+	if len(requestResources) > 0 {
+		if len(bootSpec.Resources.Requests) == 0 {
 			logger.Info("Defaulters", "type", "resources.requests", "spec", bootSpec.Resources.Requests,
-				"default", resourcesList)
-			bootSpec.Resources.Requests = resourcesList
+				"default", requestResources)
+			bootSpec.Resources.Requests = requestResources
 			changed = true
+		} else {
+			// boot's requests mem is empty
+			bootSpecMem := bootSpec.Resources.Requests.Memory()
+			if bootSpecMem.CmpInt64(0) == 0 {
+				logger.Info("Defaulters", "type", "resources.requests.memory",
+					"spec", bootSpec.Resources.Requests.Memory(),
+					"default", bootSpecMem)
+				bootSpec.Resources.Requests[corev1.ResourceMemory] = *requestResources.Memory()
+				changed = true
+			}
+
+			// boot's requests cpu is empty
+			bootSpecCpu := bootSpec.Resources.Requests.Cpu()
+			if bootSpecCpu.CmpInt64(0) == 0 {
+				logger.Info("Defaulters", "type", "resources.requests.cpu",
+					"spec", bootSpec.Resources.Requests.Cpu(),
+					"default", bootSpecCpu)
+				bootSpec.Resources.Requests[corev1.ResourceCPU] = *requestResources.Cpu()
+				changed = true
+			}
 		}
 	}
 
 	//check cpu limits and request:  cpu request>limit, set request=limit
 	requestCpu := bootSpec.Resources.Requests.Cpu()
 	limitCpu := bootSpec.Resources.Limits.Cpu()
-	if requestCpu.Cmp(*limitCpu) > 0 {
+	if limitCpu.CmpInt64(0) != 0 && requestCpu.Cmp(*limitCpu) > 0 {
 		logger.Info("Defaulters", "type", "request.cpu", "spec", requestCpu,
 			"default", limitCpu)
 
@@ -79,7 +119,7 @@ func (handler *BootHandler) DefaultValue() bool {
 	//check mem limits and request: mem request>limit, set request=limit
 	requestMem := bootSpec.Resources.Requests.Memory()
 	limitMem := bootSpec.Resources.Limits.Memory()
-	if requestMem.Cmp(*limitMem) > 0 {
+	if limitMem.CmpInt64(0) != 0 && requestMem.Cmp(*limitMem) > 0 {
 		logger.Info("Defaulters", "type", "request.mem.request", "spec", requestMem,
 			"default", limitMem)
 

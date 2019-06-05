@@ -37,10 +37,11 @@ func printObj(cfg *config.BootConfig, bootType string) {
 	fmt.Println("	subDomain: ", cfg.AppSpec.SubDomain)
 	fmt.Println("	appHealthPort: ", cfg.AppSpec.Settings.AppHealthPort)
 	fmt.Println("	registry: ", cfg.AppSpec.Settings.Registry)
-	fmt.Println("	request.memory: ", cfg.AppSpec.Resources.Requests.Memory())
 	fmt.Println("	request.cpu: ", cfg.AppSpec.Resources.Requests.Cpu())
-	fmt.Println("	limits.memory: ", cfg.AppSpec.Resources.Limits.Memory())
+	fmt.Println("	request.memory: ", cfg.AppSpec.Resources.Requests.Memory())
 	fmt.Println("	limits.cpu: ", cfg.AppSpec.Resources.Limits.Cpu())
+	fmt.Println("	limits.memory: ", cfg.AppSpec.Resources.Limits.Memory())
+
 	fmt.Println("")
 }
 
