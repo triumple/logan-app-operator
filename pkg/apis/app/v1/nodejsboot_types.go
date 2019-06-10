@@ -8,6 +8,7 @@ import (
 
 // NodeJSBoot is the Schema for the nodejsboots API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 type NodeJSBoot struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

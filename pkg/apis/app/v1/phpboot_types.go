@@ -8,6 +8,7 @@ import (
 
 // PhpBoot is the Schema for the phpboots API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 type PhpBoot struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

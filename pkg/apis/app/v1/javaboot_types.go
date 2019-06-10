@@ -8,6 +8,7 @@ import (
 
 // JavaBoot is the Schema for the javaboots API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 type JavaBoot struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -71,6 +71,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
+// blank assignment to verify that ReconcileJavaBoot implements reconcile.Reconciler
 var _ reconcile.Reconciler = &ReconcilePythonBoot{}
 
 // ReconcilePythonBoot reconciles a PythonBoot object
