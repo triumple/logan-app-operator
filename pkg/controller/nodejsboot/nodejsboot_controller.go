@@ -170,13 +170,21 @@ func InitHandler(nodejsBoot *appv1.NodeJSBoot, scheme *runtime.Scheme,
 	client client.Client, logger logr.Logger, recorder record.EventRecorder) (handler *operator.BootHandler) {
 	boot := nodejsBoot.DeepCopyBoot()
 
+	bootCfg := config.JavaConfig
+	profileConfig, err := operator.GetProfileBootConfig(boot, logger)
+	if err != nil {
+		logger.Info(err.Error())
+	} else if profileConfig != nil {
+		bootCfg = profileConfig
+	}
+
 	return &operator.BootHandler{
 		OperatorBoot: nodejsBoot,
 		OperatorSpec: &nodejsBoot.Spec,
 		OperatorMeta: &nodejsBoot.ObjectMeta,
 
 		Boot:     boot,
-		Config:   config.NodeJSConfig,
+		Config:   bootCfg,
 		Scheme:   scheme,
 		Client:   client,
 		Logger:   logger,

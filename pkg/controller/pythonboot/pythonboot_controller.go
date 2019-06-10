@@ -169,13 +169,22 @@ func (r *ReconcilePythonBoot) Reconcile(request reconcile.Request) (reconcile.Re
 func InitHandler(pythonBoot *appv1.PythonBoot, scheme *runtime.Scheme,
 	client client.Client, logger logr.Logger, recorder record.EventRecorder) (handler *operator.BootHandler) {
 	boot := pythonBoot.DeepCopyBoot()
+
+	bootCfg := config.JavaConfig
+	profileConfig, err := operator.GetProfileBootConfig(boot, logger)
+	if err != nil {
+		logger.Info(err.Error())
+	} else if profileConfig != nil {
+		bootCfg = profileConfig
+	}
+
 	return &operator.BootHandler{
 		OperatorBoot: pythonBoot,
 		OperatorSpec: &pythonBoot.Spec,
 		OperatorMeta: &pythonBoot.ObjectMeta,
 
 		Boot:     boot,
-		Config:   config.PythonConfig,
+		Config:   bootCfg,
 		Scheme:   scheme,
 		Client:   client,
 		Logger:   logger,

@@ -9,6 +9,9 @@ import (
 )
 
 func printObj(cfg *config.BootConfig, bootType string) {
+	if cfg == nil {
+		return
+	}
 	fmt.Println(bootType)
 	fmt.Println("	spec: ", cfg.AppSpec)
 	fmt.Println("	spec env: ", cfg.AppSpec.Env)
@@ -64,4 +67,6 @@ func main() {
 	printObj(config.PhpConfig, "php")
 	printObj(config.PythonConfig, "python")
 	printObj(config.NodeJSConfig, "nodejs")
+
+	printObj(config.ProfileConfig["hanlp"], "hanlp")
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/go-logr/logr"
 	appv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
 	"github.com/logancloud/logan-app-operator/pkg/logan"
 	"github.com/logancloud/logan-app-operator/pkg/logan/config"
@@ -186,4 +187,23 @@ func DecodeAnnotationEnvs(boot *appv1.Boot) ([]corev1.EnvVar, error) {
 
 		return bootMetaEnvs, nil
 	}
+}
+
+func GetProfileBootConfig(boot *appv1.Boot, logger logr.Logger) (*config.BootConfig, error) {
+	if boot.Annotations != nil && boot.Annotations[config.BootProfileAnnotationKey] != "" {
+		bootProfile := boot.Annotations[config.BootProfileAnnotationKey]
+		if bootProfile == logan.BootJava || bootProfile == logan.BootPhp || bootProfile == logan.BootPython || bootProfile == logan.BootNodeJS {
+			return nil, errors.New(fmt.Sprintf("Boot using profile, but profile [%s] is not allow.", bootProfile))
+		} else {
+			profileConfig := config.ProfileConfig[bootProfile]
+			if profileConfig != nil {
+				logger.Info("Boot using profile: ", "profile", bootProfile)
+				return config.ProfileConfig[bootProfile], nil
+			} else {
+				return nil, errors.New(fmt.Sprintf("Boot using profile, but profile [%s] config is empty: ", bootProfile))
+			}
+		}
+	}
+
+	return nil, nil
 }

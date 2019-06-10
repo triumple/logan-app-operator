@@ -19,6 +19,8 @@ const (
 	DefaultPort    = 8080
 	DefaultReplica = 1
 	DefaultHealth  = "/health"
+
+	BootProfileAnnotationKey = "logan/profile"
 )
 
 var log = logf.Log.WithName("logan_config")
@@ -52,10 +54,11 @@ type SidecarService struct {
 }
 
 var (
-	JavaConfig   *BootConfig
-	PhpConfig    *BootConfig
-	PythonConfig *BootConfig
-	NodeJSConfig *BootConfig
+	JavaConfig    *BootConfig
+	PhpConfig     *BootConfig
+	PythonConfig  *BootConfig
+	NodeJSConfig  *BootConfig
+	ProfileConfig map[string]*BootConfig
 )
 
 // 配置信息
@@ -64,21 +67,11 @@ type SettingsConfig struct {
 	AppHealthPort int32  `json:"appHealthPort"`
 }
 
-// 配置包含：
-// 	Java operator配置信息
-// 	Php operator配置信息
-// 	Python operator配置信息
-// 	NodeJS operator配置信息
-type globalConfig struct {
-	// Java配置
-	JavaOperatorConfig *operatorConfig `json:"java"`
-	// Php配置
-	PhpOperatorConfig *operatorConfig `json:"php"`
-	// Python配置
-	PythonOperatorConfig *operatorConfig `json:"python"`
-	// NodeJS配置
-	NodeJSOperatorConfig *operatorConfig `json:"nodejs"`
-}
+// 	"java": default Java operator config
+// 	"php": default Php operator config
+// 	"python": default Python operator config
+// 	"nodejs": default NodeJS operator config
+type GlobalConfig map[string]*OperatorConfig
 
 // 配置包含：
 // 	Operator默认配置信息：settings
@@ -87,7 +80,7 @@ type globalConfig struct {
 //		1. 应用app容器配置信息: app
 //		2. sidecar容器信息：sidecarContainers
 //		3. sidecar服务信息：sidecarServices
-type operatorConfig struct {
+type OperatorConfig struct {
 	// Operator配置信息
 	Settings *SettingsConfig `json:"settings"`
 
@@ -124,17 +117,19 @@ func Init(content io.Reader) error {
 }
 
 func NewConfig(content io.Reader) error {
-	c := globalConfig{}
+	c := GlobalConfig{}
 
 	err := k8syaml.NewYAMLOrJSONDecoder(content, 100).Decode(&c)
 	if err != nil {
 		return err
 	}
 
-	gConfig := &c
+	gConfig := c
 	gConfig.applyDefaults()
 
-	operator := gConfig.JavaOperatorConfig
+	ProfileConfig = make(map[string]*BootConfig, 0)
+
+	operator := gConfig[logan.BootJava]
 	JavaConfig = &BootConfig{
 		AppSpec: operator.AppSpec,
 
@@ -142,7 +137,7 @@ func NewConfig(content io.Reader) error {
 		SidecarServices:   operator.SidecarServices,
 	}
 
-	operator = gConfig.PhpOperatorConfig
+	operator = gConfig[logan.BootPhp]
 	PhpConfig = &BootConfig{
 		AppSpec: operator.AppSpec,
 
@@ -150,7 +145,7 @@ func NewConfig(content io.Reader) error {
 		SidecarServices:   operator.SidecarServices,
 	}
 
-	operator = gConfig.PythonOperatorConfig
+	operator = gConfig[logan.BootPython]
 	PythonConfig = &BootConfig{
 		AppSpec: operator.AppSpec,
 
@@ -158,7 +153,7 @@ func NewConfig(content io.Reader) error {
 		SidecarServices:   operator.SidecarServices,
 	}
 
-	operator = gConfig.NodeJSOperatorConfig
+	operator = gConfig[logan.BootNodeJS]
 	NodeJSConfig = &BootConfig{
 		AppSpec: operator.AppSpec,
 
@@ -166,12 +161,23 @@ func NewConfig(content io.Reader) error {
 		SidecarServices:   operator.SidecarServices,
 	}
 
+	for key, operator := range gConfig {
+		if key != logan.BootJava && key != logan.BootPhp && key != logan.BootPython && key != logan.BootNodeJS {
+			ProfileConfig[key] = &BootConfig{
+				AppSpec: operator.AppSpec,
+
+				SidecarContainers: operator.SidecarContainers,
+				SidecarServices:   operator.SidecarServices,
+			}
+		}
+	}
+
 	return nil
 }
 
 func NewConfigFromString(content string) error {
 	if content == "" {
-		globalCfg := &globalConfig{}
+		globalCfg := &GlobalConfig{}
 		globalCfg.applyDefaults()
 		return nil
 	}
@@ -179,29 +185,39 @@ func NewConfigFromString(content string) error {
 	return NewConfig(bytes.NewBuffer([]byte(content)))
 }
 
-func (globalCfg *globalConfig) applyDefaults() {
-	applyDefaultWithSidecar(globalCfg, globalCfg.JavaOperatorConfig, logan.BootJava)
+func (globalCfg GlobalConfig) applyDefaults() {
+	applyDefaultWithSidecar(globalCfg, globalCfg[logan.BootJava], logan.BootJava)
 
-	applyDefaultWithSidecar(globalCfg, globalCfg.PhpOperatorConfig, logan.BootPhp)
+	applyDefaultWithSidecar(globalCfg, globalCfg[logan.BootPhp], logan.BootPhp)
 
-	applyDefaultWithSidecar(globalCfg, globalCfg.PythonOperatorConfig, logan.BootPython)
+	applyDefaultWithSidecar(globalCfg, globalCfg[logan.BootPython], logan.BootPython)
 
-	applyDefaultWithSidecar(globalCfg, globalCfg.NodeJSOperatorConfig, logan.BootNodeJS)
-}
+	applyDefaultWithSidecar(globalCfg, globalCfg[logan.BootNodeJS], logan.BootNodeJS)
 
-func applyDefaultWithSidecar(globalCfg *globalConfig, operatorCfg *operatorConfig, bootType string) {
-	if operatorCfg == nil {
-		operatorCfg = &operatorConfig{}
-		if bootType == logan.BootJava {
-			globalCfg.JavaOperatorConfig = operatorCfg
-		} else if bootType == logan.BootPhp {
-			globalCfg.PhpOperatorConfig = operatorCfg
-		} else if bootType == logan.BootPython {
-			globalCfg.PythonOperatorConfig = operatorCfg
-		} else if bootType == logan.BootNodeJS {
-			globalCfg.NodeJSOperatorConfig = operatorCfg
+	for key, value := range globalCfg {
+		if key != logan.BootJava && key != logan.BootPhp && key != logan.BootPython && key != logan.BootNodeJS {
+			applyDefaultWithSidecar(globalCfg, value, key)
 		}
 	}
+}
+
+func applyDefaultWithSidecar(globalCfg GlobalConfig, operatorCfg *OperatorConfig, bootType string) {
+	if operatorCfg == nil {
+		operatorCfg = &OperatorConfig{}
+		if bootType == logan.BootJava {
+			globalCfg[logan.BootJava] = operatorCfg
+		} else if bootType == logan.BootPhp {
+			globalCfg[logan.BootPhp] = operatorCfg
+		} else if bootType == logan.BootPython {
+			globalCfg[logan.BootPython] = operatorCfg
+		} else if bootType == logan.BootNodeJS {
+			globalCfg[logan.BootNodeJS] = operatorCfg
+		} else {
+			// Other profiles: use key
+			globalCfg[bootType] = operatorCfg
+		}
+	}
+
 	if operatorCfg.AppSpec == nil {
 		operatorCfg.AppSpec = &AppSpec{}
 	}
@@ -238,7 +254,7 @@ func applyDefaultWithSidecar(globalCfg *globalConfig, operatorCfg *operatorConfi
 	}
 }
 
-func applyDefault(operatorCfg *operatorConfig, appSpec *AppSpec, bootType string) {
+func applyDefault(operatorCfg *OperatorConfig, appSpec *AppSpec, bootType string) {
 	if appSpec.Port <= 0 {
 		appSpec.Port = DefaultPort
 	}
