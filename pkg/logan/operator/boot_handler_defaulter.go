@@ -44,8 +44,8 @@ func (handler *BootHandler) DefaultValue() bool {
 	}
 
 	//resources.limits
-	limitResources := appConfigSpec.Resources.Limits
-	if len(limitResources) > 0 {
+	if len(appConfigSpec.Resources.Limits) > 0 {
+		limitResources := appConfigSpec.Resources.Limits.DeepCopy()
 		if len(bootSpec.Resources.Limits) == 0 {
 			logger.Info("Defaulters", "type", "resources.limits", "spec", bootSpec.Resources.Limits,
 				"default", limitResources)
@@ -75,8 +75,8 @@ func (handler *BootHandler) DefaultValue() bool {
 	}
 
 	//resources.requests
-	requestResources := appConfigSpec.Resources.Requests
-	if len(requestResources) > 0 {
+	if len(appConfigSpec.Resources.Requests) > 0 {
+		requestResources := appConfigSpec.Resources.Requests.DeepCopy()
 		if len(bootSpec.Resources.Requests) == 0 {
 			logger.Info("Defaulters", "type", "resources.requests", "spec", bootSpec.Resources.Requests,
 				"default", requestResources)
