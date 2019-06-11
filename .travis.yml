@@ -35,7 +35,6 @@ install:
 script:
   - make docker-build
   - if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then
-#    docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
     make docker-push;
     fi
   - make travis-build
