@@ -28,6 +28,7 @@ const (
 	ApiTypePhp    = "PhpBoot"
 	ApiTypePython = "PythonBoot"
 	ApiTypeNodeJS = "NodeJSBoot"
+	ApiTypeWeb    = "WebBoot"
 )
 
 var logger = logf.Log.WithName("logan_webhook_validation")
@@ -142,6 +143,11 @@ func (vHandler *BootValidator) BootNameExist(boot *v1.Boot) (string, bool) {
 	err = c.Get(context.TODO(), namespaceName, &appv1.NodeJSBoot{})
 	if err == nil {
 		return fmt.Sprintf("Boot's name %s exists in type %s", namespaceName, ApiTypeNodeJS), false
+	}
+
+	err = c.Get(context.TODO(), namespaceName, &appv1.WebBoot{})
+	if err == nil {
+		return fmt.Sprintf("Boot's name %s exists in type %s", namespaceName, ApiTypeWeb), false
 	}
 
 	return "", true
@@ -266,6 +272,13 @@ func (vHandler *BootValidator) DecodeBoot(req types.Request) (*appv1.Boot, error
 		boot = apiBoot.DeepCopyBoot()
 	} else if bootType == ApiTypeNodeJS {
 		apiBoot := &v1.NodeJSBoot{}
+		err := decoder.Decode(req, apiBoot)
+		if err != nil {
+			return nil, err
+		}
+		boot = apiBoot.DeepCopyBoot()
+	} else if bootType == ApiTypeWeb {
+		apiBoot := &v1.WebBoot{}
 		err := decoder.Decode(req, apiBoot)
 		if err != nil {
 			return nil, err
