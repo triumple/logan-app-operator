@@ -25,8 +25,7 @@ before_install:
   - mv operator-sdk-v0.8.1-x86_64-linux-gnu $HOME/bin/operator-sdk
   - chmod +x $HOME/bin/operator-sdk
   - export PATH="$HOME/bin:$PATH"
-  - if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then
-    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+  - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
 
 install:
   - go get -u github.com/golang/dep/cmd/dep
