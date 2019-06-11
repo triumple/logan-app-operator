@@ -166,6 +166,8 @@ func GetConfigSpec(boot *appv1.Boot) *config.AppSpec {
 		return config.PythonConfig.AppSpec
 	} else if boot.BootType == logan.BootNodeJS {
 		return config.NodeJSConfig.AppSpec
+	} else if boot.BootType == logan.BootWeb {
+		return config.WebConfig.AppSpec
 	}
 
 	return nil
@@ -192,7 +194,7 @@ func DecodeAnnotationEnvs(boot *appv1.Boot) ([]corev1.EnvVar, error) {
 func GetProfileBootConfig(boot *appv1.Boot, logger logr.Logger) (*config.BootConfig, error) {
 	if boot.Annotations != nil && boot.Annotations[config.BootProfileAnnotationKey] != "" {
 		bootProfile := boot.Annotations[config.BootProfileAnnotationKey]
-		if bootProfile == logan.BootJava || bootProfile == logan.BootPhp || bootProfile == logan.BootPython || bootProfile == logan.BootNodeJS {
+		if bootProfile == logan.BootJava || bootProfile == logan.BootPhp || bootProfile == logan.BootPython || bootProfile == logan.BootNodeJS || bootProfile == logan.BootWeb {
 			return nil, errors.New(fmt.Sprintf("Boot using profile, but profile [%s] is not allow.", bootProfile))
 		} else {
 			profileConfig := config.ProfileConfig[bootProfile]

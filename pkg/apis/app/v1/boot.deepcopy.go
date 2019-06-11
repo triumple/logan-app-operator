@@ -178,3 +178,47 @@ func (in *NodeJSBoot) DeepCopyBoot() *Boot {
 	out.BootType = logan.BootNodeJS
 	return out
 }
+
+// 5. Web
+// Boot -> WebBoot
+func (in *Boot) DeepCopyToWeb(out *WebBoot) {
+	*out = WebBoot{}
+	out.TypeMeta = in.TypeMeta
+	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
+	in.Spec.DeepCopyInto(&out.Spec)
+	in.Status.DeepCopyInto(&out.Status)
+	return
+}
+
+// Boot -> WebBoot
+func (in *Boot) DeepCopyWeb() *WebBoot {
+	if in == nil {
+		return nil
+	}
+	out := new(WebBoot)
+	in.DeepCopyToWeb(out)
+	return out
+}
+
+// WebBoot -> Boot
+func (in *WebBoot) DeepCopyIntoBoot(out *Boot) {
+	*out = Boot{}
+	out.TypeMeta = in.TypeMeta
+	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
+	in.Spec.DeepCopyInto(&out.Spec)
+	in.Status.DeepCopyInto(&out.Status)
+	return
+}
+
+// WebBoot -> Boot
+func (in *WebBoot) DeepCopyBoot() *Boot {
+	if in == nil {
+		return nil
+	}
+	out := new(Boot)
+	in.DeepCopyIntoBoot(out)
+
+	out.AppKey = logan.WebAppKey
+	out.BootType = logan.BootWeb
+	return out
+}

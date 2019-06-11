@@ -58,7 +58,7 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 		Rule: admissionregistrationv1beta1.Rule{
 			APIGroups:   []string{"app.logancloud.com"},
 			APIVersions: []string{"v1"},
-			Resources:   []string{"javaboots", "phpboots", "pythonboots", "nodejsboots"}},
+			Resources:   []string{"javaboots", "phpboots", "pythonboots", "nodejsboots", "webboots"}},
 	}
 	validationHandler := &bootvalidation.BootValidator{}
 	validationWh, err := builder.NewWebhookBuilder().

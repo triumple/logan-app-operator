@@ -82,6 +82,9 @@ recrd:
 	oc delete -f deploy/crds/app_v1_nodejsboot_crd.yaml --ignore-not-found=true
 	oc create -f deploy/crds/app_v1_nodejsboot_crd.yaml
 
+	oc delete -f deploy/crds/app_v1_webboot_crd.yaml --ignore-not-found=true
+	oc create -f deploy/crds/app_v1_webboot_crd.yaml
+
 # Redeploy controller in the configured Kubernetes cluster in ~/.kube/config
 redeploy: recm
 	oc delete -f deploy/operator-test.yaml -f deploy/operator-dev.yaml -n logan --ignore-not-found=true

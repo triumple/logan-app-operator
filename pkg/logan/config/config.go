@@ -58,6 +58,7 @@ var (
 	PhpConfig     *BootConfig
 	PythonConfig  *BootConfig
 	NodeJSConfig  *BootConfig
+	WebConfig     *BootConfig
 	ProfileConfig map[string]*BootConfig
 )
 
@@ -71,6 +72,7 @@ type SettingsConfig struct {
 // 	"php": default Php operator config
 // 	"python": default Python operator config
 // 	"nodejs": default NodeJS operator config
+// 	"web": default Web operator config
 type GlobalConfig map[string]*OperatorConfig
 
 // 配置包含：
@@ -161,8 +163,16 @@ func NewConfig(content io.Reader) error {
 		SidecarServices:   operator.SidecarServices,
 	}
 
+	operator = gConfig[logan.BootWeb]
+	WebConfig = &BootConfig{
+		AppSpec: operator.AppSpec,
+
+		SidecarContainers: operator.SidecarContainers,
+		SidecarServices:   operator.SidecarServices,
+	}
+
 	for key, operator := range gConfig {
-		if key != logan.BootJava && key != logan.BootPhp && key != logan.BootPython && key != logan.BootNodeJS {
+		if key != logan.BootJava && key != logan.BootPhp && key != logan.BootPython && key != logan.BootNodeJS && key != logan.BootWeb {
 			ProfileConfig[key] = &BootConfig{
 				AppSpec: operator.AppSpec,
 
@@ -194,8 +204,10 @@ func (globalCfg GlobalConfig) applyDefaults() {
 
 	applyDefaultWithSidecar(globalCfg, globalCfg[logan.BootNodeJS], logan.BootNodeJS)
 
+	applyDefaultWithSidecar(globalCfg, globalCfg[logan.BootWeb], logan.BootWeb)
+
 	for key, value := range globalCfg {
-		if key != logan.BootJava && key != logan.BootPhp && key != logan.BootPython && key != logan.BootNodeJS {
+		if key != logan.BootJava && key != logan.BootPhp && key != logan.BootPython && key != logan.BootNodeJS && key != logan.BootWeb {
 			applyDefaultWithSidecar(globalCfg, value, key)
 		}
 	}
@@ -212,6 +224,8 @@ func applyDefaultWithSidecar(globalCfg GlobalConfig, operatorCfg *OperatorConfig
 			globalCfg[logan.BootPython] = operatorCfg
 		} else if bootType == logan.BootNodeJS {
 			globalCfg[logan.BootNodeJS] = operatorCfg
+		} else if bootType == logan.BootWeb {
+			globalCfg[logan.BootWeb] = operatorCfg
 		} else {
 			// Other profiles: use key
 			globalCfg[bootType] = operatorCfg

@@ -16,11 +16,13 @@ const (
 	BootPhp    = "php"
 	BootPython = "python"
 	BootNodeJS = "nodejs"
+	BootWeb    = "web"
 
 	JavaAppKey   = "javaBoot"
 	PhpAppKey    = "phpBoot"
 	PythonAppKey = "pythonBoot"
 	NodeJSAppKey = "nodejsBoot"
+	WebAppKey    = "webBoot"
 )
 
 // OperDev is operator's running dev

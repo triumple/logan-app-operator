@@ -117,6 +117,36 @@ rules:
     resources: ["nodejsboots"]
     verbs: ["get", "list", "watch"]
 
+## 5. Web
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: logan-app-web-admin-edit
+  labels:
+    # Grant permissions to default roles: "admin" and "edit"
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+rules:
+  - apiGroups: ["app.logancloud.com"]
+    resources: ["webboots"]
+    # Specify the verbs that represent the permissions that are granted to the role.
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "deletecollection"]
+
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: logan-app-web-admin-view
+  labels:
+    # Grant permissions to default roles: "view" and "cluster-view"
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+    rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
+rules:
+  - apiGroups: ["app.logancloud.com"]
+    resources: ["webboots"]
+    verbs: ["get", "list", "watch"]
+
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
