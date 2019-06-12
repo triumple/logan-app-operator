@@ -170,7 +170,7 @@ func InitHandler(pythonBoot *appv1.PythonBoot, scheme *runtime.Scheme,
 	client client.Client, logger logr.Logger, recorder record.EventRecorder) (handler *operator.BootHandler) {
 	boot := pythonBoot.DeepCopyBoot()
 
-	bootCfg := config.JavaConfig
+	bootCfg := config.PythonConfig
 	profileConfig, err := operator.GetProfileBootConfig(boot, logger)
 	if err != nil {
 		logger.Info(err.Error())

@@ -170,7 +170,7 @@ func InitHandler(phpBoot *appv1.PhpBoot, scheme *runtime.Scheme,
 	client client.Client, logger logr.Logger, recorder record.EventRecorder) (handler *operator.BootHandler) {
 	boot := phpBoot.DeepCopyBoot()
 
-	bootCfg := config.JavaConfig
+	bootCfg := config.PhpConfig
 	profileConfig, err := operator.GetProfileBootConfig(boot, logger)
 	if err != nil {
 		logger.Info(err.Error())
