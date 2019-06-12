@@ -71,7 +71,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-// blank assignment to verify that ReconcileJavaBoot implements reconcile.Reconciler
+// blank assignment to verify that ReconcileNodeJSBoot implements reconcile.Reconciler
 var _ reconcile.Reconciler = &ReconcileNodeJSBoot{}
 
 // ReconcileNodeJSBoot reconciles a NodeJSBoot object
@@ -170,7 +170,7 @@ func InitHandler(nodejsBoot *appv1.NodeJSBoot, scheme *runtime.Scheme,
 	client client.Client, logger logr.Logger, recorder record.EventRecorder) (handler *operator.BootHandler) {
 	boot := nodejsBoot.DeepCopyBoot()
 
-	bootCfg := config.JavaConfig
+	bootCfg := config.NodeJSConfig
 	profileConfig, err := operator.GetProfileBootConfig(boot, logger)
 	if err != nil {
 		logger.Info(err.Error())
