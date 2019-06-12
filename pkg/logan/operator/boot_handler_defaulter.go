@@ -21,7 +21,7 @@ func (handler *BootHandler) DefaultValue() bool {
 	}
 
 	//port
-	if bootSpec.Port <= 0 {
+	if bootSpec.Port <= 0 && appConfigSpec.Port > 0 {
 		logger.Info("Defaulters", "type", "port", "spec", bootSpec.Port, "default", appConfigSpec.Port)
 		bootSpec.Port = appConfigSpec.Port
 		changed = true
@@ -30,14 +30,17 @@ func (handler *BootHandler) DefaultValue() bool {
 	//replicas
 	if bootSpec.Replicas == nil || *bootSpec.Replicas < 0 {
 		// User did not specify value
-		logger.Info("Defaulters", "type", "replicas", "spec", nil, "default", appConfigSpec.Replicas)
-		newReplicas := appConfigSpec.Replicas
-		bootSpec.Replicas = &newReplicas
+		defaultReplicas := appConfigSpec.Replicas
+		if defaultReplicas <= 0 {
+			defaultReplicas = 1
+		}
+		logger.Info("Defaulters", "type", "replicas", "spec", nil, "default", defaultReplicas)
+		bootSpec.Replicas = &defaultReplicas
 		changed = true
 	}
 
 	//health: "/health"
-	if bootSpec.Health == "" {
+	if bootSpec.Health == "" && appConfigSpec.Health != "" {
 		logger.Info("Defaulters", "type", "health", "spec", bootSpec.Health, "default", appConfigSpec.Health)
 		bootSpec.Health = appConfigSpec.Health
 		changed = true
@@ -129,7 +132,7 @@ func (handler *BootHandler) DefaultValue() bool {
 	}
 
 	//subDomain:
-	if bootSpec.SubDomain == "" {
+	if bootSpec.SubDomain == "" && appConfigSpec.SubDomain != "" {
 		logger.Info("Defaulters", "type", "subDomain", "spec", bootSpec.SubDomain, "default", appConfigSpec.SubDomain)
 		bootSpec.SubDomain = appConfigSpec.SubDomain
 		changed = true
