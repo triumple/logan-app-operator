@@ -60,6 +60,11 @@ func (in *BootSpec) DeepCopyInto(out *BootSpec) {
 			(*out)[key] = val
 		}
 	}
+	if in.Command != nil {
+		in, out := &in.Command, &out.Command
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

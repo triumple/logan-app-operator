@@ -228,8 +228,8 @@ func (handler *BootHandler) NewAppContainer() *corev1.Container {
 		},
 	}
 
-	if boot.Spec.Command != "" {
-		appContainer.Command = []string{boot.Spec.Command}
+	if boot.Spec.Command != nil && len(boot.Spec.Command) > 0 {
+		appContainer.Command = boot.Spec.Command
 	}
 
 	specContainer := handler.Config.AppSpec.Container
