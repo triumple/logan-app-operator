@@ -54,41 +54,55 @@ docker-push:
 travis-build:
 	./scripts/travis-push-docker-image.sh
 
-# Redploy configmap
+# Init Operator
+initdeploy: initcm initrole initcrd
+	oc create -f deploy/operator-test.yaml -f deploy/operator-dev.yaml -n logan
+
+initcm:
+	oc create configmap logan-app-operator-config --from-file=configs/config.yaml
+
+initrole:
+	oc create -f deploy/role.yaml
+	oc create -f deploy/role_binding.yaml
+	oc create -f deploy/role_operator.yaml
+	oc create -f deploy/service_account.yaml
+
+initcrd:
+	oc create -f deploy/crds/app_v1_javaboot_crd.yaml
+
+	oc create -f deploy/crds/app_v1_phpboot_crd.yaml
+
+	oc create -f deploy/crds/app_v1_pythonboot_crd.yaml
+
+	oc create -f deploy/crds/app_v1_nodejsboot_crd.yaml
+
+	oc create -f deploy/crds/app_v1_webboot_crd.yaml
+
+# Redeploy Operator
+redeploy: recm rerole recrd
+	oc replace -f deploy/operator-test.yaml -f deploy/operator-dev.yaml -n logan
+
 recm:
 	oc delete configmap logan-app-operator-config --ignore-not-found=true
 	oc create configmap logan-app-operator-config --from-file=configs/config.yaml
 
 rerole:
-	oc delete -f deploy/role.yaml --ignore-not-found=true
-	oc create -f deploy/role.yaml
-	oc delete -f deploy/role_binding.yaml --ignore-not-found=true
-	oc create -f deploy/role_binding.yaml
-	oc delete -f deploy/role_operator.yaml --ignore-not-found=true
-	oc create -f deploy/role_operator.yaml
-	oc delete -f deploy/service_account.yaml --ignore-not-found=true
-	oc create -f deploy/service_account.yaml
+	oc replace -f deploy/role.yaml
+	oc replace -f deploy/role_binding.yaml
+	oc replace -f deploy/role_operator.yaml
+	oc replace -f deploy/service_account.yaml
 
 recrd:
-	oc delete -f deploy/crds/app_v1_javaboot_crd.yaml --ignore-not-found=true
-	oc create -f deploy/crds/app_v1_javaboot_crd.yaml
+	oc replace -f deploy/crds/app_v1_javaboot_crd.yaml
 
-	oc delete -f deploy/crds/app_v1_phpboot_crd.yaml --ignore-not-found=true
-	oc create -f deploy/crds/app_v1_phpboot_crd.yaml
+	oc replace -f deploy/crds/app_v1_phpboot_crd.yaml
 
-	oc delete -f deploy/crds/app_v1_pythonboot_crd.yaml --ignore-not-found=true
-	oc create -f deploy/crds/app_v1_pythonboot_crd.yaml
+	oc replace -f deploy/crds/app_v1_pythonboot_crd.yaml
 
-	oc delete -f deploy/crds/app_v1_nodejsboot_crd.yaml --ignore-not-found=true
-	oc create -f deploy/crds/app_v1_nodejsboot_crd.yaml
+	oc replace -f deploy/crds/app_v1_nodejsboot_crd.yaml
 
-	oc delete -f deploy/crds/app_v1_webboot_crd.yaml --ignore-not-found=true
-	oc create -f deploy/crds/app_v1_webboot_crd.yaml
+	oc replace -f deploy/crds/app_v1_webboot_crd.yaml
 
-# Redeploy controller in the configured Kubernetes cluster in ~/.kube/config
-redeploy: recm
-	oc delete -f deploy/operator-test.yaml -f deploy/operator-dev.yaml -n logan --ignore-not-found=true
-	oc create -f deploy/operator-test.yaml -f deploy/operator-dev.yaml -n logan
 
 # test java
 test-java:
@@ -134,4 +148,3 @@ test-createall:
 #  test recreate 100 times
 test-batch:
 	scripts/all.sh
-
