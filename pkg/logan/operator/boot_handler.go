@@ -228,6 +228,10 @@ func (handler *BootHandler) NewAppContainer() *corev1.Container {
 		},
 	}
 
+	if boot.Spec.Command != "" {
+		appContainer.Command = []string{boot.Spec.Command}
+	}
+
 	specContainer := handler.Config.AppSpec.Container
 	if specContainer != nil {
 		err := util.MergeOverride(&appContainer, *specContainer)

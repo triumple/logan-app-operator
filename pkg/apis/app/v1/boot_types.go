@@ -52,6 +52,8 @@ type BootSpec struct {
 	// NodeSelector is a selector which must be true for the pod to fit on a node.
 	// Selector which must match a node's labels for the pod to be scheduled on that node.
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	// Command is command for boot's container. If empty, will use image's ENTRYPOINT, specified here if needed override.
+	Command string `json:"command,omitempty"`
 }
 
 // BootStatus defines the observed state of Boot for specified types, as JavaBoot/PhpBoot/PythonBoot/NodeJSBoot

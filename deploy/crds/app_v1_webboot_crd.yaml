@@ -59,6 +59,8 @@ spec:
               type: string
             version:
               type: string
+            command:
+              type: string
           required:
             - image
             - version
