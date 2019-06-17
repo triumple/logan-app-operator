@@ -9,18 +9,16 @@ test:
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: fmt vet
-#	operator-sdk up local --namespace=logan
-	operator-sdk up local --namespace=logan --operator-flags "--config=configs/config.yaml --zap-devel --zap-level info"
+	operator-sdk up local --namespace=logan --operator-flags "--config=configs/config_local.yaml --zap-devel --zap-level info"
 
 rundebug: fmt vet
-#	operator-sdk up local --namespace=logan
-	operator-sdk up local --namespace=logan --operator-flags "--config=configs/config.yaml --zap-devel"
+	operator-sdk up local --namespace=logan --operator-flags "--config=configs/config_local.yaml --zap-devel"
 
 rundev:
-	LOGAN_ENV=dev WATCH_NAMESPACE=logan-dev operator-sdk up local --namespace=logan-dev --operator-flags "--config=configs/config.yaml --zap-devel"
+	LOGAN_ENV=dev WATCH_NAMESPACE=logan-dev operator-sdk up local --namespace=logan-dev --operator-flags "--config=configs/config_local.yaml --zap-devel"
 
 runprod:
-	LOGAN_ENV=prod WATCH_NAMESPACE=logan-prod operator-sdk up local --namespace=logan-prod --operator-flags "--config=configs/config.yaml --zap-devel"
+	LOGAN_ENV=prod WATCH_NAMESPACE=logan-prod operator-sdk up local --namespace=logan-prod --operator-flags "--config=configs/config_local.yaml --zap-devel"
 
 # Install CRDs into a cluster
 install:
