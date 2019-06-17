@@ -234,7 +234,7 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 
 	// 9 Check command
 	deployCommand := deploy.Spec.Template.Spec.Containers[0].Command
-	bootCommand := []string{boot.Spec.Command}
+	bootCommand := boot.Spec.Command
 	if !reflect.DeepEqual(deployCommand, bootCommand) {
 		logger.Info(reason, "type", "command", "Deploy", deploy.Name,
 			"old", deployCommand, "new", bootCommand)

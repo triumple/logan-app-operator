@@ -60,7 +60,9 @@ spec:
             version:
               type: string
             command:
-              type: string
+              type: array
+              items:
+                type: string
           required:
           - image
           - version
