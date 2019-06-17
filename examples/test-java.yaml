@@ -1,0 +1,25 @@
+apiVersion: app.logancloud.com/v1
+kind: JavaBoot
+metadata:
+  name: demo-javaboot
+spec:
+  # Add fields here
+#  replicas: 1
+  image: "logancloud/logan-javaboot-sample"
+  version: "latest"
+#  env:
+#    - name: APP_OPTS
+#      value: -Denv=dev
+#    - name: BUILD_TIME
+#    - name: BRANCH_NAME
+#  port: 8081
+#  resources:
+#    limits:
+#      cpu: "2"
+#      memory: "2Gi"
+#    requests:
+#      cpu: 10m
+#      memory: 1Gi
+#  health: "/health"
+#  nodeSelector:
+#    logan/env: dev

@@ -1,0 +1,24 @@
+apiVersion: app.logancloud.com/v1
+kind: PythonBoot
+metadata:
+  name: demo-pythonboot
+spec:
+  image: "logancloud/logan-phpboot-sample"
+  version: "latest"
+  replicas: 1
+#  env:
+#    - name: APP_OPTS
+#      value: -Denv=dev
+#    - name: BUILD_TIME
+#    - name: BRANCH_NAME
+#  port: 8081
+#  resources:
+#    limits:
+#      cpu: "2"
+#      memory: "2Gi"
+#    requests:
+#      cpu: 10m
+#      memory: 1Gi
+#  health: "/health"
+#  nodeSelector:
+#    logan/env: dev

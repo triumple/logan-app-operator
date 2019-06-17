@@ -120,14 +120,14 @@ test-web:
 test-all: test-java test-php test-python test-nodejs test-web
 
 test-deleteall:
-	oc delete java default-javaboot --ignore-not-found=true
-	oc delete php default-phpboot --ignore-not-found=true
-	oc delete python default-pythonboot --ignore-not-found=true
-	oc delete nodejs default-nodejsboot --ignore-not-found=true
-	oc delete nodejs default-webboot --ignore-not-found=true
+	oc delete -f examples/test-java.yaml --ignore-not-found=true
+	oc delete -f examples/test-php.yaml --ignore-not-found=true
+	oc delete -f examples/test-python.yaml --ignore-not-found=true
+	oc delete -f examples/test-nodejs.yaml --ignore-not-found=true
+	oc delete -f examples/test-web.yaml --ignore-not-found=true
 
 test-createall:
-	oc create -f examples/crds/test.yaml
+	oc create -f examples/crds/test_java.yaml
 	oc create -f examples/crds/test_php.yaml
 	oc create -f examples/crds/test_python.yaml
 	oc create -f examples/crds/test_node.yaml

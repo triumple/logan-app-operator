@@ -46,7 +46,11 @@ func AppContainerHealthPort(boot *appv1.Boot, appSpec *config.AppSpec) intstr.In
 // AppContainerImageName return image name for the created Pod's app container
 func AppContainerImageName(boot *appv1.Boot, appSpec *config.AppSpec) string {
 	registry := appSpec.Settings.Registry
-	return registry + "/" + boot.Spec.Image + ":" + boot.Spec.Version
+	if registry != "" {
+		return registry + "/" + boot.Spec.Image + ":" + boot.Spec.Version
+	} else {
+		return boot.Spec.Image + ":" + boot.Spec.Version
+	}
 }
 
 // PodLabels return labels for the created Pod

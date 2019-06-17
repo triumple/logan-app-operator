@@ -1,7 +1,7 @@
 # Temporary Build Files
 build/_output
 build/_test
-configs/config.yaml
+configs/config_local.yaml
 
 ### macOS ###
 # General
