@@ -19,3 +19,6 @@ operator-sdk generate k8s
 
 4. Add Business logic
 - logan/operator/boot_handler.go
+
+5. Add Reconcile logic(For Modify)
+- logan/operator/boot_handler_controller.go
