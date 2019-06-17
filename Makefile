@@ -69,13 +69,9 @@ initrole:
 
 initcrd:
 	oc create -f deploy/crds/app_v1_javaboot_crd.yaml
-
 	oc create -f deploy/crds/app_v1_phpboot_crd.yaml
-
 	oc create -f deploy/crds/app_v1_pythonboot_crd.yaml
-
 	oc create -f deploy/crds/app_v1_nodejsboot_crd.yaml
-
 	oc create -f deploy/crds/app_v1_webboot_crd.yaml
 
 # Redeploy Operator
@@ -94,15 +90,10 @@ rerole:
 
 recrd:
 	oc replace -f deploy/crds/app_v1_javaboot_crd.yaml
-
 	oc replace -f deploy/crds/app_v1_phpboot_crd.yaml
-
 	oc replace -f deploy/crds/app_v1_pythonboot_crd.yaml
-
 	oc replace -f deploy/crds/app_v1_nodejsboot_crd.yaml
-
 	oc replace -f deploy/crds/app_v1_webboot_crd.yaml
-
 
 # test java
 test-java:
