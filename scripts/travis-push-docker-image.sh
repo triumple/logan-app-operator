@@ -8,6 +8,11 @@ set -u
 
 export REPO="logancloud/logan-app-operator"
 
+if [[ "${TRAVIS_PULL_REQUEST}" = "false" ]]; then
+    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+    docker push ${IMG}
+fi
+
 if [[ "${TRAVIS_TAG}" != "" ]]; then
 	# For both git tags and git branches 'TRAVIS_BRANCH' contains the name.
     export TAG="${TRAVIS_BRANCH}"

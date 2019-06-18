@@ -33,11 +33,11 @@ install:
 
 script:
   - make docker-build
-  - if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then
-    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+#  - if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then
+#    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 #    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-    make docker-push;
-    fi
+#    make docker-push;
+#    fi
   - make travis-build
 
 after_script:
