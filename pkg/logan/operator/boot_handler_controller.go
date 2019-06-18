@@ -208,16 +208,36 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 
 	// 7 Check health: check fist container(boot container)
 	probe := deploy.Spec.Template.Spec.Containers[0].LivenessProbe
-	if probe != nil {
-		deployHealth := probe.HTTPGet.Path
-		bootHealth := boot.Spec.Health
-		if deployHealth != bootHealth {
+	bootHealth := *boot.Spec.Health
+	if bootHealth == "" {
+		if probe != nil {
+			// Remove the 2 existing probes.
+			deployHealth := probe.HTTPGet.Path
 			logger.Info(reason, "type", "health", "deploy", deploy.Name,
-				"old", deployHealth, "new", bootHealth)
-			deploy.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.Path = bootHealth
-			deploy.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.Path = bootHealth
-
+				"old", deployHealth, "new", "")
+			deploy.Spec.Template.Spec.Containers[0].LivenessProbe = nil
+			deploy.Spec.Template.Spec.Containers[0].ReadinessProbe = nil
 			updated = true
+		}
+	} else {
+		if probe == nil {
+			// 1. If probe is nil, add Liveness and Readiness
+			liveness, readiness := handler.GetHealthProbe()
+			logger.Info(reason, "type", "health", "deploy", deploy.Name,
+				"old", "empty", "new", bootHealth)
+			deploy.Spec.Template.Spec.Containers[0].LivenessProbe = liveness
+			deploy.Spec.Template.Spec.Containers[0].ReadinessProbe = readiness
+			updated = true
+		} else {
+			deployHealth := probe.HTTPGet.Path
+			// 2. If probe is not nil, we only need to update the health path
+			if deployHealth != bootHealth {
+				logger.Info(reason, "type", "health", "deploy", deploy.Name,
+					"old", deployHealth, "new", bootHealth)
+				deploy.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.Path = bootHealth
+				deploy.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.Path = bootHealth
+				updated = true
+			}
 		}
 	}
 

@@ -597,12 +597,13 @@ var _ = Describe("JavaBoot", func() {
 			It("testing update health", func() {
 				res := genResource()
 				replicas := int32(3)
+				health := "/health"
 				javaboot := &javabootv1.JavaBoot{
 					ObjectMeta: metav1.ObjectMeta{Name: res.bootKey.Name, Namespace: res.bootKey.Namespace},
 					Spec: javabootv1.BootSpec{
 						Replicas: &replicas,
 						Port:     8080,
-						Health:   "/health",
+						Health:   &health,
 					},
 				}
 
@@ -626,7 +627,8 @@ var _ = Describe("JavaBoot", func() {
 				boot := getBoot(res.bootKey)
 
 				//update health
-				boot.Spec.Health = "/health2"
+				health2 := "/health2"
+				boot.Spec.Health = &health2
 				updateBoot(boot)
 
 				Eventually(requests, timeout).Should(Receive(Equal(res.expectedRequest)))
@@ -1135,12 +1137,13 @@ var _ = Describe("JavaBoot", func() {
 			It("can not update health", func() {
 				res := genResource()
 				replicas := int32(3)
+				health := "/health"
 				javaboot := &javabootv1.JavaBoot{
 					ObjectMeta: metav1.ObjectMeta{Name: res.bootKey.Name, Namespace: res.bootKey.Namespace},
 					Spec: javabootv1.BootSpec{
 						Replicas: &replicas,
 						Port:     8080,
-						Health:   "/health",
+						Health:   &health,
 					},
 				}
 
