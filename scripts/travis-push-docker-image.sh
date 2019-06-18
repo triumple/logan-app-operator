@@ -12,6 +12,7 @@ if [[ "${TRAVIS_TAG}" != "" ]]; then
 	# For both git tags and git branches 'TRAVIS_BRANCH' contains the name.
     export TAG="${TRAVIS_BRANCH}"
     docker tag ${REPO}:latest "${REPO}:${TAG}"
+    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
     echo "Pushing to docker hub ${REPO}:${TAG}"
     docker push "${REPO}:${TAG}"
 fi
