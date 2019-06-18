@@ -327,6 +327,16 @@ func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service) (reconci
 		}
 	}
 
+	// 4. Check sessionAffinity
+	svcAffinity := string(svc.Spec.SessionAffinity)
+	bootAffinity := boot.Spec.SessionAffinity
+	if !(svcAffinity == bootAffinity) {
+		logger.Info(reason, "type", "sessionAffinity", "service", svc.Name, "old", svcAffinity, "new", bootAffinity)
+		svc.Spec.SessionAffinity = corev1.ServiceAffinity(bootAffinity)
+
+		updated = true
+	}
+
 	if updated {
 		err := c.Update(context.TODO(), svc)
 		if err != nil {
