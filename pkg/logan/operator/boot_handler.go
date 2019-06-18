@@ -291,18 +291,25 @@ func (handler *BootHandler) createService(port int, name string) *corev1.Service
 			Labels:      ServiceLabels(boot),
 			Annotations: ServiceAnnotation(port),
 		},
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{
-				{
-					Name:       HttpPortName,
-					Port:       int32(port),
-					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(port)},
-				},
-			},
-			Selector: PodLabels(boot),
-			Type:     corev1.ServiceTypeClusterIP,
-		},
 	}
+
+	serviceSpec := corev1.ServiceSpec{
+		Ports: []corev1.ServicePort{
+			{
+				Name:       HttpPortName,
+				Port:       int32(port),
+				TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(port)},
+			},
+		},
+		Selector: PodLabels(boot),
+		Type:     corev1.ServiceTypeClusterIP,
+	}
+
+	if boot.Spec.SessionAffinity != "" {
+		serviceSpec.SessionAffinity = corev1.ServiceAffinity(boot.Spec.SessionAffinity)
+	}
+
+	svc.Spec = serviceSpec
 
 	// Set Boot instance as the owner and controller
 	_ = controllerutil.SetControllerReference(handler.OperatorBoot, svc, handler.Scheme)

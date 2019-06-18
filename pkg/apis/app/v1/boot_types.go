@@ -54,6 +54,8 @@ type BootSpec struct {
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// Command is command for boot's container. If empty, will use image's ENTRYPOINT, specified here if needed override.
 	Command []string `json:"command,omitempty"`
+	// SessionAffinity is SessionAffinity for boot's created service. If empty, will not set
+	SessionAffinity string `json:"sessionAffinity,omitempty"`
 }
 
 // BootStatus defines the observed state of Boot for specified types, as JavaBoot/PhpBoot/PythonBoot/NodeJSBoot

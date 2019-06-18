@@ -44,8 +44,6 @@ spec:
             image:
               type: string
             nodeSelector:
-              #              additionalProperties:
-              #                type: string
               type: object
             port:
               format: int32
@@ -63,6 +61,12 @@ spec:
               type: array
               items:
                 type: string
+            sessionAffinity:
+              type: string
+              enum:
+                - ""
+                - "ClientIP"
+                - "None"
           required:
             - image
             - version

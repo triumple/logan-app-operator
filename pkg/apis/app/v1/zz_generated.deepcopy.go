@@ -52,6 +52,11 @@ func (in *BootSpec) DeepCopyInto(out *BootSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Health != nil {
+		in, out := &in.Health, &out.Health
+		*out = new(string)
+		**out = **in
+	}
 	in.Resources.DeepCopyInto(&out.Resources)
 	if in.NodeSelector != nil {
 		in, out := &in.NodeSelector, &out.NodeSelector
