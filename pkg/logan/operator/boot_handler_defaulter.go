@@ -39,10 +39,11 @@ func (handler *BootHandler) DefaultValue() bool {
 		changed = true
 	}
 
-	//health: "/health"
-	if bootSpec.Health == "" && appConfigSpec.Health != "" {
+	//health
+	if bootSpec.Health == nil && appConfigSpec.Health != "" {
 		logger.Info("Defaulters", "type", "health", "spec", bootSpec.Health, "default", appConfigSpec.Health)
-		bootSpec.Health = appConfigSpec.Health
+		overrideHealth := appConfigSpec.Health
+		bootSpec.Health = &overrideHealth
 		changed = true
 	}
 

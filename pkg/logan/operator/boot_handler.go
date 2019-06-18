@@ -184,7 +184,6 @@ func (handler *BootHandler) NewDeployment() *appsv1.Deployment {
 // NewAppContainer return a new created App Container instance
 func (handler *BootHandler) NewAppContainer() *corev1.Container {
 	boot := handler.Boot
-	healthPort := AppContainerHealthPort(boot, handler.Config.AppSpec)
 	imageName := AppContainerImageName(boot, handler.Config.AppSpec)
 
 	appContainer := corev1.Container{
@@ -197,35 +196,13 @@ func (handler *BootHandler) NewAppContainer() *corev1.Container {
 		Env:             boot.Spec.Env,
 		ImagePullPolicy: DefaultImagePullPolicy,
 		Resources:       boot.Spec.Resources,
+	}
 
-		LivenessProbe: &corev1.Probe{
-			FailureThreshold: 10,
-			Handler: corev1.Handler{
-				HTTPGet: &corev1.HTTPGetAction{
-					Path:   boot.Spec.Health,
-					Port:   healthPort,
-					Scheme: corev1.URISchemeHTTP,
-				},
-			},
-			InitialDelaySeconds: 120,
-			PeriodSeconds:       10,
-			SuccessThreshold:    1,
-			TimeoutSeconds:      5,
-		},
-		ReadinessProbe: &corev1.Probe{
-			FailureThreshold: 10,
-			Handler: corev1.Handler{
-				HTTPGet: &corev1.HTTPGetAction{
-					Path:   boot.Spec.Health,
-					Port:   healthPort,
-					Scheme: corev1.URISchemeHTTP,
-				},
-			},
-			InitialDelaySeconds: 60,
-			PeriodSeconds:       10,
-			SuccessThreshold:    1,
-			TimeoutSeconds:      5,
-		},
+	// If Spec's health is empty string, disable the health check.
+	if boot.Spec.Health != nil && *boot.Spec.Health != "" {
+		liveness, readiness := handler.GetHealthProbe()
+		appContainer.LivenessProbe = liveness
+		appContainer.ReadinessProbe = readiness
 	}
 
 	if boot.Spec.Command != nil && len(boot.Spec.Command) > 0 {
@@ -241,6 +218,42 @@ func (handler *BootHandler) NewAppContainer() *corev1.Container {
 	}
 
 	return &appContainer
+}
+
+func (handler *BootHandler) GetHealthProbe() (*corev1.Probe, *corev1.Probe) {
+	boot := handler.Boot
+	healthPort := AppContainerHealthPort(boot, handler.Config.AppSpec)
+	livenessProbe := &corev1.Probe{
+		FailureThreshold: 10,
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   *boot.Spec.Health,
+				Port:   healthPort,
+				Scheme: corev1.URISchemeHTTP,
+			},
+		},
+		InitialDelaySeconds: 120,
+		PeriodSeconds:       10,
+		SuccessThreshold:    1,
+		TimeoutSeconds:      5,
+	}
+
+	readinessProbe := &corev1.Probe{
+		FailureThreshold: 10,
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   *boot.Spec.Health,
+				Port:   healthPort,
+				Scheme: corev1.URISchemeHTTP,
+			},
+		},
+		InitialDelaySeconds: 60,
+		PeriodSeconds:       10,
+		SuccessThreshold:    1,
+		TimeoutSeconds:      5,
+	}
+
+	return livenessProbe, readinessProbe
 }
 
 // NewService returns a new created Service instance

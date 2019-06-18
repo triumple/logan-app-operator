@@ -46,7 +46,7 @@ type BootSpec struct {
 	// Reserved, not used. for latter use
 	SubDomain string `json:"subDomain,omitempty"`
 	// Health is check path for the app container.
-	Health string `json:"health,omitempty"`
+	Health *string `json:"health,omitempty"`
 	// Resources is the compute resource requirements for the app container
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 	// NodeSelector is a selector which must be true for the pod to fit on a node.
