@@ -7,7 +7,6 @@ spec:
 #  replicas: 1
   image: "logancloud/logan-javaboot-sample"
   version: "latest"
-  sessionAffinity: "ClientIP"
 #  env:
 #    - name: APP_OPTS
 #      value: -Denv=dev

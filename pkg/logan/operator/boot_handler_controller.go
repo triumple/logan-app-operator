@@ -330,11 +330,19 @@ func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service) (reconci
 	// 4. Check sessionAffinity
 	svcAffinity := string(svc.Spec.SessionAffinity)
 	bootAffinity := boot.Spec.SessionAffinity
-	if !(svcAffinity == bootAffinity) {
-		logger.Info(reason, "type", "sessionAffinity", "service", svc.Name, "old", svcAffinity, "new", bootAffinity)
-		svc.Spec.SessionAffinity = corev1.ServiceAffinity(bootAffinity)
-
-		updated = true
+	if svcAffinity == "None" || svcAffinity == "" {
+		//K8S will set sessionAffinity to "None" if the field is empty,
+		if bootAffinity != "None" && bootAffinity != "" {
+			logger.Info(reason, "type", "sessionAffinity", "service", svc.Name, "old", svcAffinity, "new", bootAffinity)
+			svc.Spec.SessionAffinity = corev1.ServiceAffinity(bootAffinity)
+			updated = true
+		}
+	} else {
+		if !(svcAffinity == bootAffinity) {
+			logger.Info(reason, "type", "sessionAffinity", "service", svc.Name, "old", svcAffinity, "new", bootAffinity)
+			svc.Spec.SessionAffinity = corev1.ServiceAffinity(bootAffinity)
+			updated = true
+		}
 	}
 
 	if updated {
