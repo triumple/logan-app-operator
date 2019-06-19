@@ -391,10 +391,30 @@ func (handler *BootHandler) ReconcileUpdateBootMeta() (reconcile.Result, error, 
 		return reconcile.Result{}, err, true, false
 	}
 
+	// 3. Update Boot's annotation if needed.
+	podList := &corev1.PodList{}
+	labelSelector := labels.SelectorFromSet(PodLabels(boot))
+	listOptions = &client.ListOptions{Namespace: boot.Namespace, LabelSelector: labelSelector}
+	err = c.List(context.TODO(), listOptions, podList)
+	if err != nil {
+		logger.Error(err, "Failed to list pods")
+		return reconcile.Result{}, err, true, false
+	}
+
+	runningCount := len(podList.Items)
+	//for _, pod := range podList.Items {
+	//	podStatus := pod.Status.Phase
+	//	if podStatus == corev1.PodRunning {
+	//		runningCount = runningCount + 1
+	//	}
+	//}
+
 	annotationMap := map[string]string{
-		DeployAnnotationKey:   depFound.Name,
-		AppTypeAnnotationKey:  AppTypeAnnotationDeploy,
-		ServicesAnnotationKey: TransferServiceNames(svcList.Items),
+		DeployAnnotationKey:          depFound.Name,
+		AppTypeAnnotationKey:         AppTypeAnnotationDeploy,
+		ServicesAnnotationKey:        TransferServiceNames(svcList.Items),
+		StatusAvailableAnnotationKey: strconv.Itoa(runningCount),
+		StatusDesiredAnnotationKey:   strconv.Itoa(int(*boot.Spec.Replicas)),
 	}
 
 	updated := handler.UpdateAnnotation(annotationMap)

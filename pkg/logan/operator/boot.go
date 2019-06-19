@@ -13,6 +13,8 @@ import (
 	"strings"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -212,4 +214,11 @@ func GetProfileBootConfig(boot *appv1.Boot, logger logr.Logger) (*config.BootCon
 	}
 
 	return nil, nil
+}
+
+func GetCurrentTimestamp() string {
+	now := metav1.Now()
+	nowBytes, _ := now.MarshalJSON()
+	return string(nowBytes[:])
+
 }

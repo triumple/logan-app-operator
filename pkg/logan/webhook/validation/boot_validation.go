@@ -7,6 +7,7 @@ import (
 	v1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
 	"github.com/logancloud/logan-app-operator/pkg/logan/operator"
 	"github.com/logancloud/logan-app-operator/pkg/logan/util"
+	"github.com/logancloud/logan-app-operator/pkg/logan/webhook"
 	admssionv1beta1 "k8s.io/api/admission/v1beta1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"net/http"
@@ -22,14 +23,6 @@ type BootValidator struct {
 	client  client.Client
 	decoder types.Decoder
 }
-
-const (
-	ApiTypeJava   = "JavaBoot"
-	ApiTypePhp    = "PhpBoot"
-	ApiTypePython = "PythonBoot"
-	ApiTypeNodeJS = "NodeJSBoot"
-	ApiTypeWeb    = "WebBoot"
-)
 
 var logger = logf.Log.WithName("logan_webhook_validation")
 
@@ -77,7 +70,7 @@ func (vHandler *BootValidator) InjectDecoder(d types.Decoder) error {
 func (vHandler *BootValidator) Validate(req types.Request) (string, bool, error) {
 	operation := req.AdmissionRequest.Operation
 
-	boot, err := vHandler.DecodeBoot(req)
+	boot, err := webhook.DecodeBoot(req, vHandler.decoder)
 	if err != nil {
 		return "Decoding request error", false, err
 	}
@@ -127,27 +120,27 @@ func (vHandler *BootValidator) BootNameExist(boot *v1.Boot) (string, bool) {
 
 	err := c.Get(context.TODO(), namespaceName, &appv1.JavaBoot{})
 	if err == nil {
-		return fmt.Sprintf("Boot's name %s exists in type %s", namespaceName, ApiTypeJava), false
+		return fmt.Sprintf("Boot's name %s exists in type %s", namespaceName, webhook.ApiTypeJava), false
 	}
 
 	err = c.Get(context.TODO(), namespaceName, &appv1.PhpBoot{})
 	if err == nil {
-		return fmt.Sprintf("Boot's name %s exists in type %s", namespaceName, ApiTypePhp), false
+		return fmt.Sprintf("Boot's name %s exists in type %s", namespaceName, webhook.ApiTypePhp), false
 	}
 
 	err = c.Get(context.TODO(), namespaceName, &appv1.PythonBoot{})
 	if err == nil {
-		return fmt.Sprintf("Boot's name %s exists in type %s", namespaceName, ApiTypePython), false
+		return fmt.Sprintf("Boot's name %s exists in type %s", namespaceName, webhook.ApiTypePython), false
 	}
 
 	err = c.Get(context.TODO(), namespaceName, &appv1.NodeJSBoot{})
 	if err == nil {
-		return fmt.Sprintf("Boot's name %s exists in type %s", namespaceName, ApiTypeNodeJS), false
+		return fmt.Sprintf("Boot's name %s exists in type %s", namespaceName, webhook.ApiTypeNodeJS), false
 	}
 
 	err = c.Get(context.TODO(), namespaceName, &appv1.WebBoot{})
 	if err == nil {
-		return fmt.Sprintf("Boot's name %s exists in type %s", namespaceName, ApiTypeWeb), false
+		return fmt.Sprintf("Boot's name %s exists in type %s", namespaceName, webhook.ApiTypeWeb), false
 	}
 
 	return "", true
@@ -241,50 +234,4 @@ func (vHandler *BootValidator) CheckEnvKeys(boot *v1.Boot, operation admssionv1b
 	}
 
 	return "", true
-}
-
-// DecodeBoot decode the Boot object from request.
-func (vHandler *BootValidator) DecodeBoot(req types.Request) (*appv1.Boot, error) {
-	decoder := vHandler.decoder
-	bootType := req.AdmissionRequest.Kind.Kind
-
-	var boot *appv1.Boot
-	if bootType == ApiTypeJava {
-		apiBoot := &v1.JavaBoot{}
-		err := decoder.Decode(req, apiBoot)
-		if err != nil {
-			return nil, err
-		}
-		boot = apiBoot.DeepCopyBoot()
-	} else if bootType == ApiTypePhp {
-		apiBoot := &v1.PhpBoot{}
-		err := decoder.Decode(req, apiBoot)
-		if err != nil {
-			return nil, err
-		}
-		boot = apiBoot.DeepCopyBoot()
-	} else if bootType == ApiTypePython {
-		apiBoot := &v1.PythonBoot{}
-		err := decoder.Decode(req, apiBoot)
-		if err != nil {
-			return nil, err
-		}
-		boot = apiBoot.DeepCopyBoot()
-	} else if bootType == ApiTypeNodeJS {
-		apiBoot := &v1.NodeJSBoot{}
-		err := decoder.Decode(req, apiBoot)
-		if err != nil {
-			return nil, err
-		}
-		boot = apiBoot.DeepCopyBoot()
-	} else if bootType == ApiTypeWeb {
-		apiBoot := &v1.WebBoot{}
-		err := decoder.Decode(req, apiBoot)
-		if err != nil {
-			return nil, err
-		}
-		boot = apiBoot.DeepCopyBoot()
-	}
-
-	return boot, nil
 }

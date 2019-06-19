@@ -5,12 +5,11 @@ import (
 	"github.com/go-logr/logr"
 	appv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
 	"github.com/logancloud/logan-app-operator/pkg/logan"
+	"github.com/logancloud/logan-app-operator/pkg/logan/config"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	"github.com/logancloud/logan-app-operator/pkg/logan/config"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -36,6 +35,10 @@ const (
 	DeployAnnotationKey   = "app.logancloud.com/deploy"
 	ServicesAnnotationKey = "app.logancloud.com/services"
 	AppTypeAnnotationKey  = "app.logancloud.com/type"
+
+	StatusAvailableAnnotationKey        = "app.logancloud.com/status.available"
+	StatusDesiredAnnotationKey          = "app.logancloud.com/status.desired"
+	StatusModificationTimeAnnotationKey = "app.logancloud.com/status.lastUpdateTimeStamp"
 
 	MutationAnnotationKey = "app.logancloud.com/mutation"
 
@@ -66,7 +69,14 @@ func (handler *BootHandler) UpdateAnnotation(annotationMap map[string]string) bo
 	}
 
 	for aKey, aValue := range annotationMap {
-		if metaData.Annotations[aKey] != aValue {
+		if metaDataVal, exist := metaData.Annotations[aKey]; exist {
+			// Annotation Map contains the key
+			if metaDataVal != aValue {
+				metaData.Annotations[aKey] = aValue
+				updated = true
+			}
+		} else {
+			// Annotation Map does not contain the key
 			metaData.Annotations[aKey] = aValue
 			updated = true
 		}

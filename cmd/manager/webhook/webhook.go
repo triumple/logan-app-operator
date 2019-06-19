@@ -2,7 +2,6 @@ package webhook
 
 import (
 	"github.com/go-logr/logr"
-	v1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
 	"github.com/logancloud/logan-app-operator/pkg/logan"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/builder"
@@ -33,24 +32,6 @@ const (
 )
 
 func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
-	// 1. Create a webhook(mutation)
-	mutationHandler := &bootmutation.BootMutator{
-		Schema:   mgr.GetScheme(),
-		Recorder: mgr.GetRecorder("logan-webhook-mutation"),
-	}
-	mutationWh, err := builder.NewWebhookBuilder().
-		Name(MutationName).
-		Mutating().
-		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update).
-		ForType(&v1.JavaBoot{}).
-		Handlers(mutationHandler).
-		WithManager(mgr).
-		Build()
-	if err != nil {
-		log.Error(err, "Creating mutation webhook error")
-	}
-
-	// 2. Create a webhook(validation)
 	rules := admissionregistrationv1beta1.RuleWithOperations{
 		Operations: []admissionregistrationv1beta1.OperationType{
 			admissionregistrationv1beta1.Create,
@@ -60,6 +41,26 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 			APIVersions: []string{"v1"},
 			Resources:   []string{"javaboots", "phpboots", "pythonboots", "nodejsboots", "webboots"}},
 	}
+
+	// 1. Create a webhook(mutation)
+	mutationHandler := &bootmutation.BootMutator{
+		Schema:   mgr.GetScheme(),
+		Recorder: mgr.GetRecorder("logan-webhook-mutation"),
+	}
+	mutationWh, err := builder.NewWebhookBuilder().
+		Name(MutationName).
+		Mutating().
+		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update).
+		//ForType(&v1.JavaBoot{}).
+		Rules(rules).
+		Handlers(mutationHandler).
+		WithManager(mgr).
+		Build()
+	if err != nil {
+		log.Error(err, "Creating mutation webhook error")
+	}
+
+	// 2. Create a webhook(validation)
 	validationHandler := &bootvalidation.BootValidator{}
 	validationWh, err := builder.NewWebhookBuilder().
 		Name(ValidationName).
@@ -74,7 +75,7 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 		log.Error(err, "Creating validation webhook error")
 	}
 
-	// Create a server(mutation)
+	// Create a server
 	whServer, err := webhook.NewServer(ServerName, mgr, webhook.ServerOptions{
 		Port:             Port,
 		CertDir:          CertDir,
