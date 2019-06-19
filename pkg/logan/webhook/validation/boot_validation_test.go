@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/logancloud/logan-app-operator/pkg/apis"
 	"github.com/logancloud/logan-app-operator/pkg/logan/config"
+	"github.com/logancloud/logan-app-operator/pkg/logan/webhook"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
@@ -65,7 +66,7 @@ var _ = Describe("validation webhook", func() {
 	Describe("validating webhook", func() {
 		It("good one", func() {
 			ar := createRequest("logan",
-				ApiTypeJava, admissionv1beta1.Create,
+				webhook.ApiTypeJava, admissionv1beta1.Create,
 				[]byte(`
 apiVersion: app.logancloud.com/v1
 kind: JavaBoot
@@ -81,7 +82,7 @@ spec:
 
 		It("ignore namespace ", func() {
 			ar := createRequest("logan-dev",
-				ApiTypeJava, admissionv1beta1.Create,
+				webhook.ApiTypeJava, admissionv1beta1.Create,
 				[]byte(`
 apiVersison: app.logancloud.com/v1
 kind: JavaBoot
@@ -97,14 +98,14 @@ spec:
 
 		It("empty raw", func() {
 			ar := createRequest("logan",
-				ApiTypeJava, admissionv1beta1.Create,
+				webhook.ApiTypeJava, admissionv1beta1.Create,
 				[]byte(``))
 			expect(ar, true)
 		})
 
 		It("error decode ", func() {
 			ar := createRequest("logan",
-				ApiTypeJava, admissionv1beta1.Create,
+				webhook.ApiTypeJava, admissionv1beta1.Create,
 				[]byte(`{"sds":"sds"""}`))
 			expect(ar, false)
 		})
@@ -127,7 +128,7 @@ spec:
 
 		It("unknow kind in raw ", func() {
 			ar := createRequest("logan",
-				ApiTypeJava, admissionv1beta1.Create,
+				webhook.ApiTypeJava, admissionv1beta1.Create,
 				[]byte(`
 apiVersion: app.logancloud.com/v1
 kind: unknow
@@ -143,7 +144,7 @@ spec:
 
 		It("check env with create operation", func() {
 			ar := createRequest("logan",
-				ApiTypeJava, admissionv1beta1.Create,
+				webhook.ApiTypeJava, admissionv1beta1.Create,
 				[]byte(`
 apiVersion: app.logancloud.com/v1
 kind: JavaBoot
@@ -162,7 +163,7 @@ spec:
 
 		It("check env with update operation ", func() {
 			ar := createRequest("logan",
-				ApiTypeJava, admissionv1beta1.Update,
+				webhook.ApiTypeJava, admissionv1beta1.Update,
 				[]byte(`
 apiVersion: app.logancloud.com/v1
 kind: JavaBoot
@@ -187,7 +188,7 @@ spec:
 
 		It("check env with update operation and empty env annotations", func() {
 			ar := createRequest("logan",
-				ApiTypeJava, admissionv1beta1.Update,
+				webhook.ApiTypeJava, admissionv1beta1.Update,
 				[]byte(`
 apiVersion: app.logancloud.com/v1
 kind: JavaBoot
@@ -210,7 +211,7 @@ spec:
 
 		It("delete global env with update operation ", func() {
 			ar := createRequest("logan",
-				ApiTypeJava, admissionv1beta1.Update,
+				webhook.ApiTypeJava, admissionv1beta1.Update,
 				[]byte(`
 apiVersion: app.logancloud.com/v1
 kind: JavaBoot
@@ -235,7 +236,7 @@ spec:
 
 		It("add global env with update operation ", func() {
 			ar := createRequest("logan",
-				ApiTypeJava, admissionv1beta1.Update,
+				webhook.ApiTypeJava, admissionv1beta1.Update,
 				[]byte(`
 apiVersion: app.logancloud.com/v1
 kind: JavaBoot
@@ -261,7 +262,7 @@ spec:
 
 		It("modify global env with update operation", func() {
 			ar := createRequest("logan",
-				ApiTypeJava, admissionv1beta1.Update,
+				webhook.ApiTypeJava, admissionv1beta1.Update,
 				[]byte(`
 apiVersion: app.logancloud.com/v1
 kind: JavaBoot
