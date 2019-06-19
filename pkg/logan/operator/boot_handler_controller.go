@@ -406,15 +406,23 @@ func Ignore(namespace string) bool {
 	oEnv := logan.OperDev
 
 	isDevNamespace := strings.HasSuffix(namespace, "-dev")
+	isAutoNamespace := strings.HasSuffix(namespace, "-auto")
 
 	// "dev" namespace
 	if oEnv == "dev" && !isDevNamespace {
 		return true
 	}
 
-	// not "dev" namespace
-	if oEnv != "dev" && isDevNamespace {
+	// "auto" namespace
+	if oEnv == "auto" && !isAutoNamespace {
 		return true
+	}
+
+	// normal namespaces
+	if oEnv != "dev" && oEnv != "auto" {
+		if isDevNamespace || isAutoNamespace {
+			return true
+		}
 	}
 
 	return false

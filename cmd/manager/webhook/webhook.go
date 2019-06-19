@@ -78,7 +78,7 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 	whServer, err := webhook.NewServer(ServerName, mgr, webhook.ServerOptions{
 		Port:             Port,
 		CertDir:          CertDir,
-		BootstrapOptions: getBootstrapOption(operatorNs),
+		BootstrapOptions: getBootstrapOption(operatorNs, log),
 	})
 	if err != nil {
 		log.Error(err, "Creating webhook server error")
@@ -90,18 +90,22 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 	}
 }
 
-func getBootstrapOption(operatorNs string) *webhook.BootstrapOptions {
+func getBootstrapOption(operatorNs string, log logr.Logger) *webhook.BootstrapOptions {
 	operatorName := OperatorName
 	svcName := ServiceName
 	mutationName := MutationCfgName
 	validationName := ValidationCfgName
 
-	if logan.OperDev == "dev" {
+	if logan.OperDev == "dev" || logan.OperDev == "auto" {
 		operatorName = operatorName + "-" + logan.OperDev
 		svcName = svcName + "-" + logan.OperDev
 		mutationName = mutationName + "-" + logan.OperDev
 		validationName = validationName + "-" + logan.OperDev
 	}
+
+	log.Info("Register Webhook info",
+		"operatorName", operatorName, "svcName", svcName,
+		"mutationName", mutationName, "validationName", validationName)
 
 	return &webhook.BootstrapOptions{
 		MutatingWebhookConfigName:   mutationName,

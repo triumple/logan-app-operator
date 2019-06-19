@@ -56,7 +56,7 @@ travis-build:
 
 # Init Operator
 initdeploy: initcm initrole initcrd
-	oc create -f deploy/operator-test.yaml -f deploy/operator-dev.yaml -n logan
+	oc create -f deploy/operator-test.yaml -f deploy/operator-dev.yaml -n logan -f deploy/operator-auto.yaml -n logan
 
 initcm:
 	oc create configmap logan-app-operator-config --from-file=configs/config.yaml
@@ -76,7 +76,7 @@ initcrd:
 
 # Redeploy Operator
 redeploy: recm rerole recrd
-	oc replace -f deploy/operator-test.yaml -f deploy/operator-dev.yaml -n logan
+	oc replace -f deploy/operator-test.yaml -f deploy/operator-dev.yaml -f deploy/operator-auto.yaml -n logan
 
 recm:
 	oc delete configmap logan-app-operator-config --ignore-not-found=true
