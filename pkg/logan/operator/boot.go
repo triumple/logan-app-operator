@@ -198,17 +198,19 @@ func DecodeAnnotationEnvs(boot *appv1.Boot) ([]corev1.EnvVar, error) {
 }
 
 func GetProfileBootConfig(boot *appv1.Boot, logger logr.Logger) (*config.BootConfig, error) {
-	if boot.Annotations != nil && boot.Annotations[config.BootProfileAnnotationKey] != "" {
-		bootProfile := boot.Annotations[config.BootProfileAnnotationKey]
-		if bootProfile == logan.BootJava || bootProfile == logan.BootPhp || bootProfile == logan.BootPython || bootProfile == logan.BootNodeJS || bootProfile == logan.BootWeb {
-			return nil, errors.New(fmt.Sprintf("Boot using profile, but profile [%s] is not allow.", bootProfile))
-		} else {
-			profileConfig := config.ProfileConfig[bootProfile]
-			if profileConfig != nil {
-				logger.Info("Boot using profile: ", "profile", bootProfile)
-				return config.ProfileConfig[bootProfile], nil
+	if boot.Annotations != nil {
+		if _, exist := boot.Annotations[config.BootProfileAnnotationKey]; exist {
+			bootProfile := boot.Annotations[config.BootProfileAnnotationKey]
+			if bootProfile == logan.BootJava || bootProfile == logan.BootPhp || bootProfile == logan.BootPython || bootProfile == logan.BootNodeJS || bootProfile == logan.BootWeb {
+				return nil, errors.New(fmt.Sprintf("Boot using profile, but profile [%s] is not allow.", bootProfile))
 			} else {
-				return nil, errors.New(fmt.Sprintf("Boot using profile, but profile [%s] config is empty: ", bootProfile))
+				profileConfig := config.ProfileConfig[bootProfile]
+				if profileConfig != nil {
+					logger.Info("Boot using profile: ", "profile", bootProfile)
+					return config.ProfileConfig[bootProfile], nil
+				} else {
+					return nil, errors.New(fmt.Sprintf("Boot using profile, but profile [%s] config is empty: ", bootProfile))
+				}
 			}
 		}
 	}
