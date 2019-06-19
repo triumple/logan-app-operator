@@ -99,7 +99,7 @@ func DecodePythonBoot(req types.Request, decoder types.Decoder) (*appv1.PythonBo
 	bootType := req.AdmissionRequest.Kind.Kind
 
 	var boot *appv1.PythonBoot
-	if bootType == ApiTypePhp {
+	if bootType == ApiTypePython {
 		boot = &v1.PythonBoot{}
 		err := decoder.Decode(req, boot)
 		if err != nil {
@@ -116,7 +116,7 @@ func DecodeNodeJSBoot(req types.Request, decoder types.Decoder) (*appv1.NodeJSBo
 	bootType := req.AdmissionRequest.Kind.Kind
 
 	var boot *appv1.NodeJSBoot
-	if bootType == ApiTypePhp {
+	if bootType == ApiTypeNodeJS {
 		boot = &v1.NodeJSBoot{}
 		err := decoder.Decode(req, boot)
 		if err != nil {
@@ -133,7 +133,7 @@ func DecodeWebBoot(req types.Request, decoder types.Decoder) (*appv1.WebBoot, er
 	bootType := req.AdmissionRequest.Kind.Kind
 
 	var boot *appv1.WebBoot
-	if bootType == ApiTypePhp {
+	if bootType == ApiTypeWeb {
 		boot = &v1.WebBoot{}
 		err := decoder.Decode(req, boot)
 		if err != nil {
