@@ -4,7 +4,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	coreV1 "k8s.io/api/core/v1"
-	"os"
 )
 
 var _ = Describe("Config", func() {
@@ -20,10 +19,25 @@ var _ = Describe("Config", func() {
 
 	Context("With default config file", func() {
 		It("Test parsing config", func() {
-			f, err := os.Open("../../../configs/config.yaml")
-			Expect(err).NotTo(HaveOccurred())
-
-			err = NewConfig(f)
+			text := `
+java:
+  oEnvs:
+    app:
+      dev:
+        env:
+          - name: TEST_ENV1
+            value: "-Denv=${ENV}"
+  app:
+    port: 8080
+    replicas: 1
+    health: /health
+    env:
+      - name: SPRING_PROFILES_ACTIVE
+        value: "${ENV}"
+      - name: SERVER_PORT
+        value: "8080"
+`
+			err := NewConfigFromString(text)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(JavaConfig.AppSpec.Port).To(BeEquivalentTo(8080))
@@ -37,11 +51,16 @@ var _ = Describe("Config", func() {
 	Context("Test app config", func() {
 
 		It("Test app config with default config", func() {
-			f, err := os.Open("../../../configs/test/case1.yaml")
+			text := `
+java:
+  settings:
+    registry: "registry.logan.local"
+  oEnvs:
+    app:
+`
+			err := NewConfigFromString(text)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = NewConfig(f)
-			Expect(err).NotTo(HaveOccurred())
 			Expect(JavaConfig.AppSpec.Port).To(BeEquivalentTo(8080))
 			Expect(JavaConfig.AppSpec.Replicas).To(BeEquivalentTo(1))
 			Expect(JavaConfig.AppSpec.Health).To(Equal("/health"))
@@ -49,11 +68,34 @@ var _ = Describe("Config", func() {
 		})
 
 		It("Test app config with oenv config", func() {
-			f, err := os.Open("../../../configs/test/case2.yaml")
+			text := `
+java:
+  settings:
+    registry: "registry.logan.local"
+  oEnvs:
+    app:
+      test:
+        port: 8082
+        replicas: 2
+        health: /health2
+        env:
+            # Podpreset
+            - name: SPRING_ZIPKIN_ENABLED2
+              value: "true"
+        nodeSelector:
+          logan/env: test
+        resources:
+          limits:
+            cpu: "2"
+            memory: "2Gi"
+          requests:
+            cpu: "1"
+            memory: "1Gi"
+        subDomain: "2exp.logan.local"
+`
+			err := NewConfigFromString(text)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = NewConfig(f)
-			Expect(err).NotTo(HaveOccurred())
 			Expect(JavaConfig.AppSpec.Port).To(BeEquivalentTo(8082))
 			Expect(JavaConfig.AppSpec.Replicas).To(BeEquivalentTo(2))
 			Expect(JavaConfig.AppSpec.Health).To(Equal("/health2"))
@@ -72,10 +114,33 @@ var _ = Describe("Config", func() {
 		})
 
 		It("Test app config with app config", func() {
-			f, err := os.Open("../../../configs/test/case3.yaml")
-			Expect(err).NotTo(HaveOccurred())
-
-			err = NewConfig(f)
+			text := `
+java:
+  settings:
+    registry: "registry.logan.local"
+  oEnvs:
+    app:
+      test:
+  app:
+    port: 8083
+    replicas: 3
+    health: /health3
+    env:
+      # Podpreset
+      - name: SPRING_ZIPKIN_ENABLED
+        value: "true"
+    nodeSelector:
+      logan/env: test
+    resources:
+      limits:
+        cpu: "2"
+        memory: "2Gi"
+      requests:
+        cpu: "1"
+        memory: "1Gi"
+    subDomain: "3exp.logan.local"
+`
+			err := NewConfigFromString(text)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(JavaConfig.AppSpec.Port).To(BeEquivalentTo(8083))
 			Expect(JavaConfig.AppSpec.Replicas).To(BeEquivalentTo(3))
@@ -95,11 +160,54 @@ var _ = Describe("Config", func() {
 		})
 
 		It("Test app config order", func() {
-			f, err := os.Open("../../../configs/test/case4.yaml")
+			text := `
+java:
+  settings:
+    registry: "registry.logan.local"
+  oEnvs:
+    app:
+      test:
+        port: 8082
+        replicas: 2
+        health: /health2
+        env:
+          # Podpreset
+          - name: SPRING_ZIPKIN_ENABLED2
+            value: "false"
+        nodeSelector:
+          logan/envA: A
+          logan/envB: B
+        resources:
+          limits:
+            cpu: "4"
+            memory: "4Gi"
+          requests:
+            cpu: "3"
+            memory: "3Gi"
+        subDomain: "2exp.logan.local"
+  app:
+    port: 8083
+    replicas: 3
+    health: /health3
+    env:
+      # Podpreset
+      - name: SPRING_ZIPKIN_ENABLED
+        value: "true"
+    nodeSelector:
+      logan/envA: NewA
+      logan/envC: C
+    resources:
+      limits:
+        cpu: "2"
+        memory: "2Gi"
+      requests:
+        cpu: "1"
+        memory: "1Gi"
+    subDomain: "3exp.logan.local"
+`
+			err := NewConfigFromString(text)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = NewConfig(f)
-			Expect(err).NotTo(HaveOccurred())
 			Expect(JavaConfig.AppSpec.Port).To(BeEquivalentTo(8082))
 			Expect(JavaConfig.AppSpec.Replicas).To(BeEquivalentTo(2))
 			Expect(JavaConfig.AppSpec.Health).To(Equal("/health2"))
@@ -115,10 +223,28 @@ var _ = Describe("Config", func() {
 		})
 
 		It("Test app config env order", func() {
-			f, err := os.Open("../../../configs/test/case5.yaml")
-			Expect(err).NotTo(HaveOccurred())
-
-			err = NewConfig(f)
+			text := `
+java:
+  settings:
+    registry: "registry.logan.local"
+  oEnvs:
+    app:
+      test:
+        env:
+          # Podpreset
+          - name: SPRING_ZIPKIN_ENABLED
+            value: "false"
+          - name: MY_OENV_APP
+            value: "B"
+  app:
+    env:
+      # Podpreset
+      - name: SPRING_ZIPKIN_ENABLED
+        value: "true"
+      - name: MY_ENV_APP
+        value: "A"
+`
+			err := NewConfigFromString(text)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(JavaConfig.AppSpec.Env[0].Name).Should(Equal("SPRING_ZIPKIN_ENABLED"))
@@ -131,10 +257,41 @@ var _ = Describe("Config", func() {
 		})
 
 		It("Test PHP app config sidecar env order", func() {
-			f, err := os.Open("../../../configs/test/case6.yaml")
-			Expect(err).NotTo(HaveOccurred())
-
-			err = NewConfig(f)
+			text := `
+php:
+  settings:
+    registry: "registry.logan.local"
+    appHealthPort: 5678
+  oEnvs:
+    app:
+      dev:
+        subDomain: "dev.logan.local"
+        nodeSelector:
+          logan/env: dev
+      test:
+        nodeSelector:
+          logan/env: test
+        subDomain: "test.logan.local"
+      prod:
+        settings:
+          registry: "harbor.logan.inner"
+        subDomain: "logan.com"
+    sidecar:
+      test:
+        env:
+          - name: A
+            value: "A"
+          - name: B
+            value: "B"
+  sideCarContainers:
+    - name: sidecar
+      env:
+        - name: A
+          value: "newA"
+        - name: C
+          value: "C"
+`
+			err := NewConfigFromString(text)
 			Expect(err).NotTo(HaveOccurred())
 
 			for _, c := range *PhpConfig.SidecarContainers {
@@ -148,10 +305,38 @@ var _ = Describe("Config", func() {
 		})
 
 		It("Test PHP app config sidecar", func() {
-			f, err := os.Open("../../../configs/test/case7.yaml")
-			Expect(err).NotTo(HaveOccurred())
-
-			err = NewConfig(f)
+			text := `
+php:
+  oEnvs:
+    sidecar:
+      test:
+  sideCarContainers:
+    - name: sidecar
+      image: '${REGISTRY}/logancloud/logan-pulse-sidecar:0.1.2'
+      imagePullPolicy: Always
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "${ENV}"
+      lifecycle:
+        preStop:
+          exec:
+            command: ["/bin/sh", "-c", "/opt/shell/sidecar_pre_stop.sh"]
+      ports:
+        - name: http
+          containerPort: 5678
+          protocol: TCP
+      resources:
+        limits:
+          cpu: '2'
+          memory: 2Gi
+        requests:
+          cpu: '1'
+          memory: 512Mi
+      volumeMounts:
+        - mountPath: /opt/data
+          name: shared-data
+`
+			err := NewConfigFromString(text)
 			Expect(err).NotTo(HaveOccurred())
 
 			for _, c := range *PhpConfig.SidecarContainers {
@@ -168,10 +353,16 @@ var _ = Describe("Config", func() {
 		})
 
 		It("Test PHP app config sidecarServices ", func() {
-			f, err := os.Open("../../../configs/test/case8.yaml")
-			Expect(err).NotTo(HaveOccurred())
+			text := `
+php:
+  settings:
+    registry: "registry.logan.local"
 
-			err = NewConfig(f)
+  sidecarServices:
+    - name: ${APP}-sidecar
+      port: 5678
+`
+			err := NewConfigFromString(text)
 			Expect(err).NotTo(HaveOccurred())
 
 			for _, s := range *PhpConfig.SidecarServices {

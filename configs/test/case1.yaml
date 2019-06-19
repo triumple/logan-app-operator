@@ -1,6 +1,0 @@
-java:
-  settings:
-    registry: "registry.logan.local"
-  oEnvs:
-    app:
-
