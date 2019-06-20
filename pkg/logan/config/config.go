@@ -76,7 +76,7 @@ type SettingsConfig struct {
 	AppHealthPort int32  `json:"appHealthPort"`
 }
 
-// 	GlobalConfig is the entry for all boot's config
+// GlobalConfig is the entry for all boot's config
 // 	- "java": default Java operator config
 // 	- "php": default Php operator config
 // 	- "python": default Python operator config
