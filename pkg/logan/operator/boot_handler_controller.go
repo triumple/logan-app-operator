@@ -21,7 +21,7 @@ import (
 // 1. Deployment not found: Create Deployment, requeue=false
 // 2. Service not found: Create Service, requeue=false
 // 3. When creating Error: requeue error requeue=true
-func (handler *BootHandler) ReconcileCreate() (reconcile.Result, error, bool) {
+func (handler *BootHandler) ReconcileCreate() (reconcile.Result, bool, error) {
 	boot := handler.Boot
 	logger := handler.Logger
 	c := handler.Client
@@ -38,13 +38,13 @@ func (handler *BootHandler) ReconcileCreate() (reconcile.Result, error, bool) {
 			if err != nil {
 				logger.Error(err, "Failed to create Deployment", "deploy", depName)
 				handler.EventFail(reason, dep.Name, err)
-				return reconcile.Result{}, err, true
+				return reconcile.Result{}, true, err
 			}
 			handler.EventNormal(reason, dep.Name)
 		} else {
 			logger.Error(err, "Failed to get Deployment")
 			handler.EventFail(reason, depName, err)
-			return reconcile.Result{}, err, true
+			return reconcile.Result{}, true, err
 		}
 	}
 
@@ -66,18 +66,18 @@ func (handler *BootHandler) ReconcileCreate() (reconcile.Result, error, bool) {
 					logger.Info("Failed to create new Service, maybe the service is not created successfully",
 						"service", svc.Name)
 					handler.EventFail(reason, svc.Name, err)
-					return reconcile.Result{}, nil, true
+					return reconcile.Result{}, true, nil
 				}
 				handler.EventNormal(reason, svc.Name)
 			}
 		} else {
 			logger.Error(err, "Failed to get Services")
 			handler.EventFail(reason, boot.Name, err)
-			return reconcile.Result{}, err, true
+			return reconcile.Result{}, true, err
 		}
 	}
 
-	return reconcile.Result{}, nil, false
+	return reconcile.Result{}, false, nil
 }
 
 // ReconcileUpdate check the fields of components, if not as desire, update it.
@@ -85,7 +85,7 @@ func (handler *BootHandler) ReconcileCreate() (reconcile.Result, error, bool) {
 // 1.1. Check Deployment's fields: "replicas", image, env, port, resources, health, nodeSelector
 // 2. Check Service's existence: error -> requeue=true
 // 2.1 Check Service's fields:
-func (handler *BootHandler) ReconcileUpdate() (reconcile.Result, error, bool) {
+func (handler *BootHandler) ReconcileUpdate() (reconcile.Result, bool, error) {
 	boot := handler.Boot
 	logger := handler.Logger
 	c := handler.Client
@@ -96,11 +96,11 @@ func (handler *BootHandler) ReconcileUpdate() (reconcile.Result, error, bool) {
 	err := c.Get(context.TODO(), types.NamespacedName{Name: depName, Namespace: boot.Namespace}, depFound)
 	if err != nil {
 		logger.Error(err, "Failed to get Deployment")
-		return reconcile.Result{Requeue: true}, err, true
+		return reconcile.Result{Requeue: true}, true, err
 	}
 	result, err, requeue := handler.reconcileUpdateDeploy(depFound)
 	if requeue {
-		return result, err, true
+		return result, true, err
 	}
 
 	//2 Service
@@ -110,17 +110,17 @@ func (handler *BootHandler) ReconcileUpdate() (reconcile.Result, error, bool) {
 	if err != nil {
 		if errors.IsNotFound(err) {
 			logger.Info("Service resource not found. Ignoring since object is not created successfully yet", "error", err)
-			return reconcile.Result{}, nil, true
+			return reconcile.Result{}, true, nil
 		}
 		logger.Error(err, "Failed to get Service")
-		return reconcile.Result{Requeue: true}, err, true
+		return reconcile.Result{Requeue: true}, true, err
 	}
 	result, err, requeue = handler.reconcileUpdateService(appSvcFound)
 	if requeue {
-		return result, err, true
+		return result, true, err
 	}
 
-	return reconcile.Result{}, nil, false
+	return reconcile.Result{}, false, nil
 }
 
 // reconcileUpdateDeploy handle update logic of Deployment
@@ -362,7 +362,7 @@ func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service) (reconci
 
 // Refer https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
 // CustomResourceSubresources(feature-gate) is only available in 1.10(Alpha), 1.11(Beta, default true)
-func (handler *BootHandler) ReconcileUpdateBootMeta() (reconcile.Result, error, bool, bool) {
+func (handler *BootHandler) ReconcileUpdateBootMeta() (reconcile.Result, bool, bool, error) {
 	logger := handler.Logger
 	boot := handler.Boot
 	c := handler.Client
@@ -374,7 +374,7 @@ func (handler *BootHandler) ReconcileUpdateBootMeta() (reconcile.Result, error, 
 	if err != nil {
 		logger.Error(err, "Failed to get Deployment")
 
-		return reconcile.Result{}, err, true, false
+		return reconcile.Result{}, true, false, err
 	}
 
 	// 2. Update Service's metadata/annotations if needed
@@ -388,7 +388,7 @@ func (handler *BootHandler) ReconcileUpdateBootMeta() (reconcile.Result, error, 
 	if err != nil {
 		logger.Error(err, "Failed to list services")
 
-		return reconcile.Result{}, err, true, false
+		return reconcile.Result{}, true, false, err
 	}
 
 	// 3. Update Boot's annotation if needed.
@@ -398,7 +398,7 @@ func (handler *BootHandler) ReconcileUpdateBootMeta() (reconcile.Result, error, 
 	err = c.List(context.TODO(), listOptions, podList)
 	if err != nil {
 		logger.Error(err, "Failed to list pods")
-		return reconcile.Result{}, err, true, false
+		return reconcile.Result{}, true, false, err
 	}
 
 	runningCount := len(podList.Items)
@@ -419,9 +419,10 @@ func (handler *BootHandler) ReconcileUpdateBootMeta() (reconcile.Result, error, 
 
 	updated := handler.UpdateAnnotation(annotationMap)
 
-	return reconcile.Result{}, nil, false, updated
+	return reconcile.Result{}, false, updated, nil
 }
 
+// Ignore returns whether we sould ignore handling for the Boot, decided by the Namespace
 func Ignore(namespace string) bool {
 	oEnv := logan.OperDev
 

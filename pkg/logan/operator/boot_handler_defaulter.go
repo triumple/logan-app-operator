@@ -6,7 +6,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// Setting the default value for CR
+// DefaultValue will set the default value for CR
 // Return true if should be updated, false if should not be updated
 func (handler *BootHandler) DefaultValue() bool {
 	logger := handler.Logger

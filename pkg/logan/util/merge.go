@@ -74,17 +74,18 @@ func MergeOverride(dst, src interface{}) error {
 	return mergo.Merge(dst, src, mergo.WithOverride, mergo.WithTransformers(overrideEnvTransformer{}))
 }
 
-// MergeOverride merge the src and dst, handle the logic of same slice keys.
+// MergeUnOverride merge the src and dst, handle the logic of same slice keys.
 // same slice keys: dst will keep not changed.
 func MergeUnOverride(dst, src interface{}) error {
 	return mergo.Merge(dst, src, mergo.WithOverride, mergo.WithTransformers(unOverrideEnvTransformer{}))
 }
 
+// MergeAppEnvs will merge the envs.
 func MergeAppEnvs(dstSpec *appv1.BootSpec, src []corev1.EnvVar) ([]corev1.EnvVar, error) {
 	keys := make([]corev1.EnvVar, 0)
 	dst := dstSpec.Env
 	for i := 0; i < len(src); i++ {
-		// 每个要merge的值
+		// Every item needed to merged
 		foundIndex := -1
 		srcValue := src[i]
 		for j := 0; j < len(dst); j++ {

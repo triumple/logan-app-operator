@@ -2,8 +2,7 @@ package v1
 
 import "github.com/logancloud/logan-app-operator/pkg/logan"
 
-// 1. Java
-// Boot -> JavaBoot
+// DeepCopyToJava will deepcopy as: Boot -> JavaBoot
 func (in *Boot) DeepCopyToJava(out *JavaBoot) {
 	*out = JavaBoot{}
 	out.TypeMeta = in.TypeMeta
@@ -13,7 +12,7 @@ func (in *Boot) DeepCopyToJava(out *JavaBoot) {
 	return
 }
 
-// Boot -> JavaBoot
+// DeepCopyJava will deepcopy as: Boot -> JavaBoot
 func (in *Boot) DeepCopyJava() *JavaBoot {
 	if in == nil {
 		return nil
@@ -23,7 +22,7 @@ func (in *Boot) DeepCopyJava() *JavaBoot {
 	return out
 }
 
-// JavaBoot->Boot
+// DeepCopyIntoBoot will deepcopy as: JavaBoot->Boot
 func (in *JavaBoot) DeepCopyIntoBoot(out *Boot) {
 	*out = Boot{}
 	out.TypeMeta = in.TypeMeta
@@ -33,7 +32,7 @@ func (in *JavaBoot) DeepCopyIntoBoot(out *Boot) {
 	return
 }
 
-// JavaBoot->Boot
+// DeepCopyBoot will deepcopy as: JavaBoot->Boot
 func (in *JavaBoot) DeepCopyBoot() *Boot {
 	if in == nil {
 		return nil
@@ -47,7 +46,7 @@ func (in *JavaBoot) DeepCopyBoot() *Boot {
 }
 
 // 2. PHP
-// Boot -> PhpBoot
+// DeepCopyToPhp will deepcopy as: Boot -> PhpBoot
 func (in *Boot) DeepCopyToPhp(out *PhpBoot) {
 	*out = PhpBoot{}
 	out.TypeMeta = in.TypeMeta
@@ -57,7 +56,7 @@ func (in *Boot) DeepCopyToPhp(out *PhpBoot) {
 	return
 }
 
-// Boot -> PhpBoot
+// DeepCopyPhp will deepcopy as: Boot -> PhpBoot
 func (in *Boot) DeepCopyPhp() *PhpBoot {
 	if in == nil {
 		return nil
@@ -67,7 +66,7 @@ func (in *Boot) DeepCopyPhp() *PhpBoot {
 	return out
 }
 
-// PhpBoot -> Boot
+// DeepCopyIntoBoot will deepcopy as: PhpBoot -> Boot
 func (in *PhpBoot) DeepCopyIntoBoot(out *Boot) {
 	*out = Boot{}
 	out.TypeMeta = in.TypeMeta
@@ -77,7 +76,7 @@ func (in *PhpBoot) DeepCopyIntoBoot(out *Boot) {
 	return
 }
 
-// PhpBoot -> Boot
+// DeepCopyBoot will deepcopy as: PhpBoot -> Boot
 func (in *PhpBoot) DeepCopyBoot() *Boot {
 	if in == nil {
 		return nil
@@ -91,7 +90,7 @@ func (in *PhpBoot) DeepCopyBoot() *Boot {
 }
 
 // 3. Python
-// Boot -> PythonBoot
+// DeepCopyToPython will deepcopy as: Boot -> PythonBoot
 func (in *Boot) DeepCopyToPython(out *PythonBoot) {
 	*out = PythonBoot{}
 	out.TypeMeta = in.TypeMeta
@@ -101,7 +100,7 @@ func (in *Boot) DeepCopyToPython(out *PythonBoot) {
 	return
 }
 
-// Boot -> PythonBoot
+// DeepCopyPython will deepcopy as: Boot -> PythonBoot
 func (in *Boot) DeepCopyPython() *PythonBoot {
 	if in == nil {
 		return nil
@@ -111,7 +110,7 @@ func (in *Boot) DeepCopyPython() *PythonBoot {
 	return out
 }
 
-// PythonBoot -> Boot
+// DeepCopyIntoBoot will deepcopy as: PythonBoot -> Boot
 func (in *PythonBoot) DeepCopyIntoBoot(out *Boot) {
 	*out = Boot{}
 	out.TypeMeta = in.TypeMeta
@@ -121,7 +120,7 @@ func (in *PythonBoot) DeepCopyIntoBoot(out *Boot) {
 	return
 }
 
-// PythonBoot -> Boot
+// DeepCopyBoot will deepcopy as: PythonBoot -> Boot
 func (in *PythonBoot) DeepCopyBoot() *Boot {
 	if in == nil {
 		return nil
@@ -136,7 +135,7 @@ func (in *PythonBoot) DeepCopyBoot() *Boot {
 }
 
 // 4. NodeJS
-// Boot -> NodeJSBoot
+// DeepCopyToNodeJS will deepcopy as: Boot -> NodeJSBoot
 func (in *Boot) DeepCopyToNodeJS(out *NodeJSBoot) {
 	*out = NodeJSBoot{}
 	out.TypeMeta = in.TypeMeta
@@ -146,7 +145,7 @@ func (in *Boot) DeepCopyToNodeJS(out *NodeJSBoot) {
 	return
 }
 
-// Boot -> NodeJSBoot
+// DeepCopyNodeJS will deepcopy as: Boot -> NodeJSBoot
 func (in *Boot) DeepCopyNodeJS() *NodeJSBoot {
 	if in == nil {
 		return nil
@@ -156,7 +155,7 @@ func (in *Boot) DeepCopyNodeJS() *NodeJSBoot {
 	return out
 }
 
-// NodeJSBoot -> Boot
+// DeepCopyIntoBoot will deepcopy as: NodeJSBoot -> Boot
 func (in *NodeJSBoot) DeepCopyIntoBoot(out *Boot) {
 	*out = Boot{}
 	out.TypeMeta = in.TypeMeta
@@ -166,7 +165,7 @@ func (in *NodeJSBoot) DeepCopyIntoBoot(out *Boot) {
 	return
 }
 
-// NodeJSBoot -> Boot
+// DeepCopyBoot will deepcopy as: NodeJSBoot -> Boot
 func (in *NodeJSBoot) DeepCopyBoot() *Boot {
 	if in == nil {
 		return nil
@@ -180,7 +179,7 @@ func (in *NodeJSBoot) DeepCopyBoot() *Boot {
 }
 
 // 5. Web
-// Boot -> WebBoot
+// DeepCopyToWeb will deepcopy as:  Boot -> WebBoot
 func (in *Boot) DeepCopyToWeb(out *WebBoot) {
 	*out = WebBoot{}
 	out.TypeMeta = in.TypeMeta
@@ -190,7 +189,7 @@ func (in *Boot) DeepCopyToWeb(out *WebBoot) {
 	return
 }
 
-// Boot -> WebBoot
+// DeepCopyWeb will deepcopy as: Boot -> WebBoot
 func (in *Boot) DeepCopyWeb() *WebBoot {
 	if in == nil {
 		return nil
@@ -200,7 +199,7 @@ func (in *Boot) DeepCopyWeb() *WebBoot {
 	return out
 }
 
-// WebBoot -> Boot
+// DeepCopyIntoBoot will deepcopy as: WebBoot -> Boot
 func (in *WebBoot) DeepCopyIntoBoot(out *Boot) {
 	*out = Boot{}
 	out.TypeMeta = in.TypeMeta
@@ -210,7 +209,7 @@ func (in *WebBoot) DeepCopyIntoBoot(out *Boot) {
 	return
 }
 
-// WebBoot -> Boot
+// DeepCopyBoot will deepcopy as: WebBoot -> Boot
 func (in *WebBoot) DeepCopyBoot() *Boot {
 	if in == nil {
 		return nil
