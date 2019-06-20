@@ -8,11 +8,16 @@ import (
 )
 
 const (
-	ApiTypeJava   = "JavaBoot"
-	ApiTypePhp    = "PhpBoot"
+	// ApiTypeJava is the type for JavaBoot in decoding schema
+	ApiTypeJava = "JavaBoot"
+	// ApiTypePhp is the type for PhpBoot in decoding schema
+	ApiTypePhp = "PhpBoot"
+	// ApiTypePython is the type for PythonBoot in decoding schema
 	ApiTypePython = "PythonBoot"
+	// ApiTypeNodeJS is the type for NodeJSBoot in decoding schema
 	ApiTypeNodeJS = "NodeJSBoot"
-	ApiTypeWeb    = "WebBoot"
+	// ApiTypeWeb is the type for WebBoot in decoding schema
+	ApiTypeWeb = "WebBoot"
 )
 
 // DecodeBoot decode the Boot object from request.

@@ -45,7 +45,6 @@ func (in *JavaBoot) DeepCopyBoot() *Boot {
 	return out
 }
 
-// 2. PHP
 // DeepCopyToPhp will deepcopy as: Boot -> PhpBoot
 func (in *Boot) DeepCopyToPhp(out *PhpBoot) {
 	*out = PhpBoot{}
@@ -89,7 +88,6 @@ func (in *PhpBoot) DeepCopyBoot() *Boot {
 	return out
 }
 
-// 3. Python
 // DeepCopyToPython will deepcopy as: Boot -> PythonBoot
 func (in *Boot) DeepCopyToPython(out *PythonBoot) {
 	*out = PythonBoot{}
@@ -134,7 +132,6 @@ func (in *PythonBoot) DeepCopyBoot() *Boot {
 	return out
 }
 
-// 4. NodeJS
 // DeepCopyToNodeJS will deepcopy as: Boot -> NodeJSBoot
 func (in *Boot) DeepCopyToNodeJS(out *NodeJSBoot) {
 	*out = NodeJSBoot{}
@@ -178,7 +175,6 @@ func (in *NodeJSBoot) DeepCopyBoot() *Boot {
 	return out
 }
 
-// 5. Web
 // DeepCopyToWeb will deepcopy as:  Boot -> WebBoot
 func (in *Boot) DeepCopyToWeb(out *WebBoot) {
 	*out = WebBoot{}

@@ -22,10 +22,10 @@ import (
 )
 
 const (
-	DefaultAppName               = "app"
-	DefaultImagePullPolicy       = "Always"
-	DefaultRevisionHistoryLimits = int(5)
-	DefaultWeight                = 100
+	defaultAppName               = "app"
+	defaultImagePullPolicy       = "Always"
+	defaultRevisionHistoryLimits = int(5)
+	defaultWeight                = 100
 
 	EnvAnnotationKey        = "app.logancloud.com/env"
 	EnvAnnotationValue      = "generated"
@@ -39,8 +39,6 @@ const (
 	StatusAvailableAnnotationKey        = "app.logancloud.com/status.available"
 	StatusDesiredAnnotationKey          = "app.logancloud.com/status.desired"
 	StatusModificationTimeAnnotationKey = "app.logancloud.com/status.lastUpdateTimeStamp"
-
-	MutationAnnotationKey = "app.logancloud.com/mutation"
 
 	EventTypeNormal  = "Normal"
 	EventTypeWarning = "Warning"
@@ -91,7 +89,7 @@ func (handler *BootHandler) NewDeployment() *appsv1.Deployment {
 	boot := handler.Boot
 	bootCfg := handler.Config
 
-	revisionHistoryLimits := int32(DefaultRevisionHistoryLimits)
+	revisionHistoryLimits := int32(defaultRevisionHistoryLimits)
 	podLabels := PodLabels(boot)
 	deployLabels := DeployLabels(boot)
 
@@ -134,7 +132,7 @@ func (handler *BootHandler) NewDeployment() *appsv1.Deployment {
 						PodAntiAffinity: &corev1.PodAntiAffinity{
 							PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
 								{
-									Weight: DefaultWeight,
+									Weight: defaultWeight,
 									PodAffinityTerm: corev1.PodAffinityTerm{
 										LabelSelector: &metav1.LabelSelector{
 											MatchExpressions: []metav1.LabelSelectorRequirement{
@@ -198,13 +196,13 @@ func (handler *BootHandler) NewAppContainer() *corev1.Container {
 
 	appContainer := corev1.Container{
 		Image: imageName,
-		Name:  DefaultAppName,
+		Name:  defaultAppName,
 		Ports: []corev1.ContainerPort{{
 			ContainerPort: boot.Spec.Port,
 			Name:          HttpPortName,
 		}},
 		Env:             boot.Spec.Env,
-		ImagePullPolicy: DefaultImagePullPolicy,
+		ImagePullPolicy: defaultImagePullPolicy,
 		Resources:       boot.Spec.Resources,
 	}
 

@@ -16,19 +16,19 @@ import (
 )
 
 const (
-	OperatorName = "logan-app-operator"
+	operatorName = "logan-app-operator"
 
 	//Webhook Server
-	Port        = 8443
-	ServerName  = "logan-app-webhook-server"
-	CertDir     = "/etc/webhook/cert"
-	ServiceName = "logan-app-webhook"
+	port        = 8443
+	serverName  = "logan-app-webhook-server"
+	certDir     = "/etc/webhook/cert"
+	serviceName = "logan-app-webhook"
 
-	MutationName    = "mutation.app.logancloud.com"
-	MutationCfgName = "logan-app-webhook-mutation"
+	mutationName    = "mutation.app.logancloud.com"
+	mutationCfgName = "logan-app-webhook-mutation"
 
-	ValidationName    = "validation.app.logancloud.com"
-	ValidationCfgName = "logan-app-webhook-validation"
+	validationName    = "validation.app.logancloud.com"
+	validationCfgName = "logan-app-webhook-validation"
 )
 
 func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
@@ -48,7 +48,7 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 		Recorder: mgr.GetRecorder("logan-webhook-mutation"),
 	}
 	mutationWh, err := builder.NewWebhookBuilder().
-		Name(MutationName).
+		Name(mutationName).
 		Mutating().
 		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update).
 		//ForType(&v1.JavaBoot{}).
@@ -63,7 +63,7 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 	// 2. Create a webhook(validation)
 	validationHandler := &bootvalidation.BootValidator{}
 	validationWh, err := builder.NewWebhookBuilder().
-		Name(ValidationName).
+		Name(validationName).
 		Validating().
 		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update).
 		//ForType(&v1.JavaBoot{}).
@@ -76,9 +76,9 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 	}
 
 	// Create a server
-	whServer, err := webhook.NewServer(ServerName, mgr, webhook.ServerOptions{
-		Port:             Port,
-		CertDir:          CertDir,
+	whServer, err := webhook.NewServer(serverName, mgr, webhook.ServerOptions{
+		Port:             port,
+		CertDir:          certDir,
 		BootstrapOptions: getBootstrapOption(operatorNs, log),
 	})
 	if err != nil {
@@ -92,10 +92,10 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 }
 
 func getBootstrapOption(operatorNs string, log logr.Logger) *webhook.BootstrapOptions {
-	operatorName := OperatorName
-	svcName := ServiceName
-	mutationName := MutationCfgName
-	validationName := ValidationCfgName
+	operatorName := operatorName
+	svcName := serviceName
+	mutationName := mutationCfgName
+	validationName := validationCfgName
 
 	if logan.OperDev == "dev" || logan.OperDev == "auto" {
 		operatorName = operatorName + "-" + logan.OperDev

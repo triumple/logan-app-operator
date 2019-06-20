@@ -28,6 +28,7 @@ var logger = logf.Log.WithName("logan_webhook_validation")
 
 var _ admission.Handler = &BootValidator{}
 
+// Handle is the actual logic that will be called by every webhook request
 func (vHandler *BootValidator) Handle(ctx context.Context, req types.Request) types.Response {
 	if operator.Ignore(req.AdmissionRequest.Namespace) {
 		return admission.ValidationResponse(true, "")
