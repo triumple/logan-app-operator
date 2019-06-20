@@ -183,8 +183,6 @@ func (handler *BootHandler) DefaultEnvValue() bool {
 	bootSpec := handler.OperatorSpec
 	bootMeta := handler.OperatorMeta
 
-	var changed = false
-
 	//env:
 	// annotation-1: Boot Spec is modified，clear value of annotation's env and generation
 	if bootMeta.Annotations == nil {
@@ -229,6 +227,7 @@ func (handler *BootHandler) DefaultEnvValue() bool {
 		BootImagesAnnotationKey: AppContainerImageName(handler.Boot, handler.Config.AppSpec),
 	}
 
+	var changed bool
 	updated := handler.UpdateAnnotation(annotationMap)
 	if updated {
 		mergeEnvs := make([]corev1.EnvVar, 0)
