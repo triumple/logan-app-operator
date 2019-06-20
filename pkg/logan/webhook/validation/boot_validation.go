@@ -5,6 +5,7 @@ import (
 	"fmt"
 	appv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
 	v1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
+	"github.com/logancloud/logan-app-operator/pkg/logan/config"
 	"github.com/logancloud/logan-app-operator/pkg/logan/operator"
 	"github.com/logancloud/logan-app-operator/pkg/logan/util"
 	"github.com/logancloud/logan-app-operator/pkg/logan/webhook"
@@ -179,59 +180,63 @@ func (vHandler *BootValidator) CheckEnvKeys(boot *v1.Boot, operation admssionv1b
 	}
 
 	if operation == admssionv1beta1.Update {
-		bootMetaEnvs, err := operator.DecodeAnnotationEnvs(boot)
-		if err != nil {
-			logger.Error(err, "Boot's annotation env decode error")
-			return "", true
+		return checkEnvUpdate(configSpec, boot)
+	}
+
+	return "", true
+}
+
+func checkEnvUpdate(configSpec *config.AppSpec, boot *v1.Boot) (string, bool) {
+	bootMetaEnvs, err := operator.DecodeAnnotationEnvs(boot)
+	if err != nil {
+		logger.Error(err, "Boot's annotation env decode error")
+		return "", true
+	}
+
+	if bootMetaEnvs == nil {
+		// First update(By Controller), or manually deleting the annotation's env.
+		logger.Info("Boot's annotation env decode empty",
+			"namespace", boot.Namespace, "name", boot.Name)
+		return "", true
+	}
+
+	deleted, added, modified := util.Difference2(bootMetaEnvs, boot.Spec.Env)
+
+	logger.V(2).Info("Validating Boot", "deleted", deleted,
+		"added", added, "modified", modified)
+
+	for _, cfgEnv := range configSpec.Env {
+		cfgEnvName := cfgEnv.Name
+		// Decode the ${APP}, ${ENV} context
+		cfgEnvValue, _ := operator.Decode(boot, cfgEnv.Value)
+
+		// 1. Manual Delete key of Env: If key exists in global settings, valid is false.
+		for _, env := range deleted {
+			if env.Name == cfgEnvName {
+				return fmt.Sprintf("Boot's deleted Env [%s=%s] not allowed with settings [%s=%s]",
+					env.Name, env.Value, cfgEnvName, cfgEnvValue), false
+			}
 		}
 
-		if bootMetaEnvs == nil {
-			// First update(By Controller), or manually deleting the annotation's env.
-			logger.Info("Boot's annotation env decode empty",
-				"namespace", boot.Namespace, "name", boot.Name)
-			return "", true
-		}
-
-		deleted, added, modified := util.Difference2(bootMetaEnvs, boot.Spec.Env)
-
-		logger.V(2).Info("Validating Boot", "deleted", deleted,
-			"added", added, "modified", modified)
-
-		for _, cfgEnv := range configSpec.Env {
-			cfgEnvName := cfgEnv.Name
-			// Decode the ${APP}, ${ENV} context
-			cfgEnvValue, _ := operator.Decode(boot, cfgEnv.Value)
-
-			// 1. Manual Delete key of Env: If key exists in global settings, valid is false.
-			for _, env := range deleted {
-				if env.Name == cfgEnvName {
-					return fmt.Sprintf("Boot's deleted Env [%s=%s] not allowed with settings [%s=%s]",
+		// 2. Manual Add key of Env: If key exists in global settings, and value not equal, valid is false.
+		for _, env := range added {
+			if env.Name == cfgEnvName {
+				if env.Value != cfgEnvValue {
+					return fmt.Sprintf("Boot's added Env [%s=%s] not allowed with settings [%s=%s]",
 						env.Name, env.Value, cfgEnvName, cfgEnvValue), false
 				}
 			}
+		}
 
-			// 2. Manual Add key of Env: If key exists in global settings, and value not equal, valid is false.
-			for _, env := range added {
-				if env.Name == cfgEnvName {
-					if env.Value != cfgEnvValue {
-						return fmt.Sprintf("Boot's added Env [%s=%s] not allowed with settings [%s=%s]",
-							env.Name, env.Value, cfgEnvName, cfgEnvValue), false
-					}
-				}
-			}
-
-			// 3. Manual Modify value of Env: If key exists in global settings, and value not equal, valid is false.
-			for _, env := range modified {
-				if env.Name == cfgEnvName {
-					if env.Value != cfgEnvValue {
-						return fmt.Sprintf("Boot's edit Env [%s=%s] not allowed with settings [%s=%s]",
-							env.Name, env.Value, cfgEnvName, cfgEnvValue), false
-					}
+		// 3. Manual Modify value of Env: If key exists in global settings, and value not equal, valid is false.
+		for _, env := range modified {
+			if env.Name == cfgEnvName {
+				if env.Value != cfgEnvValue {
+					return fmt.Sprintf("Boot's edit Env [%s=%s] not allowed with settings [%s=%s]",
+						env.Name, env.Value, cfgEnvName, cfgEnvValue), false
 				}
 			}
 		}
-
-		return "", true
 	}
 
 	return "", true

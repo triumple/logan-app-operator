@@ -348,7 +348,7 @@ func (handler *BootHandler) EventNormal(reason string, obj string) {
 	recorder.Event(boot, eventTypeNormal, reason, fmt.Sprintf("Successful: obj=%s", obj))
 }
 
-// EventNormal will record the fail event string
+// EventFail will record the fail event string
 func (handler *BootHandler) EventFail(reason string, obj string, err error) {
 	recorder := handler.Recorder
 	boot := handler.Boot
