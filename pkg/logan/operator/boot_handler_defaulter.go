@@ -183,7 +183,7 @@ func (handler *BootHandler) DefaultEnvValue() bool {
 	bootSpec := handler.OperatorSpec
 	bootMeta := handler.OperatorMeta
 
-	changed := false
+	var changed = false
 
 	//env:
 	// annotation-1: Boot Spec is modified，clear value of annotation's env and generation
