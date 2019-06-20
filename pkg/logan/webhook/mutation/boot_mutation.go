@@ -40,6 +40,7 @@ var logger = logf.Log.WithName("logan_webhook_mutation")
 
 var _ admission.Handler = &BootMutator{}
 
+// Handle is the actual logic that will be called by every webhook request
 func (mHandler *BootMutator) Handle(ctx context.Context, req types.Request) types.Response {
 	if operator.Ignore(req.AdmissionRequest.Namespace) {
 		return admission.PatchResponse(&v1.Boot{}, &v1.Boot{})
@@ -78,7 +79,7 @@ func (mHandler *BootMutator) mutateBoot(ctx context.Context, req types.Request) 
 
 		marshaledBoot, err := json.Marshal(bootCopy)
 		if err != nil {
-			return admission.ErrorResponse(http.StatusInternalServerError, err),err
+			return admission.ErrorResponse(http.StatusInternalServerError, err), err
 		}
 		return PatchResponseFromRaw(req.AdmissionRequest.Object.Raw, marshaledBoot), nil
 	} else if bootType == webhook.ApiTypePhp {
@@ -95,7 +96,7 @@ func (mHandler *BootMutator) mutateBoot(ctx context.Context, req types.Request) 
 
 		marshaledBoot, err := json.Marshal(bootCopy)
 		if err != nil {
-			return admission.ErrorResponse(http.StatusInternalServerError, err),err
+			return admission.ErrorResponse(http.StatusInternalServerError, err), err
 		}
 		return PatchResponseFromRaw(req.AdmissionRequest.Object.Raw, marshaledBoot), nil
 	} else if bootType == webhook.ApiTypePython {
@@ -112,7 +113,7 @@ func (mHandler *BootMutator) mutateBoot(ctx context.Context, req types.Request) 
 
 		marshaledBoot, err := json.Marshal(bootCopy)
 		if err != nil {
-			return admission.ErrorResponse(http.StatusInternalServerError, err),err
+			return admission.ErrorResponse(http.StatusInternalServerError, err), err
 		}
 		return PatchResponseFromRaw(req.AdmissionRequest.Object.Raw, marshaledBoot), nil
 	} else if bootType == webhook.ApiTypeNodeJS {
@@ -129,7 +130,7 @@ func (mHandler *BootMutator) mutateBoot(ctx context.Context, req types.Request) 
 
 		marshaledBoot, err := json.Marshal(bootCopy)
 		if err != nil {
-			return admission.ErrorResponse(http.StatusInternalServerError, err),err
+			return admission.ErrorResponse(http.StatusInternalServerError, err), err
 		}
 		return PatchResponseFromRaw(req.AdmissionRequest.Object.Raw, marshaledBoot), nil
 	} else if bootType == webhook.ApiTypeWeb {
@@ -146,7 +147,7 @@ func (mHandler *BootMutator) mutateBoot(ctx context.Context, req types.Request) 
 
 		marshaledBoot, err := json.Marshal(bootCopy)
 		if err != nil {
-			return admission.ErrorResponse(http.StatusInternalServerError, err),err
+			return admission.ErrorResponse(http.StatusInternalServerError, err), err
 		}
 		return PatchResponseFromRaw(req.AdmissionRequest.Object.Raw, marshaledBoot), nil
 	}
@@ -226,4 +227,3 @@ func (mHandler *BootMutator) InjectDecoder(d types.Decoder) error {
 	mHandler.decoder = d
 	return nil
 }
-

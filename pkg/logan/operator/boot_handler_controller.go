@@ -98,7 +98,7 @@ func (handler *BootHandler) ReconcileUpdate() (reconcile.Result, bool, error) {
 		logger.Error(err, "Failed to get Deployment")
 		return reconcile.Result{Requeue: true}, true, err
 	}
-	result, err, requeue := handler.reconcileUpdateDeploy(depFound)
+	result, requeue, err := handler.reconcileUpdateDeploy(depFound)
 	if requeue {
 		return result, true, err
 	}
@@ -115,7 +115,7 @@ func (handler *BootHandler) ReconcileUpdate() (reconcile.Result, bool, error) {
 		logger.Error(err, "Failed to get Service")
 		return reconcile.Result{Requeue: true}, true, err
 	}
-	result, err, requeue = handler.reconcileUpdateService(appSvcFound)
+	result, requeue, err = handler.reconcileUpdateService(appSvcFound)
 	if requeue {
 		return result, true, err
 	}
@@ -124,7 +124,7 @@ func (handler *BootHandler) ReconcileUpdate() (reconcile.Result, bool, error) {
 }
 
 // reconcileUpdateDeploy handle update logic of Deployment
-func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (reconcile.Result, error, bool) {
+func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (reconcile.Result, bool, error) {
 	logger := handler.Logger
 	boot := handler.Boot
 	c := handler.Client
@@ -269,18 +269,18 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 			logger.Info("Failed to update Deployment", "deploy", deploy.Name, "err", err.Error())
 			handler.EventFail(reason, deploy.GetName(), err)
 
-			return reconcile.Result{}, err, true
+			return reconcile.Result{}, true, err
 		}
 
 		handler.EventNormal(reason, deploy.GetName())
-		return reconcile.Result{Requeue: true}, nil, true
+		return reconcile.Result{Requeue: true}, true, nil
 	}
 
-	return reconcile.Result{}, nil, false
+	return reconcile.Result{}, false, nil
 }
 
 // reconcileUpdateService handle update logic of Service
-func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service) (reconcile.Result, error, bool) {
+func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service) (reconcile.Result, bool, error) {
 	boot := handler.Boot
 	logger := handler.Logger
 	c := handler.Client
@@ -351,13 +351,13 @@ func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service) (reconci
 			logger.Error(err, "Failed to update Service", "type", "port", "service", svc.Name)
 			handler.EventFail(reason, svc.GetName(), err)
 
-			return reconcile.Result{}, err, true
+			return reconcile.Result{}, true, err
 		}
 
 		handler.EventNormal(reason, svc.GetName())
 	}
 
-	return reconcile.Result{}, nil, false
+	return reconcile.Result{}, false, nil
 }
 
 // Refer https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
@@ -422,7 +422,7 @@ func (handler *BootHandler) ReconcileUpdateBootMeta() (reconcile.Result, bool, b
 	return reconcile.Result{}, false, updated, nil
 }
 
-// Ignore returns whether we sould ignore handling for the Boot, decided by the Namespace
+// Ignore returns whether we should ignore handling for the Boot, decided by the Namespace
 func Ignore(namespace string) bool {
 	oEnv := logan.OperDev
 
