@@ -112,24 +112,24 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 		// Error reading the object - requeue the request.
 		logger.Error(err, "Failed to get Boot")
 		return reconcile.Result{}, err
-	} else {
-		handler = InitHandler(javaBoot, r.scheme, r.client, logger, r.recorder)
+	}
 
-		changed := handler.DefaultValue()
+	handler = InitHandler(javaBoot, r.scheme, r.client, logger, r.recorder)
 
-		//Update the Boot's default Value
-		if changed {
-			reason := "Updating Boot with Defaulters"
-			logger.Info(reason)
-			err = r.client.Update(context.TODO(), javaBoot)
-			if err != nil {
-				logger.Info("Failed to update Boot", "boot", javaBoot)
-				handler.EventFail(reason, javaBoot.Name, err)
-				return reconcile.Result{Requeue: true}, nil
-			}
-			handler.EventNormal(reason, javaBoot.Name)
+	changed := handler.DefaultValue()
+
+	//Update the Boot's default Value
+	if changed {
+		reason := "Updating Boot with Defaulters"
+		logger.Info(reason)
+		err = r.client.Update(context.TODO(), javaBoot)
+		if err != nil {
+			logger.Info("Failed to update Boot", "boot", javaBoot)
+			handler.EventFail(reason, javaBoot.Name, err)
 			return reconcile.Result{Requeue: true}, nil
 		}
+		handler.EventNormal(reason, javaBoot.Name)
+		return reconcile.Result{Requeue: true}, nil
 	}
 
 	// 1. Check the existence of components, if not exist, create new one.
@@ -166,6 +166,7 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 	return reconcile.Result{}, nil
 }
 
+// InitHandler will create the Handler for handling logic of Boot
 func InitHandler(javaBoot *appv1.JavaBoot, scheme *runtime.Scheme,
 	client client.Client, logger logr.Logger, recorder record.EventRecorder) (handler *operator.BootHandler) {
 	boot := javaBoot.DeepCopyBoot()

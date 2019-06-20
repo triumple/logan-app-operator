@@ -112,24 +112,24 @@ func (r *ReconcileWebBoot) Reconcile(request reconcile.Request) (reconcile.Resul
 		// Error reading the object - requeue the request.
 		logger.Error(err, "Failed to get Boot")
 		return reconcile.Result{}, err
-	} else {
-		handler = InitHandler(webBoot, r.scheme, r.client, logger, r.recorder)
+	}
 
-		changed := handler.DefaultValue()
+	handler = InitHandler(webBoot, r.scheme, r.client, logger, r.recorder)
 
-		//Update the Boot's default Value
-		if changed {
-			reason := "Updating Boot with Defaulters"
-			logger.Info(reason)
-			err = r.client.Update(context.TODO(), webBoot)
-			if err != nil {
-				logger.Info("Failed to update Boot", "boot", webBoot)
-				handler.EventFail(reason, webBoot.Name, err)
-				return reconcile.Result{Requeue: true}, nil
-			}
-			handler.EventNormal(reason, webBoot.Name)
+	changed := handler.DefaultValue()
+
+	//Update the Boot's default Value
+	if changed {
+		reason := "Updating Boot with Defaulters"
+		logger.Info(reason)
+		err = r.client.Update(context.TODO(), webBoot)
+		if err != nil {
+			logger.Info("Failed to update Boot", "boot", webBoot)
+			handler.EventFail(reason, webBoot.Name, err)
 			return reconcile.Result{Requeue: true}, nil
 		}
+		handler.EventNormal(reason, webBoot.Name)
+		return reconcile.Result{Requeue: true}, nil
 	}
 
 	// 1. Check the existence of components, if not exist, create new one.
@@ -166,6 +166,7 @@ func (r *ReconcileWebBoot) Reconcile(request reconcile.Request) (reconcile.Resul
 	return reconcile.Result{}, nil
 }
 
+// InitHandler will create the Handler for handling logic of Boot
 func InitHandler(webBoot *appv1.WebBoot, scheme *runtime.Scheme,
 	client client.Client, logger logr.Logger, recorder record.EventRecorder) (handler *operator.BootHandler) {
 	boot := webBoot.DeepCopyBoot()

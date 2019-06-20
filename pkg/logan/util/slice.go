@@ -4,7 +4,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// Returns
+// Difference returns the difference of 2 []string slice
 // diff1: in slice1, not in slice2
 // diff2: not in slice1, in slice2
 // https://stackoverflow.com/questions/19374219/how-to-find-the-difference-between-two-slices-of-strings-in-golang?answertab=votes#tab-top
@@ -38,7 +38,7 @@ func Difference(slice1 []string, slice2 []string) (diff1 []string, diff2 []strin
 	return
 }
 
-// Returns
+// Difference2 returns the difference of 2 []corev1.EnvVar slice
 // diff1: in slice1(origin), not in slice2(now) delete
 // diff2: not in slice1(origin), in slice2(now) add
 // modified: the slice2 value

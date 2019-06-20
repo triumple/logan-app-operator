@@ -107,7 +107,7 @@ func (vHandler *BootValidator) Validate(req types.Request) (string, bool, error)
 	return "", true, nil
 }
 
-// BoolExist check if name is exist.
+// BootNameExist check if name is exist.
 // Returns
 //    msg: error message
 //    valid: If exist false, otherwise false

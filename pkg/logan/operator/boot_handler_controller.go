@@ -360,6 +360,7 @@ func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service) (reconci
 	return reconcile.Result{}, false, nil
 }
 
+// ReconcileUpdateBootMeta will handle the metadata update
 // Refer https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
 // CustomResourceSubresources(feature-gate) is only available in 1.10(Alpha), 1.11(Beta, default true)
 func (handler *BootHandler) ReconcileUpdateBootMeta() (reconcile.Result, bool, bool, error) {

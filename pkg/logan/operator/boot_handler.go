@@ -27,23 +27,35 @@ const (
 	defaultRevisionHistoryLimits = int(5)
 	defaultWeight                = 100
 
-	EnvAnnotationKey        = "app.logancloud.com/env"
-	EnvAnnotationValue      = "generated"
-	BootEnvsAnnotationKey   = "app.logancloud.com/boot-envs"
+	// EnvAnnotationKey is the annotation key for storing when changed env
+	EnvAnnotationKey = "app.logancloud.com/env"
+	// EnvAnnotationValue is default value for for env
+	EnvAnnotationValue = "generated"
+	// BootEnvsAnnotationKey is the annotation key for storing previous envs
+	BootEnvsAnnotationKey = "app.logancloud.com/boot-envs"
+	// BootImagesAnnotationKey is the annotation key for storing previous images
 	BootImagesAnnotationKey = "app.logancloud.com/boot-images"
 
-	DeployAnnotationKey   = "app.logancloud.com/deploy"
+	// BootImagesAnnotationKey is the annotation key for storing boot's current Deployment name
+	DeployAnnotationKey = "app.logancloud.com/deploy"
+	// BootImagesAnnotationKey is the annotation key for storing boot's current services name list
 	ServicesAnnotationKey = "app.logancloud.com/services"
-	AppTypeAnnotationKey  = "app.logancloud.com/type"
+	// BootImagesAnnotationKey is the annotation key for storing boot's type
+	AppTypeAnnotationKey    = "app.logancloud.com/type"
+	AppTypeAnnotationDeploy = "deploy"
 
-	StatusAvailableAnnotationKey        = "app.logancloud.com/status.available"
-	StatusDesiredAnnotationKey          = "app.logancloud.com/status.desired"
+	// StatusAvailableAnnotationKey is the annotation key for storing boot's current pods
+	StatusAvailableAnnotationKey = "app.logancloud.com/status.available"
+	// StatusDesiredAnnotationKey is the annotation key for storing boot's desired pods
+	StatusDesiredAnnotationKey = "app.logancloud.com/status.desired"
+	// StatusModificationTimeAnnotationKey is the annotation key for storing boot's type
 	StatusModificationTimeAnnotationKey = "app.logancloud.com/status.lastUpdateTimeStamp"
 
-	EventTypeNormal  = "Normal"
-	EventTypeWarning = "Warning"
+	eventTypeNormal  = "Normal"
+	eventTypeWarning = "Warning"
 )
 
+// BootHandler is the core struct for handling logic for all boots.
 type BootHandler struct {
 	OperatorBoot metav1.Object
 	OperatorSpec *appv1.BootSpec
@@ -329,12 +341,12 @@ func (handler *BootHandler) EventNormal(reason string, obj string) {
 	recorder := handler.Recorder
 	boot := handler.Boot
 
-	recorder.Event(boot, EventTypeNormal, reason, fmt.Sprintf("Successful: obj=%s", obj))
+	recorder.Event(boot, eventTypeNormal, reason, fmt.Sprintf("Successful: obj=%s", obj))
 }
 
 func (handler *BootHandler) EventFail(reason string, obj string, err error) {
 	recorder := handler.Recorder
 	boot := handler.Boot
 
-	recorder.Event(boot, EventTypeWarning, reason, fmt.Sprintf("Failed: obj=%s, err=%s", obj, err.Error()))
+	recorder.Event(boot, eventTypeWarning, reason, fmt.Sprintf("Failed: obj=%s, err=%s", obj, err.Error()))
 }
