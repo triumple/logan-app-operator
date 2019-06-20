@@ -36,12 +36,13 @@ const (
 	// BootImagesAnnotationKey is the annotation key for storing previous images
 	BootImagesAnnotationKey = "app.logancloud.com/boot-images"
 
-	// BootImagesAnnotationKey is the annotation key for storing boot's current Deployment name
+	// DeployAnnotationKey is the annotation key for storing boot's current Deployment name
 	DeployAnnotationKey = "app.logancloud.com/deploy"
-	// BootImagesAnnotationKey is the annotation key for storing boot's current services name list
+	// ServicesAnnotationKey is the annotation key for storing boot's current services name list
 	ServicesAnnotationKey = "app.logancloud.com/services"
-	// BootImagesAnnotationKey is the annotation key for storing boot's type
-	AppTypeAnnotationKey    = "app.logancloud.com/type"
+	// AppTypeAnnotationKey is the annotation key for storing boot's type
+	AppTypeAnnotationKey = "app.logancloud.com/type"
+	// AppTypeAnnotationDeploy is the annotation value for Deployment
 	AppTypeAnnotationDeploy = "deploy"
 
 	// StatusAvailableAnnotationKey is the annotation key for storing boot's current pods
@@ -70,6 +71,7 @@ type BootHandler struct {
 	Recorder record.EventRecorder
 }
 
+// UpdateAnnotation handle the logic for annotation value, return true if updated
 func (handler *BootHandler) UpdateAnnotation(annotationMap map[string]string) bool {
 	metaData := handler.OperatorMeta
 	updated := false
@@ -240,6 +242,7 @@ func (handler *BootHandler) NewAppContainer() *corev1.Container {
 	return &appContainer
 }
 
+// GetHealthProbe return the livenessProbe and readinessProbe for the created container
 func (handler *BootHandler) GetHealthProbe() (*corev1.Probe, *corev1.Probe) {
 	boot := handler.Boot
 	healthPort := AppContainerHealthPort(boot, handler.Config.AppSpec)
@@ -276,7 +279,7 @@ func (handler *BootHandler) GetHealthProbe() (*corev1.Probe, *corev1.Probe) {
 	return livenessProbe, readinessProbe
 }
 
-// NewService returns a new created Service instance
+// NewServices returns a new created Service instance
 func (handler *BootHandler) NewServices() []*corev1.Service {
 	boot := handler.Boot
 	bootCfg := handler.Config
@@ -296,7 +299,7 @@ func (handler *BootHandler) NewServices() []*corev1.Service {
 	return allSvcs
 }
 
-// NewService returns a new created Service instance
+// createService returns a new created Service instance
 func (handler *BootHandler) createService(port int, name string) *corev1.Service {
 	boot := handler.Boot
 
@@ -337,6 +340,7 @@ func (handler *BootHandler) createService(port int, name string) *corev1.Service
 	return svc
 }
 
+// EventNormal will record the normal event string
 func (handler *BootHandler) EventNormal(reason string, obj string) {
 	recorder := handler.Recorder
 	boot := handler.Boot
@@ -344,6 +348,7 @@ func (handler *BootHandler) EventNormal(reason string, obj string) {
 	recorder.Event(boot, eventTypeNormal, reason, fmt.Sprintf("Successful: obj=%s", obj))
 }
 
+// EventNormal will record the fail event string
 func (handler *BootHandler) EventFail(reason string, obj string, err error) {
 	recorder := handler.Recorder
 	boot := handler.Boot

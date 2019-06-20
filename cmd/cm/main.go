@@ -25,7 +25,7 @@ func main() {
 		panic(err)
 	}
 
-	client, err := crclient.New(config, crclient.Options{})
+	client, _ := crclient.New(config, crclient.Options{})
 
 	cmap := &corev1.ConfigMap{}
 	err = client.Get(context.TODO(), types.NamespacedName{
