@@ -133,18 +133,18 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 	}
 
 	// 1. Check the existence of components, if not exist, create new one.
-	result, err, requeue := handler.ReconcileCreate()
+	result, requeue, err := handler.ReconcileCreate()
 	if requeue {
 		return result, err
 	}
 
 	// 2. Handle the update logic of components
-	result, err, requeue = handler.ReconcileUpdate()
+	result, requeue, err = handler.ReconcileUpdate()
 	if requeue {
 		return result, err
 	}
 
-	result, err, requeue, updated := handler.ReconcileUpdateBootMeta()
+	result, requeue, updated, err := handler.ReconcileUpdateBootMeta()
 
 	if updated {
 		reason := "Updating Boot Meta"

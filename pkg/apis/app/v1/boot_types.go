@@ -7,7 +7,7 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// JavaBoot is the Schema for the javaboots API
+// Boot is the common Schema for the all boot types API
 // +k8s:openapi-gen=true
 type Boot struct {
 	metav1.TypeMeta   `json:",inline"`

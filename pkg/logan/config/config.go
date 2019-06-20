@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	OperatorAppKey = "app"
+	operatorAppKey = "app"
 
 	DefaultPort    = 8080
 	DefaultReplica = 1
@@ -25,6 +25,7 @@ const (
 
 var log = logf.Log.WithName("logan_config")
 
+// BootConfig is the config struct for Boot.
 type BootConfig struct {
 	AppSpec           *AppSpec
 	SidecarContainers *[]corev1.Container
@@ -54,34 +55,41 @@ type SidecarService struct {
 }
 
 var (
-	JavaConfig    *BootConfig
-	PhpConfig     *BootConfig
-	PythonConfig  *BootConfig
-	NodeJSConfig  *BootConfig
-	WebConfig     *BootConfig
+	// JavaConfig is the config for JavaBoot
+	JavaConfig *BootConfig
+	// PhpConfig is the config for PhpBoot
+	PhpConfig *BootConfig
+	// PythonConfig is the config for PythonBoot
+	PythonConfig *BootConfig
+	// NodeJSConfig is the config for NodeJSBoot
+	NodeJSConfig *BootConfig
+	// WebConfig is the config for WebBoot
+	WebConfig *BootConfig
+	// ProfileConfig is the profile support config for All Boots, support to override the default profile.
 	ProfileConfig map[string]*BootConfig
 )
 
-// 配置信息
+// SettingsConfig is the common struct for Settings
 type SettingsConfig struct {
 	Registry      string `json:"registry"`
 	AppHealthPort int32  `json:"appHealthPort"`
 }
 
-// 	"java": default Java operator config
-// 	"php": default Php operator config
-// 	"python": default Python operator config
-// 	"nodejs": default NodeJS operator config
-// 	"web": default Web operator config
+// 	GlobalConfig is the entry for all boot's config
+// 	- "java": default Java operator config
+// 	- "php": default Php operator config
+// 	- "python": default Python operator config
+// 	- "nodejs": default NodeJS operator config
+// 	- "web": default Web operator config
 type GlobalConfig map[string]*OperatorConfig
 
-// 配置包含：
-// 	Operator默认配置信息：settings
-// 	operator的各个环境默认信息，oEnvs
-//	容器信息
-//		1. 应用app容器配置信息: app
-//		2. sidecar容器信息：sidecarContainers
-//		3. sidecar服务信息：sidecarServices
+// OperatorConfig is the struct for boot's global config
+// 	- Operator's default settings：settings
+// 	- operator's env specific config，oEnvs
+//	- Container Info
+//		1. application(app) container config: app
+//		2. sidecar containers：sidecarContainers
+//		3. sidecar services：sidecarServices
 type OperatorConfig struct {
 	// Operator配置信息
 	Settings *SettingsConfig `json:"settings"`
@@ -99,6 +107,7 @@ type OperatorConfig struct {
 	SidecarServices *[]SidecarService `json:"sidecarServices"`
 }
 
+// InitByFile will initialize the config from the file
 func InitByFile(configFile string) error {
 	f, err := os.Open(configFile)
 	if err != nil {
@@ -109,6 +118,7 @@ func InitByFile(configFile string) error {
 	return Init(f)
 }
 
+// Init will initialize the config from the io.Reader
 func Init(content io.Reader) error {
 	err := NewConfig(content)
 	if err != nil {
@@ -118,6 +128,7 @@ func Init(content io.Reader) error {
 	return nil
 }
 
+// NewConfig will initialize the config from the io.Reader
 func NewConfig(content io.Reader) error {
 	c := GlobalConfig{}
 
@@ -185,6 +196,7 @@ func NewConfig(content io.Reader) error {
 	return nil
 }
 
+// NewConfigFromString will initialize the config from string, for testing,
 func NewConfigFromString(content string) error {
 	if content == "" {
 		globalCfg := &GlobalConfig{}
@@ -290,7 +302,7 @@ func applyDefault(operatorCfg *OperatorConfig, appSpec *AppSpec, bootType string
 	}
 
 	// 1. Merge oEnv's settings: app
-	appEnvDefault := operatorCfg.OEnvs[OperatorAppKey][logan.OperDev]
+	appEnvDefault := operatorCfg.OEnvs[operatorAppKey][logan.OperDev]
 	err := util.MergeOverride(appSpec, appEnvDefault)
 	if err != nil {
 		log.Error(err, "env config merge error.", "type", bootType)
@@ -322,6 +334,7 @@ func applyDefault(operatorCfg *OperatorConfig, appSpec *AppSpec, bootType string
 	}
 }
 
+// DecodeImageName will decode the image name from context
 func DecodeImageName(image string, appSpec *AppSpec) string {
 	registry := appSpec.Settings.Registry
 	if registry != "" {
