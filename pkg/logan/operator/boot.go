@@ -2,7 +2,6 @@ package operator
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/go-logr/logr"
 	appv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
@@ -18,10 +17,10 @@ import (
 )
 
 const (
+	// HttpPortName is the Boot's created service port name
 	HttpPortName = "http"
 
-	AppTypeAnnotationDeploy = "deploy"
-
+	// PrometheusPortKey is the Boot's created service's prometheus annotation key
 	PrometheusPortKey = "prometheus.io/port"
 )
 
@@ -50,9 +49,9 @@ func AppContainerImageName(boot *appv1.Boot, appSpec *config.AppSpec) string {
 	registry := appSpec.Settings.Registry
 	if registry != "" {
 		return registry + "/" + boot.Spec.Image + ":" + boot.Spec.Version
-	} else {
-		return boot.Spec.Image + ":" + boot.Spec.Version
 	}
+
+	return boot.Spec.Image + ":" + boot.Spec.Version
 }
 
 // PodLabels return labels for the created Pod
@@ -140,7 +139,7 @@ func DecodeEnvVars(str string) ([]corev1.EnvVar, error) {
 	return envVars, err
 }
 
-// Return true if env1 and env2 is equal.
+// EnvVarsEq return true if env1 and env2 is equal.
 func EnvVarsEq(env1, env2 []corev1.EnvVar) bool {
 	// If one is nil, the other must also be nil.
 	if (env1 == nil) != (env2 == nil) {
@@ -185,39 +184,38 @@ func DecodeAnnotationEnvs(boot *appv1.Boot) ([]corev1.EnvVar, error) {
 	if bootMetaEnvsStr == "" {
 		// Boot's env is empty.
 		return nil, nil
-	} else {
-		bootMetaEnvs, err := DecodeEnvVars(bootMetaEnvsStr)
-		if err != nil {
-			//Decoding error. Ignore validating.
-			return nil, errors.New(fmt.Sprintf("Decoding Annotation's env error. %s/%s: %s",
-				boot.Namespace, boot.Name, err.Error()))
-		}
-
-		return bootMetaEnvs, nil
 	}
+
+	bootMetaEnvs, err := DecodeEnvVars(bootMetaEnvsStr)
+	if err != nil {
+		//Decoding error. Ignore validating.
+		return nil, fmt.Errorf("decoding Annotation's env error. %s/%s: %s", boot.Namespace, boot.Name, err.Error())
+	}
+
+	return bootMetaEnvs, nil
 }
 
+// GetProfileBootConfig gets the Boot's config by profile annotation
 func GetProfileBootConfig(boot *appv1.Boot, logger logr.Logger) (*config.BootConfig, error) {
 	if boot.Annotations != nil {
 		if _, exist := boot.Annotations[config.BootProfileAnnotationKey]; exist {
 			bootProfile := boot.Annotations[config.BootProfileAnnotationKey]
 			if bootProfile == logan.BootJava || bootProfile == logan.BootPhp || bootProfile == logan.BootPython || bootProfile == logan.BootNodeJS || bootProfile == logan.BootWeb {
-				return nil, errors.New(fmt.Sprintf("Boot using profile, but profile [%s] is not allow.", bootProfile))
-			} else {
-				profileConfig := config.ProfileConfig[bootProfile]
-				if profileConfig != nil {
-					logger.Info("Boot using profile: ", "profile", bootProfile)
-					return config.ProfileConfig[bootProfile], nil
-				} else {
-					return nil, errors.New(fmt.Sprintf("Boot using profile, but profile [%s] config is empty: ", bootProfile))
-				}
+				return nil, fmt.Errorf("boot using profile, but profile [%s] is not allow", bootProfile)
 			}
+			profileConfig := config.ProfileConfig[bootProfile]
+			if profileConfig != nil {
+				logger.Info("Boot using profile: ", "profile", bootProfile)
+				return config.ProfileConfig[bootProfile], nil
+			}
+			return nil, fmt.Errorf("Boot using profile, but profile [%s] config is empty: ", bootProfile)
 		}
 	}
 
 	return nil, nil
 }
 
+// GetCurrentTimestamp get the current time json string, as creationTimestamp of kubernetes
 func GetCurrentTimestamp() string {
 	now := metav1.Now()
 	nowBytes, _ := now.MarshalJSON()

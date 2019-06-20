@@ -112,24 +112,24 @@ func (r *ReconcileNodeJSBoot) Reconcile(request reconcile.Request) (reconcile.Re
 		// Error reading the object - requeue the request.
 		logger.Error(err, "Failed to get Boot")
 		return reconcile.Result{}, err
-	} else {
-		handler = InitHandler(nodejsBoot, r.scheme, r.client, logger, r.recorder)
+	}
 
-		changed := handler.DefaultValue()
+	handler = InitHandler(nodejsBoot, r.scheme, r.client, logger, r.recorder)
 
-		//Update the Boot's default Value
-		if changed {
-			reason := "Updating Boot with Defaulters"
-			logger.Info(reason)
-			err = r.client.Update(context.TODO(), nodejsBoot)
-			if err != nil {
-				logger.Info("Failed to update Boot", "boot", nodejsBoot)
-				handler.EventFail(reason, nodejsBoot.Name, err)
-				return reconcile.Result{Requeue: true}, nil
-			}
-			handler.EventNormal(reason, nodejsBoot.Name)
+	changed := handler.DefaultValue()
+
+	//Update the Boot's default Value
+	if changed {
+		reason := "Updating Boot with Defaulters"
+		logger.Info(reason)
+		err = r.client.Update(context.TODO(), nodejsBoot)
+		if err != nil {
+			logger.Info("Failed to update Boot", "boot", nodejsBoot)
+			handler.EventFail(reason, nodejsBoot.Name, err)
 			return reconcile.Result{Requeue: true}, nil
 		}
+		handler.EventNormal(reason, nodejsBoot.Name)
+		return reconcile.Result{Requeue: true}, nil
 	}
 
 	// 1. Check the existence of components, if not exist, create new one.
@@ -166,6 +166,7 @@ func (r *ReconcileNodeJSBoot) Reconcile(request reconcile.Request) (reconcile.Re
 	return reconcile.Result{}, nil
 }
 
+// InitHandler will create the Handler for handling logic of Boot
 func InitHandler(nodejsBoot *appv1.NodeJSBoot, scheme *runtime.Scheme,
 	client client.Client, logger logr.Logger, recorder record.EventRecorder) (handler *operator.BootHandler) {
 	boot := nodejsBoot.DeepCopyBoot()

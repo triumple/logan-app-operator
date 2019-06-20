@@ -283,8 +283,8 @@ func (handler *BootHandler) ImageChange() bool {
 	if bootMetaImageStr == "" {
 		// Annotation "boot-images" is empty, means it is newly created.
 		return true
-	} else {
-		// Annotation "boot-images" is not empty, we need to check if it is modified.
-		return bootMetaImageStr != AppContainerImageName(handler.Boot, handler.Config.AppSpec)
 	}
+
+	// Annotation "boot-images" is not empty, we need to check if it is modified.
+	return bootMetaImageStr != AppContainerImageName(handler.Boot, handler.Config.AppSpec)
 }

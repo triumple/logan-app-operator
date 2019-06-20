@@ -16,10 +16,11 @@ import (
 const (
 	operatorAppKey = "app"
 
-	DefaultPort    = 8080
-	DefaultReplica = 1
-	DefaultHealth  = "/health"
+	defaultPort    = 8080
+	defaultReplica = 1
+	defaultHealth  = "/health"
 
+	// BootProfileAnnotationKey is the annotation key for storing boot's profile
 	BootProfileAnnotationKey = "logan/profile"
 )
 
@@ -282,20 +283,16 @@ func applyDefaultWithSidecar(globalCfg GlobalConfig, operatorCfg *OperatorConfig
 
 func applyDefault(operatorCfg *OperatorConfig, appSpec *AppSpec, bootType string) {
 	if appSpec.Port <= 0 {
-		appSpec.Port = DefaultPort
+		appSpec.Port = defaultPort
 	}
 
 	if appSpec.Replicas <= 0 {
-		appSpec.Replicas = DefaultReplica
+		appSpec.Replicas = defaultReplica
 	}
 
 	if appSpec.Health == "" {
-		appSpec.Health = DefaultHealth
+		appSpec.Health = defaultHealth
 	}
-
-	//if appSpec.Resources == nil {
-	//	appSpec.Resources = &v1.ResourceRequirements{}
-	//}
 
 	if appSpec.Settings == nil {
 		appSpec.Settings = &SettingsConfig{}

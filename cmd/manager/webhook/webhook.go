@@ -31,6 +31,7 @@ const (
 	validationCfgName = "logan-app-webhook-validation"
 )
 
+// RegisterWebhook will register webhook for mutation and validation
 func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 	rules := admissionregistrationv1beta1.RuleWithOperations{
 		Operations: []admissionregistrationv1beta1.OperationType{

@@ -112,24 +112,24 @@ func (r *ReconcilePhpBoot) Reconcile(request reconcile.Request) (reconcile.Resul
 		// Error reading the object - requeue the request.
 		logger.Error(err, "Failed to get Boot")
 		return reconcile.Result{}, err
-	} else {
-		handler = InitHandler(phpBoot, r.scheme, r.client, logger, r.recorder)
+	}
 
-		changed := handler.DefaultValue()
+	handler = InitHandler(phpBoot, r.scheme, r.client, logger, r.recorder)
 
-		//Update the Boot's default Value
-		if changed {
-			reason := "Updating Boot with Defaulters"
-			logger.Info(reason)
-			err = r.client.Update(context.TODO(), phpBoot)
-			if err != nil {
-				logger.Info("Failed to update Boot", "boot", phpBoot)
-				handler.EventFail(reason, phpBoot.Name, err)
-				return reconcile.Result{Requeue: true}, nil
-			}
-			handler.EventNormal(reason, phpBoot.Name)
+	changed := handler.DefaultValue()
+
+	//Update the Boot's default Value
+	if changed {
+		reason := "Updating Boot with Defaulters"
+		logger.Info(reason)
+		err = r.client.Update(context.TODO(), phpBoot)
+		if err != nil {
+			logger.Info("Failed to update Boot", "boot", phpBoot)
+			handler.EventFail(reason, phpBoot.Name, err)
 			return reconcile.Result{Requeue: true}, nil
 		}
+		handler.EventNormal(reason, phpBoot.Name)
+		return reconcile.Result{Requeue: true}, nil
 	}
 
 	// 1. Check the existence of components, if not exist, create new one.
@@ -166,6 +166,7 @@ func (r *ReconcilePhpBoot) Reconcile(request reconcile.Request) (reconcile.Resul
 	return reconcile.Result{}, nil
 }
 
+// InitHandler will create the Handler for handling logic of Boot
 func InitHandler(phpBoot *appv1.PhpBoot, scheme *runtime.Scheme,
 	client client.Client, logger logr.Logger, recorder record.EventRecorder) (handler *operator.BootHandler) {
 	boot := phpBoot.DeepCopyBoot()
