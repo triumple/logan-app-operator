@@ -57,6 +57,11 @@ func (in *BootSpec) DeepCopyInto(out *BootSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Prometheus != nil {
+		in, out := &in.Prometheus, &out.Prometheus
+		*out = new(bool)
+		**out = **in
+	}
 	in.Resources.DeepCopyInto(&out.Resources)
 	if in.NodeSelector != nil {
 		in, out := &in.NodeSelector, &out.NodeSelector

@@ -41,6 +41,8 @@ spec:
               type: array
             health:
               type: string
+            prometheus:
+              type: boolean
             image:
               type: string
             nodeSelector:

@@ -16,10 +16,10 @@ import (
 const (
 	operatorAppKey = "app"
 
-	defaultPort    = 8080
-	defaultReplica = 1
-	defaultHealth  = "/health"
-
+	defaultPort             = 8080
+	defaultReplica          = 1
+	defaultHealth           = "/health"
+	defaultPrometheusScrape = true
 	// BootProfileAnnotationKey is the annotation key for storing boot's profile
 	BootProfileAnnotationKey = "logan/profile"
 )
@@ -72,8 +72,9 @@ var (
 
 // SettingsConfig is the common struct for Settings
 type SettingsConfig struct {
-	Registry      string `json:"registry"`
-	AppHealthPort int32  `json:"appHealthPort"`
+	Registry         string `json:"registry"`
+	AppHealthPort    int32  `json:"appHealthPort"`
+	PrometheusScrape *bool  `json:"prometheusScrape"`
 }
 
 // GlobalConfig is the entry for all boot's config
@@ -316,6 +317,9 @@ func applyDefault(operatorCfg *OperatorConfig, appSpec *AppSpec, bootType string
 		if envSettings.AppHealthPort > 0 {
 			oSettings.AppHealthPort = envSettings.AppHealthPort
 		}
+		if envSettings.PrometheusScrape != nil {
+			oSettings.PrometheusScrape = envSettings.PrometheusScrape
+		}
 	}
 
 	// 2.2 Global Settings-> App Settings
@@ -328,6 +332,16 @@ func applyDefault(operatorCfg *OperatorConfig, appSpec *AppSpec, bootType string
 		if oSettings.AppHealthPort > 0 {
 			appSpec.Settings.AppHealthPort = oSettings.AppHealthPort
 		}
+
+		if oSettings.PrometheusScrape != nil {
+			appSpec.Settings.PrometheusScrape = oSettings.PrometheusScrape
+		}
+	}
+
+	//2.3 App settings PrometheusScrape set default
+	if appSpec.Settings.PrometheusScrape == nil {
+		prometheusScrape := defaultPrometheusScrape
+		appSpec.Settings.PrometheusScrape = &prometheusScrape
 	}
 }
 
