@@ -303,6 +303,7 @@ func (handler *BootHandler) NewServices() []*corev1.Service {
 func (handler *BootHandler) createService(port int, name string) *corev1.Service {
 	boot := handler.Boot
 
+	PrometheusScrape := AllowPrometheusScrape(boot, handler.Config.AppSpec)
 	svc := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -312,7 +313,7 @@ func (handler *BootHandler) createService(port int, name string) *corev1.Service
 			Name:        ServiceName(boot, name),
 			Namespace:   boot.Namespace,
 			Labels:      ServiceLabels(boot),
-			Annotations: ServiceAnnotation(port),
+			Annotations: ServiceAnnotation(PrometheusScrape, port),
 		},
 	}
 

@@ -47,6 +47,13 @@ func (handler *BootHandler) DefaultValue() bool {
 		changed = true
 	}
 
+	//Prometheus
+	if bootSpec.Prometheus == nil && appConfigSpec.Settings.PrometheusScrape != nil {
+		logger.Info("Defaulters", "type", "prometheus", "spec", bootSpec.Prometheus, "default", appConfigSpec.Settings.PrometheusScrape)
+		bootSpec.Prometheus = appConfigSpec.Settings.PrometheusScrape
+		changed = true
+	}
+
 	//resources.limits
 	if len(appConfigSpec.Resources.Limits) > 0 {
 		limitResources := appConfigSpec.Resources.Limits.DeepCopy()

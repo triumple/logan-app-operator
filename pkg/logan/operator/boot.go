@@ -71,13 +71,24 @@ func ServiceLabels(boot *appv1.Boot) map[string]string {
 }
 
 // ServiceAnnotation return the annotations for the created Service
-func ServiceAnnotation(port int) map[string]string {
-	return map[string]string{
-		"prometheus.io/path":   "/prometheus",
-		PrometheusPortKey:      strconv.Itoa(port),
-		"prometheus.io/scheme": "http",
-		"prometheus.io/scrape": "true",
+func AllowPrometheusScrape(boot *appv1.Boot, appSpec *config.AppSpec) *bool {
+	prometheusScrape := appSpec.Settings.PrometheusScrape
+	if boot.Spec.Prometheus != nil {
+		prometheusScrape = boot.Spec.Prometheus
 	}
+	return prometheusScrape
+}
+
+func ServiceAnnotation(prometheusScrape *bool, port int) map[string]string {
+	if *prometheusScrape == true {
+		return map[string]string{
+			"prometheus.io/path":   "/prometheus",
+			PrometheusPortKey:      strconv.Itoa(port),
+			"prometheus.io/scheme": "http",
+			"prometheus.io/scrape": "true",
+		}
+	}
+	return nil
 }
 
 // TransferServiceNames transfer the services list of []Service to string, split by ,
