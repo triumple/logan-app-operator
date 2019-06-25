@@ -72,11 +72,11 @@ func ServiceLabels(boot *appv1.Boot) map[string]string {
 
 // ServiceAnnotation return the annotations for the created Service
 func AllowPrometheusScrape(boot *appv1.Boot, appSpec *config.AppSpec) *bool {
-	prometheusScrape := appSpec.Settings.PrometheusScrape
-	if boot.Spec.Prometheus != nil {
-		prometheusScrape = boot.Spec.Prometheus
+	if boot.Spec.Prometheus != "" {
+		prometheusScrape, _ := strconv.ParseBool(boot.Spec.Prometheus)
+		return &prometheusScrape
 	}
-	return prometheusScrape
+	return appSpec.Settings.PrometheusScrape
 }
 
 func ServiceAnnotation(prometheusScrape *bool, port int) map[string]string {

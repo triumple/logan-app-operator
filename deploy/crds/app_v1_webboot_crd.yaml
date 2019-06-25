@@ -43,6 +43,10 @@ spec:
               type: string
             prometheus:
               type: boolean
+              enum:
+                - ""
+                - "true"
+                - "false"
             image:
               type: string
             nodeSelector:

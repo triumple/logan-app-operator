@@ -4,6 +4,7 @@ import (
 	appv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
 	"github.com/logancloud/logan-app-operator/pkg/logan/util"
 	corev1 "k8s.io/api/core/v1"
+	"strconv"
 )
 
 // DefaultValue will set the default value for CR
@@ -48,9 +49,9 @@ func (handler *BootHandler) DefaultValue() bool {
 	}
 
 	//Prometheus
-	if bootSpec.Prometheus == nil && appConfigSpec.Settings.PrometheusScrape != nil {
+	if bootSpec.Prometheus == "" && appConfigSpec.Settings.PrometheusScrape != nil {
 		logger.Info("Defaulters", "type", "prometheus", "spec", bootSpec.Prometheus, "default", appConfigSpec.Settings.PrometheusScrape)
-		bootSpec.Prometheus = appConfigSpec.Settings.PrometheusScrape
+		bootSpec.Prometheus = strconv.FormatBool(*appConfigSpec.Settings.PrometheusScrape)
 		changed = true
 	}
 
