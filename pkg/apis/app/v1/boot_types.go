@@ -48,7 +48,7 @@ type BootSpec struct {
 	// Health is check path for the app container.
 	Health *string `json:"health,omitempty"`
 	// Prometheus will scrape metrices from the service, default is `true`
-	Prometheus *bool `json:"prometheus"`
+	Prometheus string `json:"prometheus"`
 	// Resources is the compute resource requirements for the app container
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 	// NodeSelector is a selector which must be true for the pod to fit on a node.
