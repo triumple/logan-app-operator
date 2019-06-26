@@ -42,7 +42,7 @@ spec:
             health:
               type: string
             prometheus:
-              type: boolean
+              type: string
               enum:
                 - ""
                 - "true"
