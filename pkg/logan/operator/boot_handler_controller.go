@@ -313,9 +313,9 @@ func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service) (reconci
 
 	// 3. Check annotation
 	// Annotation is removed
-	PrometheusScrape := AllowPrometheusScrape(boot, handler.Config.AppSpec)
-	if svc.Annotations == nil && *PrometheusScrape == true {
-		svc.Annotations = ServiceAnnotation(PrometheusScrape, int(boot.Spec.Port))
+	prometheusScrape := allowPrometheusScrape(boot, handler.Config.AppSpec)
+	if svc.Annotations == nil && prometheusScrape == true {
+		svc.Annotations = ServiceAnnotation(prometheusScrape, int(boot.Spec.Port))
 		updated = true
 	}
 
@@ -329,8 +329,8 @@ func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service) (reconci
 	}
 
 	//PrometheusScrape is changed
-	if svc.Annotations != nil && *PrometheusScrape == false {
-		svc.Annotations = ServiceAnnotation(PrometheusScrape, int(boot.Spec.Port))
+	if svc.Annotations != nil && prometheusScrape == false {
+		svc.Annotations = ServiceAnnotation(prometheusScrape, int(boot.Spec.Port))
 		updated = true
 	}
 

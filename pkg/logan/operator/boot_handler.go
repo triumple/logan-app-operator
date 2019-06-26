@@ -284,7 +284,8 @@ func (handler *BootHandler) NewServices() []*corev1.Service {
 	boot := handler.Boot
 	bootCfg := handler.Config
 	// app Service
-	bootSvc := handler.createService(int(boot.Spec.Port), boot.Name)
+	prometheusScrape := allowPrometheusScrape(boot, handler.Config.AppSpec)
+	bootSvc := handler.createService(int(boot.Spec.Port), boot.Name, prometheusScrape)
 	allSvcs := []*corev1.Service{bootSvc}
 
 	// additional sidecar Service
@@ -292,7 +293,7 @@ func (handler *BootHandler) NewServices() []*corev1.Service {
 	if sidecarSvcs != nil {
 		for _, svc := range *sidecarSvcs {
 			svcName, _ := Decode(boot, svc.Name)
-			allSvcs = append(allSvcs, handler.createService(int(svc.Port), svcName))
+			allSvcs = append(allSvcs, handler.createService(int(svc.Port), svcName, true))
 		}
 	}
 
@@ -300,10 +301,9 @@ func (handler *BootHandler) NewServices() []*corev1.Service {
 }
 
 // createService returns a new created Service instance
-func (handler *BootHandler) createService(port int, name string) *corev1.Service {
+func (handler *BootHandler) createService(port int, name string, prometheusScrape bool) *corev1.Service {
 	boot := handler.Boot
 
-	PrometheusScrape := AllowPrometheusScrape(boot, handler.Config.AppSpec)
 	svc := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -313,7 +313,7 @@ func (handler *BootHandler) createService(port int, name string) *corev1.Service
 			Name:        ServiceName(boot, name),
 			Namespace:   boot.Namespace,
 			Labels:      ServiceLabels(boot),
-			Annotations: ServiceAnnotation(PrometheusScrape, port),
+			Annotations: ServiceAnnotation(prometheusScrape, port),
 		},
 	}
 
