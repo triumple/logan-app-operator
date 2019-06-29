@@ -47,7 +47,7 @@ type BootSpec struct {
 	SubDomain string `json:"subDomain,omitempty"`
 	// Health is check path for the app container.
 	Health *string `json:"health,omitempty"`
-	// Prometheus will scrape metrices from the service, default is `true`
+	// Prometheus will scrape metrics from the service, default is `true`
 	Prometheus string `json:"prometheus"`
 	// Resources is the compute resource requirements for the app container
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
