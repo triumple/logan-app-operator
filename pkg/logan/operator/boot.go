@@ -217,7 +217,7 @@ func GetProfileBootConfig(boot *appv1.Boot, logger logr.Logger) (*config.BootCon
 			profileConfig := config.ProfileConfig[bootProfile]
 			if profileConfig != nil {
 				logger.Info("Boot using profile: ", "profile", bootProfile)
-				return config.ProfileConfig[bootProfile], nil
+				return profileConfig, nil
 			}
 			return nil, fmt.Errorf("Boot using profile, but profile [%s] config is empty: ", bootProfile)
 		}

@@ -142,8 +142,6 @@ func NewConfig(content io.Reader) error {
 	gConfig := c
 	gConfig.applyDefaults()
 
-	ProfileConfig = make(map[string]*BootConfig, 0)
-
 	operator := gConfig[logan.BootJava]
 	JavaConfig = &BootConfig{
 		AppSpec: operator.AppSpec,
@@ -184,9 +182,10 @@ func NewConfig(content io.Reader) error {
 		SidecarServices:   operator.SidecarServices,
 	}
 
+	var tmpProfileConfig = make(map[string]*BootConfig, 0)
 	for key, operator := range gConfig {
 		if key != logan.BootJava && key != logan.BootPhp && key != logan.BootPython && key != logan.BootNodeJS && key != logan.BootWeb {
-			ProfileConfig[key] = &BootConfig{
+			tmpProfileConfig[key] = &BootConfig{
 				AppSpec: operator.AppSpec,
 
 				SidecarContainers: operator.SidecarContainers,
@@ -194,6 +193,8 @@ func NewConfig(content io.Reader) error {
 			}
 		}
 	}
+
+	ProfileConfig = tmpProfileConfig
 
 	return nil
 }

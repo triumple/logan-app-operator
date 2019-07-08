@@ -27,7 +27,9 @@ const (
 	mutationName    = "mutation.app.logancloud.com"
 	mutationCfgName = "logan-app-webhook-mutation"
 
-	validationName    = "validation.app.logancloud.com"
+	validationName       = "validation.app.logancloud.com"
+	validationConfigName = "config.validation.app.logancloud.com"
+
 	validationCfgName = "logan-app-webhook-validation"
 )
 
@@ -43,7 +45,7 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 			Resources:   []string{"javaboots", "phpboots", "pythonboots", "nodejsboots", "webboots"}},
 	}
 
-	// 1. Create a webhook(mutation)
+	// 1. Create a webhook(boot mutation)
 	mutationHandler := &bootmutation.BootMutator{
 		Schema:   mgr.GetScheme(),
 		Recorder: mgr.GetRecorder("logan-webhook-mutation"),
@@ -52,28 +54,54 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 		Name(mutationName).
 		Mutating().
 		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update).
-		//ForType(&v1.JavaBoot{}).
 		Rules(rules).
 		Handlers(mutationHandler).
 		WithManager(mgr).
 		Build()
 	if err != nil {
-		log.Error(err, "Creating mutation webhook error")
+		log.Error(err, "Creating boot mutation webhook error")
 	}
 
-	// 2. Create a webhook(validation)
+	// 2. Create a webhook(boot validation)
 	validationHandler := &bootvalidation.BootValidator{}
 	validationWh, err := builder.NewWebhookBuilder().
 		Name(validationName).
 		Validating().
 		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update).
-		//ForType(&v1.JavaBoot{}).
 		Rules(rules).
 		Handlers(validationHandler).
 		WithManager(mgr).
 		Build()
 	if err != nil {
-		log.Error(err, "Creating validation webhook error")
+		log.Error(err, "Creating boot validation webhook error")
+	}
+
+	// 3. Create a webhook(config validation)
+
+	configRules := admissionregistrationv1beta1.RuleWithOperations{
+		Operations: []admissionregistrationv1beta1.OperationType{
+			admissionregistrationv1beta1.Create,
+			admissionregistrationv1beta1.Update,
+			admissionregistrationv1beta1.Delete},
+		Rule: admissionregistrationv1beta1.Rule{
+			APIGroups:   []string{""},
+			APIVersions: []string{"v1"},
+			Resources:   []string{"configmaps"}},
+	}
+
+	validationConfigHandler := &bootvalidation.ConfigValidator{
+		OperatorNamespace: operatorNs,
+	}
+	validationConfigWh, err := builder.NewWebhookBuilder().
+		Name(validationConfigName).
+		Validating().
+		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update, admissionregistrationv1beta1.Delete).
+		Rules(configRules).
+		Handlers(validationConfigHandler).
+		WithManager(mgr).
+		Build()
+	if err != nil {
+		log.Error(err, "Creating config validation webhook error")
 	}
 
 	// Create a server
@@ -86,7 +114,7 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 		log.Error(err, "Creating webhook server error")
 	}
 
-	err = whServer.Register(mutationWh, validationWh)
+	err = whServer.Register(mutationWh, validationWh, validationConfigWh)
 	if err != nil {
 		log.Error(err, "Registering webhook error")
 	}

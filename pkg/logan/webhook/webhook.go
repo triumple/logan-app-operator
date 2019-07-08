@@ -1,10 +1,10 @@
 package webhook
 
 import (
-	v1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/types"
-
 	appv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
+	admissionv1beta1 "k8s.io/api/admission/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/types"
 )
 
 const (
@@ -26,35 +26,35 @@ func DecodeBoot(req types.Request, decoder types.Decoder) (*appv1.Boot, error) {
 
 	var boot *appv1.Boot
 	if bootType == ApiTypeJava {
-		apiBoot := &v1.JavaBoot{}
+		apiBoot := &appv1.JavaBoot{}
 		err := decoder.Decode(req, apiBoot)
 		if err != nil {
 			return nil, err
 		}
 		boot = apiBoot.DeepCopyBoot()
 	} else if bootType == ApiTypePhp {
-		apiBoot := &v1.PhpBoot{}
+		apiBoot := &appv1.PhpBoot{}
 		err := decoder.Decode(req, apiBoot)
 		if err != nil {
 			return nil, err
 		}
 		boot = apiBoot.DeepCopyBoot()
 	} else if bootType == ApiTypePython {
-		apiBoot := &v1.PythonBoot{}
+		apiBoot := &appv1.PythonBoot{}
 		err := decoder.Decode(req, apiBoot)
 		if err != nil {
 			return nil, err
 		}
 		boot = apiBoot.DeepCopyBoot()
 	} else if bootType == ApiTypeNodeJS {
-		apiBoot := &v1.NodeJSBoot{}
+		apiBoot := &appv1.NodeJSBoot{}
 		err := decoder.Decode(req, apiBoot)
 		if err != nil {
 			return nil, err
 		}
 		boot = apiBoot.DeepCopyBoot()
 	} else if bootType == ApiTypeWeb {
-		apiBoot := &v1.WebBoot{}
+		apiBoot := &appv1.WebBoot{}
 		err := decoder.Decode(req, apiBoot)
 		if err != nil {
 			return nil, err
@@ -71,7 +71,7 @@ func DecodeJavaBoot(req types.Request, decoder types.Decoder) (*appv1.JavaBoot, 
 
 	var boot *appv1.JavaBoot
 	if bootType == ApiTypeJava {
-		boot = &v1.JavaBoot{}
+		boot = &appv1.JavaBoot{}
 		err := decoder.Decode(req, boot)
 		if err != nil {
 			return nil, err
@@ -88,7 +88,7 @@ func DecodePhpBoot(req types.Request, decoder types.Decoder) (*appv1.PhpBoot, er
 
 	var boot *appv1.PhpBoot
 	if bootType == ApiTypePhp {
-		boot = &v1.PhpBoot{}
+		boot = &appv1.PhpBoot{}
 		err := decoder.Decode(req, boot)
 		if err != nil {
 			return nil, err
@@ -105,7 +105,7 @@ func DecodePythonBoot(req types.Request, decoder types.Decoder) (*appv1.PythonBo
 
 	var boot *appv1.PythonBoot
 	if bootType == ApiTypePython {
-		boot = &v1.PythonBoot{}
+		boot = &appv1.PythonBoot{}
 		err := decoder.Decode(req, boot)
 		if err != nil {
 			return nil, err
@@ -122,7 +122,7 @@ func DecodeNodeJSBoot(req types.Request, decoder types.Decoder) (*appv1.NodeJSBo
 
 	var boot *appv1.NodeJSBoot
 	if bootType == ApiTypeNodeJS {
-		boot = &v1.NodeJSBoot{}
+		boot = &appv1.NodeJSBoot{}
 		err := decoder.Decode(req, boot)
 		if err != nil {
 			return nil, err
@@ -139,7 +139,7 @@ func DecodeWebBoot(req types.Request, decoder types.Decoder) (*appv1.WebBoot, er
 
 	var boot *appv1.WebBoot
 	if bootType == ApiTypeWeb {
-		boot = &v1.WebBoot{}
+		boot = &appv1.WebBoot{}
 		err := decoder.Decode(req, boot)
 		if err != nil {
 			return nil, err
@@ -148,4 +148,19 @@ func DecodeWebBoot(req types.Request, decoder types.Decoder) (*appv1.WebBoot, er
 	}
 
 	return boot, nil
+}
+
+func ValidationResponse(allowed bool, code int32, reason string) types.Response {
+	resp := types.Response{
+		Response: &admissionv1beta1.AdmissionResponse{
+			Allowed: allowed,
+		},
+	}
+	resp.Response.Result = &metav1.Status{
+		Code: code,
+	}
+	if len(reason) > 0 {
+		resp.Response.Result.Message = reason
+	}
+	return resp
 }

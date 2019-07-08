@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/types"
 )
@@ -24,8 +23,6 @@ type BootValidator struct {
 	client  client.Client
 	decoder types.Decoder
 }
-
-var logger = logf.Log.WithName("logan_webhook_validation")
 
 var _ admission.Handler = &BootValidator{}
 
@@ -42,7 +39,7 @@ func (vHandler *BootValidator) Handle(ctx context.Context, req types.Request) ty
 	}
 
 	if !valid {
-		return admission.ValidationResponse(false, msg)
+		return webhook.ValidationResponse(false, http.StatusBadRequest, msg)
 	}
 
 	return admission.ValidationResponse(true, "")

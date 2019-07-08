@@ -10,9 +10,14 @@ const (
 	Version = "0.2.0"
 	// InnerVersion is the current operator inner version
 	InnerVersion = "1"
-	defaultEnv   = "test"
 
-	oEnvKey = "LOGAN_ENV"
+	defaultEnv = "test"
+	oEnvKey    = "LOGAN_ENV"
+
+	defaultConfigMap = "logan-app-operator-config"
+	oConfigMapKey    = "CONFIGMAP_NAME"
+
+	ConfigFilename = "config.yaml"
 
 	// BootJava is for JavaBoot type
 	BootJava = "java"
@@ -40,6 +45,8 @@ const (
 // OperDev is operator's running dev
 var OperDev string
 
+var OperConfigmap string
+
 var log = logf.Log.WithName("logan_util")
 
 func init() {
@@ -55,4 +62,18 @@ func init() {
 	} else {
 		OperDev = ns
 	}
+
+	configMap, found := os.LookupEnv(oConfigMapKey)
+	if !found {
+		log.Info("CONFIGMAP_NAME not set, use default", "CONFIGMAP_NAME", defaultConfigMap)
+		OperConfigmap = defaultConfigMap
+	}
+
+	if configMap == "" {
+		log.Info("CONFIGMAP_NAME set is empty, use default", "CONFIGMAP_NAME", defaultConfigMap)
+		OperConfigmap = defaultConfigMap
+	} else {
+		OperConfigmap = configMap
+	}
+
 }

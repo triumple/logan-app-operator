@@ -152,7 +152,7 @@ func (mHandler *BootMutator) mutateBoot(ctx context.Context, req types.Request) 
 		return PatchResponseFromRaw(req.AdmissionRequest.Object.Raw, marshaledBoot), nil
 	}
 
-	return types.Response{}, nil
+	return types.Response{Response: &admissionv1beta1.AdmissionResponse{Allowed: false}}, nil
 }
 
 // PatchResponseFromRaw takes 2 byte arrays and returns a new response with json patch.
