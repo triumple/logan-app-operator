@@ -11,6 +11,12 @@ export REPO="logancloud/logan-app-operator"
 if [[ "${TRAVIS_PULL_REQUEST}" = "false" ]]; then
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
     docker push ${REPO}:latest
+else
+    export TAG="pr_${TRAVIS_PULL_REQUEST}"
+    docker tag ${REPO}:latest "${REPO}:${TAG}"
+    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+    echo "Pushing to docker hub ${REPO}:${TAG}"
+    docker push "${REPO}:${TAG}"
 fi
 
 if [[ "${TRAVIS_TAG}" != "" ]]; then
