@@ -40,4 +40,4 @@ after_script:
 notifications:
   email: false
 
-  webhooks: https://oapi.dingtalk.com/robot/send?access_token=$DING_TOKEN
+  webhooks: https://oapi.dingtalk.com/robot/send?access_token=%{DING_TOKEN}
