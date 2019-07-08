@@ -15,9 +15,9 @@ else
     export TAG="pr_${TRAVIS_PULL_REQUEST}"
     docker tag ${REPO}:latest "${REPO}:${TAG}"
     docker images
-    #docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
     echo "Pushing to docker hub ${REPO}:${TAG}"
-    #docker push "${REPO}:${TAG}"
+    docker push "${REPO}:${TAG}"
 fi
 
 if [[ "${TRAVIS_TAG}" != "" ]]; then
