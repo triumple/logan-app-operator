@@ -39,4 +39,4 @@ after_script:
 
 notifications:
   email: false
-  webhooks: https://oapi.dingtalk.com/robot/send?access_token=d97c04116fd741faa4d441a1fe474d5e9ce8ea621cb88ba3d7e48cd250a3a604
+  #webhooks: https://oapi.dingtalk.com/robot/send?access_token=d97c04116fd741faa4d441a1fe474d5e9ce8ea621cb88ba3d7e48cd250a3a604
