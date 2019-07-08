@@ -32,13 +32,6 @@ install:
 
 script:
   - make docker-build
-  - if [[ ${TRAVIS_REPO_SLUG} != "logancloud/logan-app-operator" ]]; then
-      echo "fuck 1"
-      webhooks = "https://oapi.dingtalk.com/robot/send?access_token=d97c04116fd741faa4d441a1fe474d5e9ce8ea621cb88ba3d7e48cd250a3a604"
-    else
-      echo "fuck 2"
-      webhooks = ""
-    fi
   - make travis-build
 
 after_script:
@@ -47,4 +40,4 @@ after_script:
 notifications:
   email: false
 
-  #webhooks: https://oapi.dingtalk.com/robot/send?access_token=d97c04116fd741faa4d441a1fe474d5e9ce8ea621cb88ba3d7e48cd250a3a604
+  webhooks: https://oapi.dingtalk.com/robot/send?access_token=$DING_TOKEN
