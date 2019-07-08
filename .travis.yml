@@ -27,7 +27,6 @@ before_install:
   - export PATH="$HOME/bin:$PATH"
 
 install:
-  - echo "DING_TOKEN = $DING_TOKEN"
   - go get -u github.com/golang/dep/cmd/dep
   - go get -u github.com/onsi/ginkgo/ginkgo
 
