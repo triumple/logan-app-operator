@@ -11,7 +11,10 @@ export REPO="logancloud/logan-app-operator"
 if [[ "${TRAVIS_PULL_REQUEST}" = "false" ]]; then
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
     docker push ${REPO}:latest
-else
+fi
+
+echo ${TRAVIS_COMMIT_MESSAGE}
+if [[ "${TRAVIS_PULL_REQUEST}" != "false" ]]; then
     export TAG="pr_${TRAVIS_PULL_REQUEST}"
     docker tag ${REPO}:latest "${REPO}:${TAG}"
     docker images
