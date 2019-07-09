@@ -101,7 +101,7 @@ func TransferServiceNames(services []corev1.Service) string {
 }
 
 // Decode will decode the origin string, with the fields of Boot
-// Currently key only supports ${APP} and ${ENV}
+// Currently key only supports ${APP} and ${ENV} and ${PORT}
 func Decode(boot *appv1.Boot, origin string) (string, bool) {
 	ret := origin
 	replaced := false
@@ -112,6 +112,11 @@ func Decode(boot *appv1.Boot, origin string) (string, bool) {
 
 	if strings.Contains(origin, "${ENV}") {
 		ret = strings.ReplaceAll(ret, "${ENV}", logan.OperDev)
+		replaced = true
+	}
+	if strings.Contains(origin, "${PORT}") {
+		ret = strings.ReplaceAll(ret, "${PORT}",
+			strconv.FormatInt(int64(boot.Spec.Port), 10))
 		replaced = true
 	}
 
