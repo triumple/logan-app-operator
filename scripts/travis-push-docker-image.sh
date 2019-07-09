@@ -18,7 +18,6 @@ gitlogs='$(git log -1 | grep "Merge pull request")'
 re="Merge pull request #([0-9]+) .*"
 if [[ $gitlogs =~ $re ]]; then
     pullRequstId=${BASH_REMATCH[1]}
-    echo "4"
 fi
 
 echo "test_$pullRequstId"
