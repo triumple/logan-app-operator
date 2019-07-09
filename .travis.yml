@@ -15,7 +15,7 @@ go:
   - "1.12"
 
 env:
-  - DING_TOKEN="5349ab8e8a4ec739e5f2c704ebdcf50bf1e52c5b925d176a871c4e5b98735a20"
+  - TRAVIS_SD_START_TIME=$(date -u +%s%N)
 
 services:
   - docker
@@ -23,7 +23,6 @@ services:
 go_import_path: github.com/logancloud/logan-app-operator
 
 before_install:
-  - export TRAVIS_SD_START_TIME=$(date -u +%s%N)
   - wget https://github.com/operator-framework/operator-sdk/releases/download/v0.8.1/operator-sdk-v0.8.1-x86_64-linux-gnu
   - mkdir -p $HOME/bin
   - mv operator-sdk-v0.8.1-x86_64-linux-gnu $HOME/bin/operator-sdk
