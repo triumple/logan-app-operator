@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/logancloud/logan-app-operator/pkg/logan"
 	"github.com/logancloud/logan-app-operator/pkg/logan/config"
-	"github.com/logancloud/logan-app-operator/pkg/logan/operator"
 	"github.com/logancloud/logan-app-operator/pkg/logan/webhook"
 	admssionv1beta1 "k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -25,10 +24,6 @@ type ConfigValidator struct {
 var _ admission.Handler = &ConfigValidator{}
 
 func (vHandler *ConfigValidator) Handle(ctx context.Context, req types.Request) types.Response {
-	if operator.Ignore(req.AdmissionRequest.Namespace) {
-		return admission.ValidationResponse(true, "")
-	}
-
 	if !vHandler.targetConfig(req) {
 		return admission.ValidationResponse(true, "")
 	}
