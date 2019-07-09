@@ -14,15 +14,13 @@ os:
 go:
   - "1.12"
 
-env:
-  - TRAVIS_SD_START_TIME=$(date -u +%s%N)
-
 services:
   - docker
 
 go_import_path: github.com/logancloud/logan-app-operator
 
 before_install:
+  - export TRAVIS_SD_START_TIME=$(date -u +%s%N)
   - wget https://github.com/operator-framework/operator-sdk/releases/download/v0.8.1/operator-sdk-v0.8.1-x86_64-linux-gnu
   - mkdir -p $HOME/bin
   - mv operator-sdk-v0.8.1-x86_64-linux-gnu $HOME/bin/operator-sdk
@@ -34,19 +32,20 @@ install:
   - go get -u github.com/onsi/ginkgo/ginkgo
 
 script:
-  #- sh scripts/test.sh
   - make docker-build
   - make travis-build
 
 after_script:
+  - sh scripts/test.sh
   - docker logout
 
+
 after_failure:
-  - sh scripts/test.sh
+  - export TRAVIS_SD_STATUS=failure
 
 after_success:
-  - sh scripts/test1.sh
+  - export TRAVIS_SD_STATUS=success
 
 notifications:
   email: false
-  webhooks: "https://oapi.dingtalk.com/robot/send?access_token=[DING_TOKEN]"
+  #webhooks: "https://oapi.dingtalk.com/robot/send?access_token=[DING_TOKEN]"
