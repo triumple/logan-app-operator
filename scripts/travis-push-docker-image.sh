@@ -13,10 +13,7 @@ if [[ "${TRAVIS_PULL_REQUEST}" = "false" ]]; then
     docker push ${REPO}:latest
 fi
 
-echo "TRAVIS_COMMIT_MESSAGE=${TRAVIS_COMMIT_MESSAGE}"
-echo "TRAVIS_COMMIT=${TRAVIS_COMMIT}"
-echo "TRAVIS_COMMIT_RANGE=${TRAVIS_COMMIT_RANGE}"
-env
+#env
 git log -2
 if [[ "${TRAVIS_PULL_REQUEST}" != "false" ]]; then
     export TAG="pr_${TRAVIS_PULL_REQUEST}"
