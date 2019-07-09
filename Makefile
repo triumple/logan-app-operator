@@ -7,6 +7,9 @@ all: test
 test:
 	ginkgo -r -p
 
+dingding:
+	bash ./scripts/dingding.sh
+
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: fmt vet
 	operator-sdk up local --namespace=logan --operator-flags "--config=configs/config_local.yaml --zap-devel --zap-level info"
@@ -52,7 +55,7 @@ docker-push:
 	docker push ${IMG}
 
 travis-build:
-	./scripts/travis-push-docker-image.sh
+	bash ./scripts/travis-push-docker-image.sh
 
 # Init Operator
 initdeploy: initcm initrole initcrd
