@@ -14,7 +14,9 @@ if [[ "${TRAVIS_PULL_REQUEST}" = "false" ]]; then
 fi
 echo "2"
 pullRequstId=""
-gitlogs="$(git log -1 | grep "Merge pull request")"
+echo "21"
+gitlogs="$(git log -1 | grep \"Merge pull request\")"
+echo "22"
 gitlogs="Merge pull request #44 from triumple/operator_timezone_fix"
 re="Merge pull request #([0-9]+) .*"
 if [[ $gitlogs =~ $re ]]; then
