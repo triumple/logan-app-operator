@@ -5,6 +5,6 @@ curl 'https://oapi.dingtalk.com/robot/send?access_token=5349ab8e8a4ec739e5f2c704
 	-H 'Content-Type: application/json' \
 	-d '{"msgtype": "text",
               "text": {
-		"content": msg
+		"content": $msg
 	      }
 	    }'
