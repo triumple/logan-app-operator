@@ -34,7 +34,7 @@ install:
   - go get -u github.com/onsi/ginkgo/ginkgo
 
 script:
-  - sh scripts/test.sh
+  #- sh scripts/test.sh
   - make docker-build
   - make travis-build
 
@@ -43,4 +43,4 @@ after_script:
 
 notifications:
   email: false
-  webhooks: https://oapi.dingtalk.com/robot/send?access_token="[DING_TOKEN]"
+  webhooks: https://oapi.dingtalk.com/robot/send?access_token=[DING_TOKEN]
