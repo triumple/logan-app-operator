@@ -15,7 +15,7 @@ fi
 echo "2"
 pullRequstId=""
 echo "21"
-gitlogs="$(git log -1 | grep \"Merge pull request\")"
+gitlogs='$(git log -1 | grep "Merge pull request")'
 echo "22"
 gitlogs="Merge pull request #44 from triumple/operator_timezone_fix"
 re="Merge pull request #([0-9]+) .*"
