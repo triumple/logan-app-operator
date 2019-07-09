@@ -41,6 +41,12 @@ script:
 after_script:
   - docker logout
 
+after_failure:
+  - sh scripts/test.sh
+
+after_success:
+  - sh scripts/test1.sh
+
 notifications:
   email: false
   webhooks: "https://oapi.dingtalk.com/robot/send?access_token=[DING_TOKEN]"
