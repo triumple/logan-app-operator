@@ -17,9 +17,10 @@ go:
 services:
   - docker
 
-#go_import_path: logancloud/logan-app-operator
+go_import_path: github.com/logancloud/logan-app-operator
 
 before_install:
+  - export TRAVIS_SD_START_TIME=$(date -u +%s)
   - wget https://github.com/operator-framework/operator-sdk/releases/download/v0.8.1/operator-sdk-v0.8.1-x86_64-linux-gnu
   - mkdir -p $HOME/bin
   - mv operator-sdk-v0.8.1-x86_64-linux-gnu $HOME/bin/operator-sdk
@@ -35,8 +36,14 @@ script:
   - make travis-build
 
 after_script:
+  - sh scripts/dingding.sh
   - docker logout
+
+after_failure:
+  - export TRAVIS_SD_STATUS=failed
+
+after_success:
+  - export TRAVIS_SD_STATUS=succeeded
 
 notifications:
   email: false
-  webhooks: https://oapi.dingtalk.com/robot/send?access_token=d97c04116fd741faa4d441a1fe474d5e9ce8ea621cb88ba3d7e48cd250a3a604
