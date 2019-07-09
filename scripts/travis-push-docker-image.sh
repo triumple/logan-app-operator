@@ -7,12 +7,12 @@ set -o pipefail
 set -u
 
 export REPO="logancloud/logan-app-operator"
-
+echo "1"
 if [[ "${TRAVIS_PULL_REQUEST}" = "false" ]]; then
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
     docker push ${REPO}:latest
 fi
-
+echo "2"
 pullRequstId=""
 gitlogs="$(git log -1 | grep "Merge pull request")"
 gitlogs="Merge pull request #44 from triumple/operator_timezone_fix"
@@ -23,7 +23,7 @@ fi
 
 echo $pullRequstId
 if [[ "${pullRequstId}" != "" ]]; then
-    export TAG="pr_${TRAVIS_PULL_REQUEST}"
+    export TAG="pr_${pullRequstId}"
     docker tag ${REPO}:latest "${REPO}:${TAG}"
     docker images
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
