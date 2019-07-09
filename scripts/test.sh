@@ -1,8 +1,8 @@
 echo $TRAVIS_REPO_SLUG
 now=$(date -u +%s%N)
-elapsed_nano=`expr $now - $TRAVIS_TIMER_START_TIME`
+elapsed_nano=`expr $now - $TRAVIS_SD_START_TIME`
 echo $now
-echo $TRAVIS_TIMER_START_TIME
+echo $TRAVIS_SD_START_TIME
 echo $elapsed_nano
 elapsed_time=`expr $elapsed_nano / 1000000000`
 error_info="Build #$TRAVIS_BUILD_NUMBER($TRAVIS_COMMIT) of $TRAVIS_REPO_SLUG@$TRAVIS_BRANCH fail in $elapsed_time seconds"
