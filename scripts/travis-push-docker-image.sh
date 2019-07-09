@@ -13,9 +13,16 @@ if [[ "${TRAVIS_PULL_REQUEST}" = "false" ]]; then
     docker push ${REPO}:latest
 fi
 
-#env
-git log -2
-if [[ "${TRAVIS_PULL_REQUEST}" != "false" ]]; then
+pullRequstId=""
+gitlogs="$(git log -1 | grep "Merge pull request")"
+gitlogs="Merge pull request #44 from triumple/operator_timezone_fix"
+re="Merge pull request #([0-9]+) .*"
+if [[ $gitlogs =~ $re ]]; then
+    pullRequstId=${BASH_REMATCH[1]};
+fi
+
+echo $pullRequstId
+if [[ "${pullRequstId}" != "" ]]; then
     export TAG="pr_${TRAVIS_PULL_REQUEST}"
     docker tag ${REPO}:latest "${REPO}:${TAG}"
     docker images
