@@ -130,6 +130,7 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	c := handler.Client
 
 	updated := false
+	rebootUpdated := false
 
 	reason := "Updating Deployment"
 	// 1. Check ownerReferences
@@ -159,9 +160,8 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	if bootImg != deployImg {
 		logger.Info(reason, "type", "image", "Deploy", deploy.Name,
 			"old", deployImg, "new", bootImg)
-		deploy.Spec.Template.Spec.Containers[0].Image = bootImg
 
-		updated = true
+		rebootUpdated = true
 	}
 
 	// 4. Check env: check fist container(boot container)
@@ -170,9 +170,8 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	if !reflect.DeepEqual(deployEnv, bootEnv) {
 		logger.Info(reason, "type", "env", "deploy", deploy.Name,
 			"old", deployEnv, "new", bootEnv)
-		deploy.Spec.Template.Spec.Containers[0].Env = bootEnv
 
-		updated = true
+		rebootUpdated = true
 	}
 
 	// 5. Check port: check fist container(boot container)
@@ -181,18 +180,8 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	if !reflect.DeepEqual(deployPorts, bootPorts) {
 		logger.Info(reason, "type", "port", "deploy", deploy.Name,
 			"old", deployPorts, "new", bootPorts)
-		deploy.Spec.Template.Spec.Containers[0].Ports = bootPorts
-		readinessProbe := deploy.Spec.Template.Spec.Containers[0].ReadinessProbe
-		if readinessProbe != nil {
-			readinessProbe.HTTPGet.Port = intstr.IntOrString{Type: intstr.Int, IntVal: int32(boot.Spec.Port)}
-		}
 
-		livenessProbe := deploy.Spec.Template.Spec.Containers[0].LivenessProbe
-		if readinessProbe != nil {
-			livenessProbe.HTTPGet.Port = intstr.IntOrString{Type: intstr.Int, IntVal: int32(boot.Spec.Port)}
-		}
-
-		updated = true
+		rebootUpdated = true
 	}
 
 	// 6 Check resources: check fist container(boot container)
@@ -201,9 +190,8 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	if !reflect.DeepEqual(deployResources, bootResources) {
 		logger.Info(reason, "type", "resources", "deploy", deploy.Name,
 			"old", deployResources, "new", bootResources)
-		deploy.Spec.Template.Spec.Containers[0].Resources = bootResources
 
-		updated = true
+		rebootUpdated = true
 	}
 
 	// 7 Check health: check fist container(boot container)
@@ -215,28 +203,24 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 			deployHealth := probe.HTTPGet.Path
 			logger.Info(reason, "type", "health", "deploy", deploy.Name,
 				"old", deployHealth, "new", "")
-			deploy.Spec.Template.Spec.Containers[0].LivenessProbe = nil
-			deploy.Spec.Template.Spec.Containers[0].ReadinessProbe = nil
-			updated = true
+
+			rebootUpdated = true
 		}
 	} else {
 		if probe == nil {
 			// 1. If probe is nil, add Liveness and Readiness
-			liveness, readiness := handler.GetHealthProbe()
 			logger.Info(reason, "type", "health", "deploy", deploy.Name,
 				"old", "empty", "new", bootHealth)
-			deploy.Spec.Template.Spec.Containers[0].LivenessProbe = liveness
-			deploy.Spec.Template.Spec.Containers[0].ReadinessProbe = readiness
-			updated = true
+
+			rebootUpdated = true
 		} else {
 			deployHealth := probe.HTTPGet.Path
 			// 2. If probe is not nil, we only need to update the health path
 			if deployHealth != bootHealth {
 				logger.Info(reason, "type", "health", "deploy", deploy.Name,
 					"old", deployHealth, "new", bootHealth)
-				deploy.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.Path = bootHealth
-				deploy.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.Path = bootHealth
-				updated = true
+
+				rebootUpdated = true
 			}
 		}
 	}
@@ -247,9 +231,8 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	if !reflect.DeepEqual(deployNodeSelector, bootNodeSelector) {
 		logger.Info(reason, "type", "nodeSelector", "deploy", deploy.Name,
 			"old", deployNodeSelector, "new", bootNodeSelector)
-		deploy.Spec.Template.Spec.NodeSelector = bootNodeSelector
 
-		updated = true
+		rebootUpdated = true
 	}
 
 	// 9 Check command
@@ -258,12 +241,16 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	if !reflect.DeepEqual(deployCommand, bootCommand) {
 		logger.Info(reason, "type", "command", "Deploy", deploy.Name,
 			"old", deployCommand, "new", bootCommand)
-		deploy.Spec.Template.Spec.Containers[0].Command = bootCommand
 
-		updated = true
+		rebootUpdated = true
 	}
 
-	if updated {
+	if rebootUpdated {
+		updateDeploy := handler.NewDeployment()
+		deploy.Spec = updateDeploy.Spec
+	}
+
+	if updated || rebootUpdated {
 		err := c.Update(context.TODO(), deploy)
 		if err != nil {
 			logger.Info("Failed to update Deployment", "deploy", deploy.Name, "err", err.Error())
