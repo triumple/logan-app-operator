@@ -20,10 +20,11 @@ re="Merge pull request #([0-9]+) .*"
 if [[ $git_logs =~ $re ]]; then
     pull_requst_id=${BASH_REMATCH[1]}
 fi
-
+echo "pull_requst_id: ${pull_requst_id}"
 if [[ "${pull_requst_id}" != "" ]]; then
     export TAG="pr_${pull_requst_id}"
     docker tag ${REPO}:latest "${REPO}:${TAG}"
+    docker images
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
     echo "Pushing to docker hub ${REPO}:${TAG}"
     docker push "${REPO}:${TAG}"
