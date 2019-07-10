@@ -15,6 +15,7 @@ fi
 
 pull_requst_id=""
 git_logs=$(git log -1 | grep "Merge pull request")
+echo "travis push docker image: $git_logs"
 re="Merge pull request #([0-9]+) .*"
 if [[ $git_logs =~ $re ]]; then
     pull_requst_id=${BASH_REMATCH[1]}
