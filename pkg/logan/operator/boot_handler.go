@@ -280,20 +280,24 @@ func (handler *BootHandler) GetHealthProbe() (*corev1.Probe, *corev1.Probe) {
 }
 
 // NewServices returns a new created Service instance
-func (handler *BootHandler) NewServices() []*corev1.Service {
+func (handler *BootHandler) NewServices(dep *appsv1.Deployment) []*corev1.Service {
 	boot := handler.Boot
-	bootCfg := handler.Config
+	//bootCfg := handler.Config
 	// app Service
 	prometheusScrape := allowPrometheusScrape(boot, handler.Config.AppSpec)
 	bootSvc := handler.createService(int(boot.Spec.Port), boot.Name, prometheusScrape)
 	allSvcs := []*corev1.Service{bootSvc}
 
 	// additional sidecar Service
-	sidecarSvcs := bootCfg.SidecarServices
-	if sidecarSvcs != nil {
-		for _, svc := range *sidecarSvcs {
-			svcName, _ := Decode(boot, svc.Name)
-			allSvcs = append(allSvcs, handler.createService(int(svc.Port), svcName, true))
+	if len(dep.Spec.Template.Spec.Containers) > 1 {
+		sidecarContainers := dep.Spec.Template.Spec.Containers[1:]
+		for _, sidecarContainer := range sidecarContainers {
+			if sidecarContainer.Ports != nil {
+				for _, port := range sidecarContainer.Ports {
+					svcName := SideCarServiceName(boot, port)
+					allSvcs = append(allSvcs, handler.createService(int(port.ContainerPort), svcName, true))
+				}
+			}
 		}
 	}
 
@@ -310,7 +314,7 @@ func (handler *BootHandler) createService(port int, name string, prometheusScrap
 			Kind:       "Service",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        ServiceName(boot, name),
+			Name:        name,
 			Namespace:   boot.Namespace,
 			Labels:      ServiceLabels(boot),
 			Annotations: ServiceAnnotation(prometheusScrape, port),
@@ -331,6 +335,8 @@ func (handler *BootHandler) createService(port int, name string, prometheusScrap
 
 	if boot.Spec.SessionAffinity != "" {
 		serviceSpec.SessionAffinity = corev1.ServiceAffinity(boot.Spec.SessionAffinity)
+	} else {
+		serviceSpec.SessionAffinity = corev1.ServiceAffinityNone
 	}
 
 	svc.Spec = serviceSpec

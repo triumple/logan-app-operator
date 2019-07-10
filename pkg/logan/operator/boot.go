@@ -59,10 +59,9 @@ func PodLabels(boot *appv1.Boot) map[string]string {
 	return map[string]string{"app": "havok", boot.AppKey: boot.Name}
 }
 
-// ServiceName return the name for the created Service
-func ServiceName(boot *appv1.Boot, svcName string) string {
-	return svcName
-	//return svcName + "-" + boot.BootType
+// SideCarServiceName return the name for sidecar service
+func SideCarServiceName(boot *appv1.Boot, port corev1.ContainerPort) string {
+	return boot.Name + "-" + port.Name
 }
 
 // ServiceLabels return the labels for the created Service
