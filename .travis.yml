@@ -37,7 +37,7 @@ script:
 
 after_script:
   - docker logout
-  - sh scripts/dingding.sh
+  - bash scripts/dingding.sh
 
 after_failure:
   - export TRAVIS_SD_STATUS=failed
