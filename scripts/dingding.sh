@@ -5,7 +5,7 @@ if [ "${DING_TOKEN}" != "" ]; then
     elapsed_seconds=`expr $now - $TRAVIS_SD_START_TIME`
 
     author=""
-    git_logs=$(git log -1 | grep "Author: ")
+    git_logs='$(git log -1 | grep "Author: ")'
     echo "dingding git logs: $git_logs"
     re="Author: (.*) <.*"
     if [[ $git_logs =~ $re ]]; then
