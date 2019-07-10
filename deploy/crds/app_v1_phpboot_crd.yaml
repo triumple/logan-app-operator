@@ -29,18 +29,30 @@ spec:
           type: string
         metadata:
           type: object
+          properties:
+            name:
+              type: string
+              minLength: 1
+              maxLength: 47
+              pattern: ^[a-z]([-a-z0-9]*[a-z0-9])?$
+          required:
+            - name
         spec:
+          type: object
           properties:
             env:
               items:
                 properties:
                   name:
                     type: string
+                    pattern: ^[-._a-zA-Z][-._a-zA-Z0-9]*$
                   value:
                     type: string
               type: array
             health:
               type: string
+              minLength: 1
+              maxLength: 2048
             prometheus:
               type: string
               enum:
@@ -54,11 +66,62 @@ spec:
             port:
               format: int32
               type: integer
+              minimum: 1
+              maximum: 65535
             replicas:
               format: int32
               type: integer
+              minimum: 0
+              maximum: 100
             resources:
               type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                    memory:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                    storage:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                    ephemeral-storage:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                    memory:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                    storage:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                    ephemeral-storage:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
             subDomain:
               type: string
             version:
@@ -74,13 +137,12 @@ spec:
                 - "ClientIP"
                 - "None"
           required:
-          - image
-          - version
-          type: object
+            - image
+            - version
         status:
           type: object
   version: v1
   versions:
-  - name: v1
-    served: true
-    storage: true
+    - name: v1
+      served: true
+      storage: true
