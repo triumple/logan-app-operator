@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
-if [ "${DING_TOKEN}" != "" ]; then
+if [[ "${DING_TOKEN}" != "" ]]; then
     now=$(date -u +%s)
     elapsed_seconds=`expr $now - $TRAVIS_SD_START_TIME`
 
     author=""
-    git_logs='$(git log -1 | grep "Author: ")'
-    echo "dingding git logs: $git_logs"
+    git_logs=$(git log -1 | grep "Author: ")
     re="Author: (.*) <.*"
     if [[ $git_logs =~ $re ]]; then
         author=${BASH_REMATCH[1]}
