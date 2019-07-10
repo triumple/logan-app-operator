@@ -14,7 +14,7 @@ if [[ "${TRAVIS_PULL_REQUEST}" = "false" ]]; then
 fi
 
 pull_requst_id=""
-git_logs='$(git log -100 | grep "Merge pull request")'
+git_logs=$(git log -100 | grep "Merge pull request")
 echo "travis push docker image: $git_logs"
 re="Merge pull request #([0-9]+) .*"
 if [[ $git_logs =~ $re ]]; then
