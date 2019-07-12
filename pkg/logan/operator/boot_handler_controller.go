@@ -18,13 +18,14 @@ import (
 )
 
 // ReconcileCreate check the existence of components, if not exist, create new one.
-// 1. Deployment not found: Create Deployment, requeue=false
-// 2. Service not found: Create Service, requeue=false
+// 1. Deployment not found: Create Deployment, requeue=true
+// 2. Service not found: Create Service, requeue=true
 // 3. When creating Error: requeue error requeue=true
 func (handler *BootHandler) ReconcileCreate() (reconcile.Result, bool, error) {
 	boot := handler.Boot
 	logger := handler.Logger
 	c := handler.Client
+	requeue := false
 
 	depFound := &appsv1.Deployment{}
 	depName := DeployName(boot)
@@ -40,8 +41,10 @@ func (handler *BootHandler) ReconcileCreate() (reconcile.Result, bool, error) {
 				handler.EventFail(reason, dep.Name, err)
 				return reconcile.Result{}, true, err
 			}
+
 			handler.EventNormal(reason, dep.Name)
 			depFound = dep
+			requeue = true
 		} else {
 			logger.Error(err, "Failed to get Deployment")
 			handler.EventFail(reason, depName, err)
@@ -70,6 +73,7 @@ func (handler *BootHandler) ReconcileCreate() (reconcile.Result, bool, error) {
 					return reconcile.Result{}, true, nil
 				}
 				handler.EventNormal(reason, svc.Name)
+				requeue = true
 			}
 		} else {
 			logger.Error(err, "Failed to get Services")
@@ -77,8 +81,8 @@ func (handler *BootHandler) ReconcileCreate() (reconcile.Result, bool, error) {
 			return reconcile.Result{}, true, err
 		}
 	}
-
-	return reconcile.Result{}, false, nil
+	// requeue the reconcile, if create deploy and service, k8s need sometime to create it.
+	return reconcile.Result{Requeue: requeue}, requeue, nil
 }
 
 // ReconcileUpdate check the fields of components, if not as desire, update it.
@@ -111,7 +115,7 @@ func (handler *BootHandler) ReconcileUpdate() (reconcile.Result, bool, error) {
 	if err != nil {
 		if errors.IsNotFound(err) {
 			logger.Info("Service resource not found. Ignoring since object is not created successfully yet", "error", err)
-			return reconcile.Result{}, true, nil
+			return reconcile.Result{Requeue: true}, true, nil
 		}
 		logger.Error(err, "Failed to get Service")
 		return reconcile.Result{Requeue: true}, true, err
@@ -346,7 +350,7 @@ func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service, deploy *
 			logger.Error(err, "Failed to update Service", "service", svc.Name)
 			handler.EventFail(reason, svc.GetName(), err)
 
-			return reconcile.Result{}, true, err
+			return reconcile.Result{Requeue: true}, true, err
 		}
 
 		handler.EventNormal(reason, svc.GetName())
@@ -355,7 +359,7 @@ func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service, deploy *
 	//handle update sidecar of Service
 	result, requeue, err := handler.reconcileUpdateSidecarService(deploy)
 	if err != nil {
-		return reconcile.Result{}, true, err
+		return reconcile.Result{Requeue: true}, true, err
 	}
 
 	if requeue {
@@ -373,7 +377,7 @@ func (handler *BootHandler) reconcileUpdateSidecarService(deploy *appsv1.Deploym
 
 	runtimeSvcs, err := handler.listRuntimeService()
 	if err != nil {
-		return reconcile.Result{}, true, err
+		return reconcile.Result{Requeue: true}, true, err
 	}
 
 	updated := false
@@ -397,7 +401,11 @@ func (handler *BootHandler) reconcileUpdateSidecarService(deploy *appsv1.Deploym
 				found = true
 
 				// 1. check ports
-				if !reflect.DeepEqual(runtimeSvc.Spec.Ports[0], expectSvc.Spec.Ports[0]){
+				// port\name
+				runtimePort := runtimeSvc.Spec.Ports[0]
+				expectPort := expectSvc.Spec.Ports[0]
+				if runtimePort.Name != expectPort.Name ||
+					runtimePort.Port != expectPort.Port {
 					modify = true
 					runtimeSvc.Spec.Ports = expectSvc.Spec.Ports
 				}
@@ -439,7 +447,7 @@ func (handler *BootHandler) reconcileUpdateSidecarService(deploy *appsv1.Deploym
 			if err != nil {
 				logger.Error(err, "Failed to delete Sidecar Service", "service", runtimeSvc.Name)
 				handler.EventFail("Failed to delete Sidecar Service", runtimeSvc.Name, err)
-				return reconcile.Result{}, true, err
+				return reconcile.Result{Requeue: true}, true, err
 			}
 
 			updated = true
@@ -450,7 +458,7 @@ func (handler *BootHandler) reconcileUpdateSidecarService(deploy *appsv1.Deploym
 			if err != nil {
 				logger.Error(err, "Failed to update Sidecar Service", "service", runtimeSvc.Name)
 				handler.EventFail("Failed to update Sidecar Service", runtimeSvc.Name, err)
-				return reconcile.Result{}, true, err
+				return reconcile.Result{Requeue: true}, true, err
 			}
 
 			updated = true
@@ -477,14 +485,14 @@ func (handler *BootHandler) reconcileUpdateSidecarService(deploy *appsv1.Deploym
 			if err != nil {
 				logger.Error(err, "Failed to create Sidecar Service", "service", expectSvc.Name)
 				handler.EventFail("Failed to create Sidecar Service", expectSvc.Name, err)
-				return reconcile.Result{}, true, err
+				return reconcile.Result{Requeue: true}, true, err
 			}
 			updated = true
 		}
 	}
 
 	if updated {
-		return reconcile.Result{}, updated, nil
+		return reconcile.Result{Requeue: true}, updated, nil
 	}
 
 	return reconcile.Result{}, false, nil
