@@ -41,6 +41,7 @@ func (handler *BootHandler) ReconcileCreate() (reconcile.Result, bool, error) {
 				return reconcile.Result{}, true, err
 			}
 			handler.EventNormal(reason, dep.Name)
+			depFound = dep
 		} else {
 			logger.Error(err, "Failed to get Deployment")
 			handler.EventFail(reason, depName, err)
@@ -49,7 +50,7 @@ func (handler *BootHandler) ReconcileCreate() (reconcile.Result, bool, error) {
 	}
 
 	appSvcFound := &corev1.Service{}
-	appSvcName := ServiceName(boot, boot.Name)
+	appSvcName := boot.Name
 	err = c.Get(context.TODO(), types.NamespacedName{Name: appSvcName, Namespace: boot.Namespace}, appSvcFound)
 	if err != nil && errors.IsNotFound(err) {
 		reason := "Creating Service"
@@ -58,7 +59,7 @@ func (handler *BootHandler) ReconcileCreate() (reconcile.Result, bool, error) {
 			// need to consider individually in the future
 
 			// Creating all services
-			for _, svc := range handler.NewServices() {
+			for _, svc := range handler.NewServices(depFound) {
 				logger.Info("Creating Service", "service", svc.Name)
 				err = c.Create(context.TODO(), svc)
 				if err != nil {
@@ -105,7 +106,7 @@ func (handler *BootHandler) ReconcileUpdate() (reconcile.Result, bool, error) {
 
 	//2 Service
 	appSvcFound := &corev1.Service{}
-	appSvcName := ServiceName(boot, boot.Name)
+	appSvcName := boot.Name
 	err = c.Get(context.TODO(), types.NamespacedName{Name: appSvcName, Namespace: boot.Namespace}, appSvcFound)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -115,7 +116,7 @@ func (handler *BootHandler) ReconcileUpdate() (reconcile.Result, bool, error) {
 		logger.Error(err, "Failed to get Service")
 		return reconcile.Result{Requeue: true}, true, err
 	}
-	result, requeue, err = handler.reconcileUpdateService(appSvcFound)
+	result, requeue, err = handler.reconcileUpdateService(appSvcFound, depFound)
 	if requeue {
 		return result, true, err
 	}
@@ -130,6 +131,7 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	c := handler.Client
 
 	updated := false
+	rebootUpdated := false
 
 	reason := "Updating Deployment"
 	// 1. Check ownerReferences
@@ -159,9 +161,8 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	if bootImg != deployImg {
 		logger.Info(reason, "type", "image", "Deploy", deploy.Name,
 			"old", deployImg, "new", bootImg)
-		deploy.Spec.Template.Spec.Containers[0].Image = bootImg
 
-		updated = true
+		rebootUpdated = true
 	}
 
 	// 4. Check env: check fist container(boot container)
@@ -170,9 +171,8 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	if !reflect.DeepEqual(deployEnv, bootEnv) {
 		logger.Info(reason, "type", "env", "deploy", deploy.Name,
 			"old", deployEnv, "new", bootEnv)
-		deploy.Spec.Template.Spec.Containers[0].Env = bootEnv
 
-		updated = true
+		rebootUpdated = true
 	}
 
 	// 5. Check port: check fist container(boot container)
@@ -181,18 +181,8 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	if !reflect.DeepEqual(deployPorts, bootPorts) {
 		logger.Info(reason, "type", "port", "deploy", deploy.Name,
 			"old", deployPorts, "new", bootPorts)
-		deploy.Spec.Template.Spec.Containers[0].Ports = bootPorts
-		readinessProbe := deploy.Spec.Template.Spec.Containers[0].ReadinessProbe
-		if readinessProbe != nil {
-			readinessProbe.HTTPGet.Port = intstr.IntOrString{Type: intstr.Int, IntVal: int32(boot.Spec.Port)}
-		}
 
-		livenessProbe := deploy.Spec.Template.Spec.Containers[0].LivenessProbe
-		if readinessProbe != nil {
-			livenessProbe.HTTPGet.Port = intstr.IntOrString{Type: intstr.Int, IntVal: int32(boot.Spec.Port)}
-		}
-
-		updated = true
+		rebootUpdated = true
 	}
 
 	// 6 Check resources: check fist container(boot container)
@@ -201,9 +191,8 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	if !reflect.DeepEqual(deployResources, bootResources) {
 		logger.Info(reason, "type", "resources", "deploy", deploy.Name,
 			"old", deployResources, "new", bootResources)
-		deploy.Spec.Template.Spec.Containers[0].Resources = bootResources
 
-		updated = true
+		rebootUpdated = true
 	}
 
 	// 7 Check health: check fist container(boot container)
@@ -215,28 +204,24 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 			deployHealth := probe.HTTPGet.Path
 			logger.Info(reason, "type", "health", "deploy", deploy.Name,
 				"old", deployHealth, "new", "")
-			deploy.Spec.Template.Spec.Containers[0].LivenessProbe = nil
-			deploy.Spec.Template.Spec.Containers[0].ReadinessProbe = nil
-			updated = true
+
+			rebootUpdated = true
 		}
 	} else {
 		if probe == nil {
 			// 1. If probe is nil, add Liveness and Readiness
-			liveness, readiness := handler.GetHealthProbe()
 			logger.Info(reason, "type", "health", "deploy", deploy.Name,
 				"old", "empty", "new", bootHealth)
-			deploy.Spec.Template.Spec.Containers[0].LivenessProbe = liveness
-			deploy.Spec.Template.Spec.Containers[0].ReadinessProbe = readiness
-			updated = true
+
+			rebootUpdated = true
 		} else {
 			deployHealth := probe.HTTPGet.Path
 			// 2. If probe is not nil, we only need to update the health path
 			if deployHealth != bootHealth {
 				logger.Info(reason, "type", "health", "deploy", deploy.Name,
 					"old", deployHealth, "new", bootHealth)
-				deploy.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.Path = bootHealth
-				deploy.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.Path = bootHealth
-				updated = true
+
+				rebootUpdated = true
 			}
 		}
 	}
@@ -247,9 +232,8 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	if !reflect.DeepEqual(deployNodeSelector, bootNodeSelector) {
 		logger.Info(reason, "type", "nodeSelector", "deploy", deploy.Name,
 			"old", deployNodeSelector, "new", bootNodeSelector)
-		deploy.Spec.Template.Spec.NodeSelector = bootNodeSelector
 
-		updated = true
+		rebootUpdated = true
 	}
 
 	// 9 Check command
@@ -258,12 +242,16 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	if !reflect.DeepEqual(deployCommand, bootCommand) {
 		logger.Info(reason, "type", "command", "Deploy", deploy.Name,
 			"old", deployCommand, "new", bootCommand)
-		deploy.Spec.Template.Spec.Containers[0].Command = bootCommand
 
-		updated = true
+		rebootUpdated = true
 	}
 
-	if updated {
+	if rebootUpdated {
+		updateDeploy := handler.NewDeployment()
+		deploy.Spec = updateDeploy.Spec
+	}
+
+	if updated || rebootUpdated {
 		err := c.Update(context.TODO(), deploy)
 		if err != nil {
 			logger.Info("Failed to update Deployment", "deploy", deploy.Name, "err", err.Error())
@@ -279,8 +267,8 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	return reconcile.Result{}, false, nil
 }
 
-// reconcileUpdateService handle update logic of Service
-func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service) (reconcile.Result, bool, error) {
+// reconcileUpdateService handle update logic/sidecar of Service
+func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service, deploy *appsv1.Deployment) (reconcile.Result, bool, error) {
 	boot := handler.Boot
 	logger := handler.Logger
 	c := handler.Client
@@ -355,7 +343,7 @@ func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service) (reconci
 	if updated {
 		err := c.Update(context.TODO(), svc)
 		if err != nil {
-			logger.Error(err, "Failed to update Service", "type", "port", "service", svc.Name)
+			logger.Error(err, "Failed to update Service", "service", svc.Name)
 			handler.EventFail(reason, svc.GetName(), err)
 
 			return reconcile.Result{}, true, err
@@ -364,7 +352,160 @@ func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service) (reconci
 		handler.EventNormal(reason, svc.GetName())
 	}
 
+	//handle update sidecar of Service
+	result, requeue, err := handler.reconcileUpdateSidecarService(deploy)
+	if err != nil {
+		return reconcile.Result{}, true, err
+	}
+
+	if requeue {
+		return result, requeue, err
+	}
+
 	return reconcile.Result{}, false, nil
+}
+
+// reconcileUpdateSidecarService handle update sidecar of Service
+func (handler *BootHandler) reconcileUpdateSidecarService(deploy *appsv1.Deployment) (reconcile.Result, bool, error) {
+	c := handler.Client
+	boot := handler.Boot
+	logger := handler.Logger
+
+	runtimeSvcs, err := handler.listRuntimeService()
+	if err != nil {
+		return reconcile.Result{}, true, err
+	}
+
+	updated := false
+	expectSvcs := handler.NewServices(deploy)
+	// update or delete  sidecar service
+	for _, runtimeSvc := range runtimeSvcs.Items {
+		// skip app service
+		if runtimeSvc.Name == boot.Name {
+			continue
+		}
+
+		found := false
+		modify := false
+		for _, expectSvc := range expectSvcs {
+			// skip app service
+			if expectSvc.Name == boot.Name {
+				continue
+			}
+
+			if runtimeSvc.Name == expectSvc.Name {
+				found = true
+
+				// 1. check ports
+				if !reflect.DeepEqual(runtimeSvc.Spec.Ports[0], expectSvc.Spec.Ports[0]){
+					modify = true
+					runtimeSvc.Spec.Ports = expectSvc.Spec.Ports
+				}
+
+				// 2. check OwnerReferences
+				ownerReferences := runtimeSvc.OwnerReferences
+				if ownerReferences == nil || len(ownerReferences) == 0 {
+					runtimeSvc.OwnerReferences = expectSvc.OwnerReferences
+				}
+
+				// 3. check SessionAffinity
+				if runtimeSvc.Spec.SessionAffinity != expectSvc.Spec.SessionAffinity {
+					modify = true
+					runtimeSvc.Spec.SessionAffinity = expectSvc.Spec.SessionAffinity
+				}
+
+				// 4. Check annotation
+				// Annotation is removed
+				if runtimeSvc.Annotations == nil {
+					modify = true
+					runtimeSvc.Annotations = expectSvc.Annotations
+				}
+
+				// Annotation port is changed
+				if runtimeSvc.Annotations != nil {
+					svcAnnoPort := runtimeSvc.Annotations[PrometheusPortKey]
+					if svcAnnoPort != strconv.Itoa(int(expectSvc.Spec.Ports[0].Port)) {
+						runtimeSvc.Annotations = expectSvc.Annotations
+						modify = true
+					}
+				}
+			}
+		}
+
+		if !found {
+			logger.Info("Deleting Sidecar Service", "service", runtimeSvc.Name)
+
+			err := c.Delete(context.TODO(), &runtimeSvc)
+			if err != nil {
+				logger.Error(err, "Failed to delete Sidecar Service", "service", runtimeSvc.Name)
+				handler.EventFail("Failed to delete Sidecar Service", runtimeSvc.Name, err)
+				return reconcile.Result{}, true, err
+			}
+
+			updated = true
+		} else if modify {
+			logger.Info("Updating Sidecar Service", "service", runtimeSvc.Name)
+
+			err := c.Update(context.TODO(), &runtimeSvc)
+			if err != nil {
+				logger.Error(err, "Failed to update Sidecar Service", "service", runtimeSvc.Name)
+				handler.EventFail("Failed to update Sidecar Service", runtimeSvc.Name, err)
+				return reconcile.Result{}, true, err
+			}
+
+			updated = true
+		}
+	}
+
+	// new sidecar service
+	for _, expectSvc := range expectSvcs {
+		// skip app service
+		if expectSvc.Name == boot.Name {
+			continue
+		}
+
+		notFound := true
+		for _, runtimeSvc := range runtimeSvcs.Items {
+			if runtimeSvc.Name == expectSvc.Name {
+				notFound = false
+			}
+		}
+
+		if notFound {
+			logger.Info("Creating Sidecar Service", "service", expectSvc.Name)
+			err := c.Create(context.TODO(), expectSvc)
+			if err != nil {
+				logger.Error(err, "Failed to create Sidecar Service", "service", expectSvc.Name)
+				handler.EventFail("Failed to create Sidecar Service", expectSvc.Name, err)
+				return reconcile.Result{}, true, err
+			}
+			updated = true
+		}
+	}
+
+	if updated {
+		return reconcile.Result{}, updated, nil
+	}
+
+	return reconcile.Result{}, false, nil
+}
+
+func (handler *BootHandler) listRuntimeService() (*corev1.ServiceList, error) {
+	logger := handler.Logger
+	boot := handler.Boot
+	c := handler.Client
+	svcLabels := ServiceLabels(boot)
+	svcList := &corev1.ServiceList{}
+	listOptions := &client.ListOptions{
+		Namespace:     boot.Namespace,
+		LabelSelector: labels.SelectorFromSet(svcLabels),
+	}
+	err := c.List(context.TODO(), listOptions, svcList)
+	if err != nil {
+		logger.Error(err, "Failed to list services")
+		return nil, err
+	}
+	return svcList, nil
 }
 
 // ReconcileUpdateBootMeta will handle the metadata update
@@ -386,13 +527,7 @@ func (handler *BootHandler) ReconcileUpdateBootMeta() (reconcile.Result, bool, b
 	}
 
 	// 2. Update Service's metadata/annotations if needed
-	svcLabels := ServiceLabels(boot)
-	svcList := &corev1.ServiceList{}
-	listOptions := &client.ListOptions{
-		Namespace:     boot.Namespace,
-		LabelSelector: labels.SelectorFromSet(svcLabels),
-	}
-	err = c.List(context.TODO(), listOptions, svcList)
+	svcList, err := handler.listRuntimeService()
 	if err != nil {
 		logger.Error(err, "Failed to list services")
 
@@ -402,7 +537,7 @@ func (handler *BootHandler) ReconcileUpdateBootMeta() (reconcile.Result, bool, b
 	// 3. Update Boot's annotation if needed.
 	podList := &corev1.PodList{}
 	labelSelector := labels.SelectorFromSet(PodLabels(boot))
-	listOptions = &client.ListOptions{Namespace: boot.Namespace, LabelSelector: labelSelector}
+	listOptions := &client.ListOptions{Namespace: boot.Namespace, LabelSelector: labelSelector}
 	err = c.List(context.TODO(), listOptions, podList)
 	if err != nil {
 		logger.Error(err, "Failed to list pods")
