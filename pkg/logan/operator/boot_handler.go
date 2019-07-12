@@ -246,8 +246,15 @@ func (handler *BootHandler) NewAppContainer() *corev1.Container {
 func (handler *BootHandler) GetHealthProbe() (*corev1.Probe, *corev1.Probe) {
 	boot := handler.Boot
 	healthPort := AppContainerHealthPort(boot, handler.Config.AppSpec)
+
+	// havok issue #95
+	failureThreshold := int32(10)
+	if boot.BootType == logan.BootPython {
+		failureThreshold = int32(15)
+	}
+
 	livenessProbe := &corev1.Probe{
-		FailureThreshold: 10,
+		FailureThreshold: failureThreshold,
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   *boot.Spec.Health,
@@ -262,7 +269,7 @@ func (handler *BootHandler) GetHealthProbe() (*corev1.Probe, *corev1.Probe) {
 	}
 
 	readinessProbe := &corev1.Probe{
-		FailureThreshold: 10,
+		FailureThreshold: failureThreshold,
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   *boot.Spec.Health,
