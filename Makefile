@@ -60,6 +60,8 @@ initdeploy: initcm initrole initcrd
 
 initcm:
 	oc create configmap logan-app-operator-config --from-file=configs/config.yaml
+	oc create configmap logan-app-operator-config-auto --from-file=configs/config.yaml
+	oc create configmap logan-app-operator-config-dev --from-file=configs/config.yaml
 
 initrole:
 	oc create -f deploy/role.yaml
@@ -81,6 +83,10 @@ redeploy: recm rerole recrd
 recm:
 	oc delete configmap logan-app-operator-config --ignore-not-found=true
 	oc create configmap logan-app-operator-config --from-file=configs/config.yaml
+	oc delete configmap logan-app-operator-config-dev --ignore-not-found=true
+	oc create configmap logan-app-operator-config-dev --from-file=configs/config.yaml
+	oc delete configmap logan-app-operator-config-auto --ignore-not-found=true
+	oc create configmap logan-app-operator-config-auto --from-file=configs/config.yaml
 
 rerole:
 	oc replace -f deploy/role.yaml
