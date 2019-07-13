@@ -57,7 +57,7 @@ func AppContainerImageName(boot *appv1.Boot, appSpec *config.AppSpec) string {
 // PodLabels return labels for the created Pod
 func PodLabels(boot *appv1.Boot) map[string]string {
 	//return map[string]string{"app": "havok", boot.AppKey: boot.Name}
-	return map[string]string{"app": "havok", "bootName": boot.Name ,"bootType": boot.BootType}
+	return map[string]string{"app": "havok", "bootName": boot.Name, "bootType": boot.BootType}
 }
 
 // SideCarServiceName return the name for sidecar service
