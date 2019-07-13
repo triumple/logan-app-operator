@@ -253,12 +253,33 @@ func applyDefaultWithSidecar(globalCfg GlobalConfig, operatorCfg *OperatorConfig
 	appSpec := operatorCfg.AppSpec
 	applyDefault(operatorCfg, appSpec, bootType)
 
-	// Replace Registry's name
+	// Replace Registry's name, Merge env
 	// 1. InitContainers
 	podSpec := operatorCfg.AppSpec.PodSpec
 	if podSpec != nil && podSpec.InitContainers != nil {
 		for i, container := range podSpec.InitContainers {
+			//Replace Image Registry
 			podSpec.InitContainers[i].Image = DecodeImageName(container.Image, operatorCfg.AppSpec)
+
+			// Merge oEnv's settings: initContainer
+			initContainerOEnvs, ok := operatorCfg.OEnvs[container.Name]
+			if !ok {
+				continue
+			}
+			appEnvDefault, ok := initContainerOEnvs[logan.OperDev]
+			if !ok {
+				continue
+			}
+
+			toMerge := AppSpec{
+				Env: container.Env,
+			}
+
+			err := util.MergeOverride(&toMerge, appEnvDefault)
+			if err != nil {
+				log.Error(err, "initContainer env config merge error.", "type", bootType)
+			}
+			podSpec.InitContainers[i].Env = toMerge.Env
 		}
 	}
 
@@ -270,15 +291,24 @@ func applyDefaultWithSidecar(globalCfg GlobalConfig, operatorCfg *OperatorConfig
 			(*sidecarContainers)[i].Image = DecodeImageName(container.Image, operatorCfg.AppSpec)
 
 			// Merge oEnv's settings: sidecar
-			appEnvDefault := operatorCfg.OEnvs[container.Name][logan.OperDev]
+			sidecarOEnvs, ok := operatorCfg.OEnvs[container.Name]
+			if !ok {
+				continue
+			}
+			appEnvDefault, ok := sidecarOEnvs[logan.OperDev]
+			if !ok {
+				continue
+			}
+
 			toMerge := AppSpec{
 				Env: container.Env,
 			}
+
 			err := util.MergeOverride(&toMerge, appEnvDefault)
-			(*sidecarContainers)[i].Env = toMerge.Env
 			if err != nil {
 				log.Error(err, "sidecar env config merge error.", "type", bootType)
 			}
+			(*sidecarContainers)[i].Env = toMerge.Env
 		}
 	}
 }
