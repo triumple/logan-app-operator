@@ -32,12 +32,14 @@ spec:
               value: "logan-app-operator"
             - name: LOGAN_ENV
               value: "dev"
+            - name: CONFIGMAP_NAME
+              value: "logan-app-operator-config-dev"
           volumeMounts:
             - mountPath: /etc/logan
               name: logan-app-operator-config
       volumes:
         - name: logan-app-operator-config
           configMap:
-            name: logan-app-operator-config
+            name: logan-app-operator-config-dev
   strategy:
     type: Recreate
