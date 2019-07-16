@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-logr/logr"
 	appv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
+	"github.com/logancloud/logan-app-operator/pkg/logan"
 	"github.com/logancloud/logan-app-operator/pkg/logan/config"
 	"github.com/logancloud/logan-app-operator/pkg/logan/operator"
 	appsv1 "k8s.io/api/apps/v1"
@@ -40,7 +41,7 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("webboot-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("webboot-controller", mgr, controller.Options{Reconciler: r, MaxConcurrentReconciles: logan.MaxConcurrentReconciles})
 	if err != nil {
 		return err
 	}
