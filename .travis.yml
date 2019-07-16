@@ -1,5 +1,6 @@
 sudo: required
 
+dist: xenial
 language: go
 
 os:
@@ -12,14 +13,15 @@ os:
 #    - develop
 
 go:
-  - "1.12"
+  - "1.12.x"
 
 services:
   - docker
 
-#go_import_path: logancloud/logan-app-operator
+go_import_path: github.com/logancloud/logan-app-operator
 
 before_install:
+  - bash ./scripts/display-system-info.sh
   - export TRAVIS_SD_START_TIME=$(date -u +%s)
   - wget https://github.com/operator-framework/operator-sdk/releases/download/v0.8.1/operator-sdk-v0.8.1-x86_64-linux-gnu
   - mkdir -p $HOME/bin
@@ -33,6 +35,7 @@ install:
 
 script:
   - make docker-build
+  - make test-e2e
   - make travis-build
 
 after_script:
