@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env  bash
 
 if [[ "${DING_TOKEN}" != "" ]]; then
     now=$(date -u +%s)
