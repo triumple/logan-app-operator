@@ -2,6 +2,7 @@ package logan
 
 import (
 	"os"
+	"runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
@@ -47,6 +48,8 @@ var OperDev string
 
 var OperConfigmap string
 
+var MaxConcurrentReconciles int
+
 var log = logf.Log.WithName("logan_util")
 
 func init() {
@@ -76,4 +79,5 @@ func init() {
 		OperConfigmap = configMap
 	}
 
+	MaxConcurrentReconciles = runtime.NumCPU() * 2
 }

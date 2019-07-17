@@ -21,6 +21,13 @@ spec:
             - logan-app-operator
           args: ["--config", "/etc/logan/config.yaml", "--zap-devel", "--zap-level", "info"]
           imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: '2'
+              memory: 2Gi
+            requests:
+              cpu: 100m
+              memory: 512Mi
           env:
             - name: WATCH_NAMESPACE
               value: ""
