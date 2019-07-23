@@ -23,6 +23,7 @@ rules:
   verbs:
   - get
 - apiGroups:
+  - extensions
   - apps
   resources:
   - deployments
@@ -39,6 +40,7 @@ rules:
   - get
   - create
 - apiGroups:
+  - extensions
   - apps
   resourceNames:
   - logan-app-operator
