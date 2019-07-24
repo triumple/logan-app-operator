@@ -51,7 +51,7 @@ spec:
               type: array
             health:
               type: string
-              minLength: 1
+              minLength: 0
               maxLength: 2048
             prometheus:
               type: string
@@ -83,22 +83,22 @@ spec:
                       type: string
                       minLength: 1
                       maxLength: 63
-                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
                     memory:
                       type: string
                       minLength: 1
                       maxLength: 63
-                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
                     storage:
                       type: string
                       minLength: 1
                       maxLength: 63
-                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
                     ephemeral-storage:
                       type: string
                       minLength: 1
                       maxLength: 63
-                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
                 requests:
                   type: object
                   properties:
@@ -106,22 +106,22 @@ spec:
                       type: string
                       minLength: 1
                       maxLength: 63
-                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
                     memory:
                       type: string
                       minLength: 1
                       maxLength: 63
-                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
                     storage:
                       type: string
                       minLength: 1
                       maxLength: 63
-                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
                     ephemeral-storage:
                       type: string
                       minLength: 1
                       maxLength: 63
-                      pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
             subDomain:
               type: string
             version:
