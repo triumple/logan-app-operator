@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logan-app-operator-config
+  namespace: logan
+data:
+  config.yaml: |-
+    ## JavaBoot default config
+    java:
+      oEnvs:
+        app:
+          dev:
+            env:
+              - name: TEST_ENV1
+                value: "-Denv=${ENV}"
+      app:
+        port: 8080
+        replicas: 1
+        health: /
+        env:
+          - name: SPRING_PROFILES_ACTIVE
+            value: "${ENV}"
+          - name: SPRING_APPLICATION_NAME
+            value: "${APP}"
+          - name: SERVER_PORT
+            value: "${PORT}"
+          - name: SPRING_ZIPKIN_ENABLED
+            value: "true"
+        resources:
+          limits:
+            cpu: "2"
+            memory: "2Gi"
+          requests:
+            cpu: "30m"
+            memory: "512Mi"
+
+    ## PhpBoot Default
+    php:
+      oEnvs:
+        app:
+          dev:
+            env:
+              - name: TEST_ENV1
+                value: "-Denv=${ENV}"
+        sidecar:
+          dev:
+            env:
+              - name: TEST_ENV1
+                value: "-Denv=${ENV}8"
+      app:
+        port: 7777
+        replicas: 1
+        health: /
+        resources:
+          limits:
+            cpu: "2"
+            memory: "1Gi"
+          requests:
+            cpu: "500m"
+            memory: "100Mi"
+        container:
+          volumeMounts:
+            - mountPath: /opt/data
+              name: shared-data
+        podSpec:
+          volumes:
+            - name: shared-data
+              emptyDir: {}
+          initContainers:
+            - name: fetcher
+              image: 'busybox:latest'
+              imagePullPolicy: Always
+              env:
+                - name: APPLICATION_NAME
+                  value: ${APP}
+              resources:
+                limits:
+                  cpu: '1'
+                  memory: 2Gi
+                requests:
+                  cpu: 100m
+                  memory: 512Mi
+      sideCarContainers:
+        - name: sidecar
+          image: 'busybox:latest'
+          imagePullPolicy: Always
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "${ENV}"
+          ports:
+            - name: http
+              containerPort: 5678
+              protocol: TCP
+          resources:
+            limits:
+              cpu: '1'
+              memory: 2Gi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+      sidecarServices:
+        - name: ${APP}-sidecar
+          port: 5678

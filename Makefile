@@ -5,7 +5,7 @@ all: test
 
 # Run tests
 test:
-	ginkgo -r -p
+	ginkgo -r
 
 dingding:
 	bash ./scripts/dingding.sh
@@ -33,11 +33,11 @@ deploy:
 
 # Run go fmt against code
 fmt:
-	go fmt ./pkg/... ./cmd/...
+	go fmt ./pkg/... ./cmd/... ./test/...
 
 # Run go vet against code
 vet:
-	go vet ./pkg/... ./cmd/...
+	go vet ./pkg/... ./cmd/... ./test/...
 
 # Run generate k8s
 gen-k8s:
@@ -56,6 +56,9 @@ docker-push:
 
 travis-build:
 	bash ./scripts/travis-push-docker-image.sh
+
+test-e2e:
+	bash ./scripts/travis-e2e.sh
 
 # Init Operator
 initdeploy: initcm initrole initcrd
