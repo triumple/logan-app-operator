@@ -23,6 +23,7 @@ JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.ty
 oc replace configmap --filename test/resources/config.yaml
 
 #run test
+WAIT_TIME=3
 ginkgo -p -r test
 
 "${SCRIPT_DIR}"/delete-minikube.sh

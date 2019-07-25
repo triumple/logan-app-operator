@@ -8,8 +8,8 @@ set -u
 # print each command before executing it
 set -x
 
-export MINIKUBE_VERSION=v0.35.0
-export KUBERNETES_VERSION=v1.13.4
+export MINIKUBE_VERSION=v1.2.0
+export KUBERNETES_VERSION=v1.12.0
 
 sudo mount --make-rshared /
 sudo mount --make-rshared /proc
@@ -21,9 +21,9 @@ curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBE
 curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64 && \
     chmod +x minikube && \
     sudo mv minikube /usr/local/bin/
-curl -Lo /tmp/oc.tar.gz https://github.com/openshift/origin/releases/download/v3.9.0/openshift-origin-client-tools-v3.9.0-191fece-linux-64bit.tar.gz  && \
+curl -Lo /tmp/oc.tar.gz https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz  && \
     tar -zxvf /tmp/oc.tar.gz -C /tmp &&  \
-    sudo mv /tmp/openshift-origin-client-tools-v3.9.0-191fece-linux-64bit/oc /usr/local/bin/
+    sudo mv /tmp/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit/oc /usr/local/bin/
 
 
 export MINIKUBE_HOME=$HOME
