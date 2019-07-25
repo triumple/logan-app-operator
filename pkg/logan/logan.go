@@ -8,7 +8,7 @@ import (
 
 const (
 	// Version is the current operator version
-	Version = "0.2.0"
+	Version = "0.3.0"
 	// InnerVersion is the current operator inner version
 	InnerVersion = "1"
 
