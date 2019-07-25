@@ -3,8 +3,10 @@ package framework
 import (
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"log"
 )
 
 func GetDeployment(nn types.NamespacedName) *appsv1.Deployment {
@@ -22,7 +24,15 @@ func UpdateDeployment(dep *appsv1.Deployment) *appsv1.Deployment {
 	deploy := &appsv1.Deployment{}
 	var err error
 	Eventually(func() error {
-		deploy, err = framework.KubeClient.AppsV1().Deployments(dep.Namespace).Update(dep)
+		latest := GetDeployment(types.NamespacedName{Namespace: dep.Namespace, Name: dep.Name})
+		latest.Spec = dep.Spec
+		deploy, err = framework.KubeClient.AppsV1().Deployments(dep.Namespace).Update(latest)
+		if apierrors.IsConflict(err) {
+			log.Printf("failed to update object, got an Conflict error: ")
+		}
+		if apierrors.IsInvalid(err) {
+			log.Printf("failed to update object, got an invalid object error: ")
+		}
 		return err
 	}, defaultTimeout).
 		Should(Succeed())

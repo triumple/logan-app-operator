@@ -15,15 +15,36 @@ sudo mount --make-rshared /
 sudo mount --make-rshared /proc
 sudo mount --make-rshared /sys
 
-curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && \
-    chmod +x kubectl &&  \
-    sudo mv kubectl /usr/local/bin/
-curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64 && \
-    chmod +x minikube && \
-    sudo mv minikube /usr/local/bin/
-curl -Lo /tmp/oc.tar.gz https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz  && \
-    tar -zxvf /tmp/oc.tar.gz -C /tmp &&  \
-    sudo mv /tmp/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit/oc /usr/local/bin/
+if [ -f $GOPATH/bin/kubectl ];then
+    echo "kubectl in cached install"
+    sudo cp $GOPATH/bin/kubectl /usr/local/bin/
+else
+    curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && \
+        chmod +x kubectl &&  \
+        sudo mv kubectl /usr/local/bin/
+        sudo cp /usr/local/bin/kubectl $GOPATH/bin/
+fi
+
+if [ -f $GOPATH/bin/minikube ];then
+    echo "minikube in cached install"
+    sudo cp $GOPATH/bin/minikube /usr/local/bin/
+else
+    curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64 && \
+        chmod +x minikube && \
+        sudo mv minikube /usr/local/bin/
+        sudo cp /usr/local/bin/minikube $GOPATH/bin/
+fi
+
+if [ -f $GOPATH/bin/oc ];then
+    echo "oc in cached install"
+    sudo cp $GOPATH/bin/oc /usr/local/bin/
+else
+    curl -Lo /tmp/oc.tar.gz https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz  && \
+        tar -zxvf /tmp/oc.tar.gz -C /tmp &&  \
+        sudo mv /tmp/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit/oc /usr/local/bin/
+        sudo cp /usr/local/bin/oc $GOPATH/bin/
+fi
+
 
 
 export MINIKUBE_HOME=$HOME

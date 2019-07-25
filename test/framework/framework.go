@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-var defaultTimeout = 10 * time.Second
+var defaultTimeout = 1 * time.Minute
 
 type Framework struct {
 	Mgr            manager.Manager

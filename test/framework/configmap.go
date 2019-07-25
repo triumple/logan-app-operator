@@ -3,8 +3,10 @@ package framework
 import (
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"log"
 )
 
 func GetConfigmap(nn types.NamespacedName) *v1.ConfigMap {
@@ -22,7 +24,16 @@ func UpdateConfigmap(configMap *v1.ConfigMap) *v1.ConfigMap {
 	conf := &v1.ConfigMap{}
 	var err error
 	Eventually(func() error {
-		conf, err = framework.KubeClient.CoreV1().ConfigMaps(configMap.Namespace).Update(configMap)
+		latest := GetConfigmap(types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace})
+		latest.Data = configMap.Data
+		latest.BinaryData = configMap.BinaryData
+		conf, err = framework.KubeClient.CoreV1().ConfigMaps(configMap.Namespace).Update(latest)
+		if apierrors.IsConflict(err) {
+			log.Printf("failed to update object, got an Conflict error: ")
+		}
+		if apierrors.IsInvalid(err) {
+			log.Printf("failed to update object, got an invalid object error: ")
+		}
 		return err
 	}, defaultTimeout).
 		Should(Succeed())

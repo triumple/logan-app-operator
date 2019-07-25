@@ -50,6 +50,9 @@ build: docker-build docker-push
 docker-build:
 	operator-sdk build ${IMG}
 
+travis-docker-build:
+	bash ./scripts/travis-build.sh ${IMG}
+
 # Push the docker image
 docker-push:
 	docker push ${IMG}
