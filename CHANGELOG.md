@@ -1,4 +1,4 @@
-# Minikube Release Notes
+# logan-app-operator Release Notes
 
 ## Version 0.3.0 - 7/2019
 
