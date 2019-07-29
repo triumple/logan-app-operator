@@ -3,8 +3,10 @@ package framework
 import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"log"
 )
 
 func GetService(nn types.NamespacedName) *corev1.Service {
@@ -23,7 +25,15 @@ func UpdateService(svr *corev1.Service) *corev1.Service {
 	service := &corev1.Service{}
 	var err error
 	Eventually(func() error {
-		service, err = framework.KubeClient.CoreV1().Services(svr.Namespace).Update(svr)
+		latest := GetService(types.NamespacedName{Name: svr.Name, Namespace: svr.Namespace})
+		latest.Spec = svr.Spec
+		service, err = framework.KubeClient.CoreV1().Services(svr.Namespace).Update(latest)
+		if apierrors.IsConflict(err) {
+			log.Printf("failed to update object, got an Conflict error: ")
+		}
+		if apierrors.IsInvalid(err) {
+			log.Printf("failed to update object, got an invalid object error: ")
+		}
 		return err
 	}, defaultTimeout).
 		Should(Succeed())

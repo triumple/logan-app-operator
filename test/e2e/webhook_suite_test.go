@@ -40,8 +40,8 @@ var _ = Describe("Testing Webhook", func() {
 					ObjectMeta: metav1.ObjectMeta{Name: bootKey.Name, Namespace: bootKey.Namespace},
 					Spec: bootv1.BootSpec{
 						Replicas: &replicas,
-						Image:    "logan-startkit-boot",
-						Version:  "1.2.1",
+						Image:    "logancloud/logan-phpboot-sample",
+						Version:  "latest",
 					},
 				}
 

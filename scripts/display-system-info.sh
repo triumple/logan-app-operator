@@ -6,7 +6,7 @@ set -o pipefail
 # error on unset variables
 set -u
 # print each command before executing it
-set -x
+#set -x
 
 echo "--- cpuinfo ---"
 cat /proc/cpuinfo
