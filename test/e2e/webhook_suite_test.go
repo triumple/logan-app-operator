@@ -25,30 +25,102 @@ var _ = Describe("Testing Webhook", func() {
 		operatorFramework.DeleteNamespace(bootKey.Namespace)
 	})
 
-	It("testing create the same boot name", func() {
-		(&(operatorFramework.E2E{
-			Build: func() {
-				operatorFramework.CreateBoot(javaBoot)
-			},
-			Check: func() {
-				boot := operatorFramework.GetBoot(bootKey)
-				Expect(boot.Name).Should(Equal(bootKey.Name))
-			},
-			Update: func() {
-				replicas := int32(1)
-				phpboot := &bootv1.PhpBoot{
-					ObjectMeta: metav1.ObjectMeta{Name: bootKey.Name, Namespace: bootKey.Namespace},
-					Spec: bootv1.BootSpec{
-						Replicas: &replicas,
-						Image:    "logancloud/logan-phpboot-sample",
-						Version:  "latest",
-					},
-				}
+	Context("test create the same boot name", func() {
+		It("testing create same boot with same namespace and same kind", func() {
+			(&(operatorFramework.E2E{
+				Build: func() {
+					operatorFramework.CreateBoot(javaBoot)
+				},
+				Check: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					Expect(boot.Name).Should(Equal(bootKey.Name))
+				},
+				Update: func() {
+					err := operatorFramework.CreateBootWithError(javaBoot)
+					Expect(err).Should(HaveOccurred())
+				},
+			})).Run()
+		})
 
-				err := operatorFramework.CreateBootWithError(phpboot)
-				Expect(err).Should(HaveOccurred())
-			},
-		})).Run()
+		It("testing create same boot with same namespace and different kind", func() {
+			(&(operatorFramework.E2E{
+				Build: func() {
+					operatorFramework.CreateBoot(javaBoot)
+				},
+				Check: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					Expect(boot.Name).Should(Equal(bootKey.Name))
+				},
+				Update: func() {
+					replicas := int32(1)
+					phpboot := &bootv1.PhpBoot{
+						ObjectMeta: metav1.ObjectMeta{Name: bootKey.Name, Namespace: bootKey.Namespace},
+						Spec: bootv1.BootSpec{
+							Replicas: &replicas,
+							Image:    "logan-startkit-boot",
+							Version:  "1.2.1",
+						},
+					}
+
+					err := operatorFramework.CreateBootWithError(phpboot)
+					Expect(err).Should(HaveOccurred())
+				},
+			})).Run()
+		})
+
+		It("testing create same boot with different namespace and same kind", func() {
+			(&(operatorFramework.E2E{
+				Build: func() {
+					operatorFramework.CreateBoot(javaBoot)
+				},
+				Check: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					Expect(boot.Name).Should(Equal(bootKey.Name))
+				},
+				Update: func() {
+					newBootKey := operatorFramework.GenResource()
+					Expect(newBootKey.Namespace != javaBoot.Namespace).Should(BeTrue())
+
+					javaBoot = operatorFramework.SampleBoot(newBootKey)
+					javaBoot.Namespace = newBootKey.Namespace
+					operatorFramework.CreateNamespace(newBootKey.Namespace)
+					operatorFramework.CreateBoot(javaBoot)
+					boot := operatorFramework.GetBoot(newBootKey)
+					Expect(boot.Name).Should(Equal(newBootKey.Name))
+				},
+			})).Run()
+		})
+
+		It("testing create same boot with different namespace and different kind", func() {
+			(&(operatorFramework.E2E{
+				Build: func() {
+					operatorFramework.CreateBoot(javaBoot)
+				},
+				Check: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					Expect(boot.Name).Should(Equal(bootKey.Name))
+				},
+				Update: func() {
+					newBootKey := operatorFramework.GenResource()
+					Expect(newBootKey.Namespace != bootKey.Namespace).Should(BeTrue())
+					newBootKey.Name = bootKey.Name
+
+					replicas := int32(1)
+					phpboot := &bootv1.PhpBoot{
+						ObjectMeta: metav1.ObjectMeta{Name: newBootKey.Name, Namespace: newBootKey.Namespace},
+						Spec: bootv1.BootSpec{
+							Replicas: &replicas,
+							Image:    "logan-startkit-boot",
+							Version:  "1.2.1",
+						},
+					}
+					operatorFramework.CreateNamespace(newBootKey.Namespace)
+					operatorFramework.CreateBoot(phpboot)
+					boot := operatorFramework.GetPhpBoot(newBootKey)
+					Expect(boot.Name).Should(Equal(newBootKey.Name))
+				},
+			})).Run()
+		})
 	})
 
 	Context("testing validating webhook", func() {

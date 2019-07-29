@@ -9,6 +9,30 @@ import (
 	"log"
 )
 
+func CreateDeployment(dep *appsv1.Deployment) *appsv1.Deployment {
+	deploy := &appsv1.Deployment{}
+	var err error
+	Eventually(func() error {
+		deploy, err = framework.KubeClient.AppsV1().Deployments(dep.Namespace).Create(dep)
+		return err
+	}, defaultTimeout).
+		Should(Succeed())
+	WaitDefaultUpdate()
+	return deploy
+}
+
+func CreateDeploymentWithError(dep *appsv1.Deployment) (*appsv1.Deployment, error) {
+	deploy := &appsv1.Deployment{}
+	var err error
+	Eventually(func() error {
+		deploy, err = framework.KubeClient.AppsV1().Deployments(dep.Namespace).Create(dep)
+		return err
+	}, defaultTimeout).
+		ShouldNot(Succeed())
+	WaitDefaultUpdate()
+	return deploy, err
+}
+
 func GetDeployment(nn types.NamespacedName) *appsv1.Deployment {
 	deploy := &appsv1.Deployment{}
 	var err error
