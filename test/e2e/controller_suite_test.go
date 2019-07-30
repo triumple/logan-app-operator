@@ -5,6 +5,7 @@ import (
 	operatorFramework "github.com/logancloud/logan-app-operator/test/framework"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
@@ -15,6 +16,7 @@ import (
 var _ = Describe("Testing Boot", func() {
 	var bootKey types.NamespacedName
 	var javaBoot *bootv1.JavaBoot
+
 	BeforeEach(func() {
 		// Gen new namespace
 		bootKey = operatorFramework.GenResource()
@@ -28,18 +30,311 @@ var _ = Describe("Testing Boot", func() {
 		operatorFramework.DeleteNamespace(bootKey.Namespace)
 	})
 
-	Context("test create boot", func() {
-		It("testing create boot", func() {
-			operatorFramework.CreateBoot(javaBoot)
+	Describe("testing create boot service and deployment", func() {
+		Context("test create boot default", func() {
+			It("testing create boot default", func() {
+				operatorFramework.CreateBoot(javaBoot)
 
-			boot := operatorFramework.GetBoot(bootKey)
-			Expect(boot.Name).Should(Equal(bootKey.Name))
+				boot := operatorFramework.GetBoot(bootKey)
+				Expect(boot.Name).Should(Equal(bootKey.Name))
 
-			deploy := operatorFramework.GetDeployment(bootKey)
-			operatorFramework.DeleteDeployment(deploy)
+				deploy := operatorFramework.GetDeployment(bootKey)
+				operatorFramework.DeleteDeployment(deploy)
 
-			svr := operatorFramework.GetService(bootKey)
-			operatorFramework.DeleteService(svr)
+				svr := operatorFramework.GetService(bootKey)
+				operatorFramework.DeleteService(svr)
+			})
+
+			It("testing create boot after deployments create", func() {
+				// get deploy data
+				operatorFramework.CreateBoot(javaBoot)
+				deploy := operatorFramework.GetDeployment(bootKey)
+				operatorFramework.DeleteBoot(javaBoot)
+
+				// use deploy data to create deployment
+				var dep appsv1.Deployment
+				dep.Spec = deploy.Spec
+				dep.Namespace = javaBoot.Namespace
+				dep.Name = javaBoot.Name
+				operatorFramework.CreateDeployment(&dep)
+				deployByDeployment := operatorFramework.GetDeployment(bootKey)
+				Expect(len(deployByDeployment.ObjectMeta.OwnerReferences)).Should(Equal(0))
+
+				// create boot and test result
+				javaBoot = operatorFramework.SampleBoot(bootKey)
+				operatorFramework.CreateBoot(javaBoot)
+				deployByBoot := operatorFramework.GetDeployment(bootKey)
+				boot := operatorFramework.GetBoot(bootKey)
+				Expect(deployByBoot.ObjectMeta.UID).Should(Equal(deployByDeployment.ObjectMeta.UID))
+				Expect(len(deployByBoot.ObjectMeta.OwnerReferences)).Should(Equal(1))
+				Expect(deployByBoot.ObjectMeta.OwnerReferences[0].UID).Should(Equal(boot.ObjectMeta.UID))
+			})
+
+			It("testing create deployments duplicated", func() {
+				// get deploy data
+				operatorFramework.CreateBoot(javaBoot)
+				deploy := operatorFramework.GetDeployment(bootKey)
+				operatorFramework.DeleteBoot(javaBoot)
+
+				// create boot and test result
+				javaBoot = operatorFramework.SampleBoot(bootKey)
+				operatorFramework.CreateBoot(javaBoot)
+
+				// use deploy data to create deployment
+				var dep appsv1.Deployment
+				dep.Spec = deploy.Spec
+				dep.Namespace = javaBoot.Namespace
+				dep.Name = javaBoot.Name
+				_, err := operatorFramework.CreateDeploymentWithError(&dep)
+				Expect(err).Should(HaveOccurred())
+			})
+
+			It("testing create boot after service create", func() {
+				// get service data
+				operatorFramework.CreateBoot(javaBoot)
+				service := operatorFramework.GetService(bootKey)
+				operatorFramework.DeleteBoot(javaBoot)
+
+				// use service data to create deployment
+				var svc corev1.Service
+				svc.Spec = service.Spec
+				svc.Namespace = javaBoot.Namespace
+				svc.Name = javaBoot.Name
+				operatorFramework.CreateService(&svc)
+				serviceByService := operatorFramework.GetService(bootKey)
+				Expect(len(serviceByService.ObjectMeta.OwnerReferences)).Should(Equal(0))
+
+				// create boot and test result
+				javaBoot = operatorFramework.SampleBoot(bootKey)
+				operatorFramework.CreateBoot(javaBoot)
+				serviceByBoot := operatorFramework.GetService(bootKey)
+				boot := operatorFramework.GetBoot(bootKey)
+				Expect(serviceByBoot.ObjectMeta.UID).Should(Equal(serviceByService.ObjectMeta.UID))
+				Expect(len(serviceByBoot.ObjectMeta.OwnerReferences)).Should(Equal(1))
+				Expect(serviceByBoot.ObjectMeta.OwnerReferences[0].UID).Should(Equal(boot.ObjectMeta.UID))
+			})
+
+			It("testing create service duplicated", func() {
+				// get deploy data
+				operatorFramework.CreateBoot(javaBoot)
+				service := operatorFramework.GetService(bootKey)
+				operatorFramework.DeleteBoot(javaBoot)
+
+				// create boot and test result
+				javaBoot = operatorFramework.SampleBoot(bootKey)
+				operatorFramework.CreateBoot(javaBoot)
+
+				// use deploy data to create deployment
+				var svc corev1.Service
+				svc.Spec = service.Spec
+				svc.Namespace = javaBoot.Namespace
+				svc.Name = javaBoot.Name
+				_,err := operatorFramework.CreateServiceWithError(&svc)
+				Expect(err).Should(HaveOccurred())
+			})
+
+			It("testing create boot after deployments service create", func() {
+				// get deploy and service data
+				operatorFramework.CreateBoot(javaBoot)
+				deploy := operatorFramework.GetDeployment(bootKey)
+				service := operatorFramework.GetService(bootKey)
+				operatorFramework.DeleteBoot(javaBoot)
+
+				// use deploy and service data to create deployment and service
+				var dep appsv1.Deployment
+				dep.Spec = deploy.Spec
+				dep.Namespace = javaBoot.Namespace
+				dep.Name = javaBoot.Name
+				operatorFramework.CreateDeployment(&dep)
+				deployByDeployment := operatorFramework.GetDeployment(bootKey)
+				Expect(len(deployByDeployment.ObjectMeta.OwnerReferences)).Should(Equal(0))
+
+				var svc corev1.Service
+				svc.Spec = service.Spec
+				svc.Namespace = javaBoot.Namespace
+				svc.Name = javaBoot.Name
+				operatorFramework.CreateService(&svc)
+				serviceByService := operatorFramework.GetService(bootKey)
+				Expect(len(serviceByService.ObjectMeta.OwnerReferences)).Should(Equal(0))
+
+				// create boot and test result
+				javaBoot = operatorFramework.SampleBoot(bootKey)
+				operatorFramework.CreateBoot(javaBoot)
+				deployByBoot := operatorFramework.GetDeployment(bootKey)
+				serviceByBoot := operatorFramework.GetService(bootKey)
+				boot := operatorFramework.GetBoot(bootKey)
+				Expect(deployByBoot.ObjectMeta.UID).Should(Equal(deployByDeployment.ObjectMeta.UID))
+				Expect(len(deployByBoot.ObjectMeta.OwnerReferences)).Should(Equal(1))
+				Expect(deployByBoot.ObjectMeta.OwnerReferences[0].UID).Should(Equal(boot.ObjectMeta.UID))
+				Expect(serviceByBoot.ObjectMeta.UID).Should(Equal(serviceByService.ObjectMeta.UID))
+				Expect(len(serviceByBoot.ObjectMeta.OwnerReferences)).Should(Equal(1))
+				Expect(serviceByBoot.ObjectMeta.OwnerReferences[0].UID).Should(Equal(boot.ObjectMeta.UID))
+			})
+		})
+
+		Context("test create boot custom", func() {
+			It("testing create boot custom env", func() {
+				envVar := corev1.EnvVar {
+					Name: "APPLICATION_NAME_CUSTOM",
+					Value: "logan-startkit-boot-custom-env-test",
+				}
+				(&(operatorFramework.E2E{
+					Build: func() {
+						javaBoot.Spec.Env = append(javaBoot.Spec.Env, envVar)
+						operatorFramework.CreateBoot(javaBoot)
+					},
+					Check: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+						isCustomEnvExist := false
+						for _, value := range boot.Spec.Env {
+							if value.Name == envVar.Name {
+								isCustomEnvExist = true
+								Expect(value.Value).Should(Equal(envVar.Value))
+							}
+						}
+						Expect(isCustomEnvExist).Should(Equal(true))
+					},
+				})).Run()
+			})
+
+			It("testing create boot with env APP_OPTS", func() {
+				envVar := corev1.EnvVar {
+					Name: "APP_OPTS",
+					Value: "-Denv=test -Dtest_meta=http://logan-namor-config.logan-dev:8888",
+				}
+				(&(operatorFramework.E2E{
+					Build: func() {
+						javaBoot.Spec.Env = append(javaBoot.Spec.Env, envVar)
+						operatorFramework.CreateBoot(javaBoot)
+					},
+					Check: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+						isCustomEnvExist := false
+						for _, value := range boot.Spec.Env {
+							if value.Name == envVar.Name {
+								isCustomEnvExist = true
+								Expect(value.Value).Should(Equal(envVar.Value))
+							}
+						}
+						Expect(isCustomEnvExist).Should(Equal(true))
+					},
+				})).Run()
+			})
+
+			It("testing create boot with env JAVA_OPTS", func() {
+				envVar := corev1.EnvVar {
+					Name: "JAVA_OPTS",
+					Value: "-Xmx1024m -Xms512m -XX:NewRatio=1 -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=75 -XX:+UseCMSInitiatingOccupancyOnly -XX:ReservedCodeCacheSize=128M -XX:ParallelGCThreads=2 -XX:+ExplicitGCInvokesConcurrent -Duser.timezone=Asia/Shanghai",
+				}
+				(&(operatorFramework.E2E{
+					Build: func() {
+						javaBoot.Spec.Env = append(javaBoot.Spec.Env, envVar)
+						operatorFramework.CreateBoot(javaBoot)
+					},
+					Check: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+						isCustomEnvExist := false
+						for _, value := range boot.Spec.Env {
+							if value.Name == envVar.Name {
+								isCustomEnvExist = true
+								Expect(value.Value).Should(Equal(envVar.Value))
+							}
+						}
+						Expect(isCustomEnvExist).Should(Equal(true))
+					},
+				})).Run()
+			})
+
+			It("testing create boot custom Replicas", func() {
+				(&(operatorFramework.E2E{
+					Build: func() {
+						newReplicas := int32(3)
+						javaBoot.Spec.Replicas = &newReplicas
+						operatorFramework.CreateBoot(javaBoot)
+					},
+					Check: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+						Expect(*boot.Spec.Replicas).Should(Equal(int32(3)))
+					},
+				})).Run()
+			})
+
+			It("testing create boot custom NodeSelector", func() {
+				(&(operatorFramework.E2E{
+					Build: func() {
+						nodeSelector := map[string]string{"logan/env": "e2e_test"}
+						javaBoot.Spec.NodeSelector = nodeSelector
+						operatorFramework.CreateBoot(javaBoot)
+					},
+					Check: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+						Expect(boot.Spec.NodeSelector["logan/env"]).Should(Equal("e2e_test"))
+					},
+				})).Run()
+			})
+
+			It("testing create boot custom resource limits", func() {
+				resources := &corev1.ResourceRequirements{
+					Limits:   map[corev1.ResourceName]resource.Quantity{},
+					Requests: map[corev1.ResourceName]resource.Quantity{},
+				}
+				resources.Limits[corev1.ResourceMemory] = *resource.NewMilliQuantity(2048, resource.BinarySI)
+				resources.Limits[corev1.ResourceCPU] = *resource.NewQuantity(2, resource.DecimalSI)
+				(&(operatorFramework.E2E{
+					Build: func() {
+						javaBoot.Spec.Resources = *resources
+						operatorFramework.CreateBoot(javaBoot)
+					},
+					Check: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+
+						deploy := operatorFramework.GetDeployment(bootKey)
+						Expect(deploy.Spec.Template.Spec.Containers[0].Resources.Limits.Memory()).Should(Equal(resources.Limits.Memory()))
+						Expect(deploy.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()).Should(Equal(resources.Limits.Cpu()))
+					},
+				})).Run()
+			})
+
+			It("testing create boot custom resource request", func() {
+				resources := &corev1.ResourceRequirements{
+					Limits:   map[corev1.ResourceName]resource.Quantity{},
+					Requests: map[corev1.ResourceName]resource.Quantity{},
+				}
+				resources.Requests[corev1.ResourceMemory] = *resource.NewMilliQuantity(1024, resource.BinarySI)
+				resources.Requests[corev1.ResourceCPU] = *resource.NewQuantity(1, resource.DecimalSI)
+				(&(operatorFramework.E2E{
+					Build: func() {
+						javaBoot.Spec.Resources = *resources
+						operatorFramework.CreateBoot(javaBoot)
+					},
+					Check: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+
+						deploy := operatorFramework.GetDeployment(bootKey)
+						Expect(deploy.Spec.Template.Spec.Containers[0].Resources.Requests.Memory()).Should(Equal(resources.Requests.Memory()))
+						Expect(deploy.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()).Should(Equal(resources.Requests.Cpu()))
+					},
+				})).Run()
+			})
+		})
+
+		It("testing create boot empty", func() {
+			javaBoot = new(bootv1.JavaBoot)
+			err := operatorFramework.CreateBootWithError(javaBoot)
+			Expect(err).Should(HaveOccurred())
+		})
+
+		It("testing create boot name empty", func() {
+			javaBoot.ObjectMeta.Name = ""
+			err := operatorFramework.CreateBootWithError(javaBoot)
+			Expect(err).Should(HaveOccurred())
 		})
 	})
 
@@ -726,6 +1021,106 @@ var _ = Describe("Testing Boot", func() {
 				},
 			}
 			e2e.Recheck = e2e.Check
+			e2e.Run()
+		})
+	})
+
+	Describe("test delete boot deployment and service", func() {
+		It("testing delete boot", func() {
+			e2e := &operatorFramework.E2E{
+				Build: func() {
+					operatorFramework.CreateBoot(javaBoot)
+					operatorFramework.DeleteBoot(javaBoot)
+				},
+				Check: func() {
+					_, err := operatorFramework.GetBootWithError(bootKey)
+					Expect(err).Should(HaveOccurred())
+				},
+			}
+			e2e.Run()
+		})
+
+		It("testing delete service created by boot", func() {
+			e2e := &operatorFramework.E2E{
+				Build: func() {
+					operatorFramework.CreateBoot(javaBoot)
+
+					svr := operatorFramework.GetService(bootKey)
+					operatorFramework.DeleteService(svr)
+				},
+				Check: func() {
+					svr := operatorFramework.GetService(bootKey)
+					Expect(svr.Name).Should(Equal(javaBoot.Name))
+				},
+			}
+			e2e.Run()
+		})
+
+		It("testing delete deployment created by boot", func() {
+			e2e := &operatorFramework.E2E{
+				Build: func() {
+					operatorFramework.CreateBoot(javaBoot)
+
+					deploy := operatorFramework.GetDeployment(bootKey)
+					operatorFramework.DeleteDeployment(deploy)
+				},
+				Check: func() {
+					deploy := operatorFramework.GetDeployment(bootKey)
+					Expect(deploy.Name).Should(Equal(javaBoot.Name))
+				},
+			}
+			e2e.Run()
+		})
+
+		It("testing delete boot when service created independent", func() {
+			// get service data
+			operatorFramework.CreateBoot(javaBoot)
+			service := operatorFramework.GetService(bootKey)
+			operatorFramework.DeleteBoot(javaBoot)
+
+			e2e := &operatorFramework.E2E{
+				Build: func() {
+					var svc corev1.Service
+					svc.Spec = service.Spec
+					svc.Namespace = javaBoot.Namespace
+					svc.Name = javaBoot.Name
+					operatorFramework.CreateService(&svc)
+
+					javaBoot = operatorFramework.SampleBoot(bootKey)
+					operatorFramework.CreateBoot(javaBoot)
+					operatorFramework.DeleteBoot(javaBoot)
+				},
+				Check: func() {
+					svr := operatorFramework.GetService(bootKey)
+					Expect(svr.Name).Should(Equal(javaBoot.Name))
+				},
+			}
+			e2e.Run()
+		})
+
+		It("testing delete boot when deployment created independent", func() {
+			// get deployment data
+			operatorFramework.CreateBoot(javaBoot)
+			deploy := operatorFramework.GetDeployment(bootKey)
+			operatorFramework.DeleteBoot(javaBoot)
+
+			e2e := &operatorFramework.E2E{
+				Build: func() {
+					var dep appsv1.Deployment
+					dep.Spec = deploy.Spec
+					dep.Namespace = javaBoot.Namespace
+					dep.Name = javaBoot.Name
+					operatorFramework.CreateDeployment(&dep)
+
+					javaBoot = operatorFramework.SampleBoot(bootKey)
+					operatorFramework.CreateBoot(javaBoot)
+					operatorFramework.DeleteBoot(javaBoot)
+				},
+				Check: func() {
+					deploy := operatorFramework.GetDeployment(bootKey)
+					Expect(deploy.Name).Should(Equal(javaBoot.Name))
+				},
+			}
 			e2e.Run()
 		})
 	})

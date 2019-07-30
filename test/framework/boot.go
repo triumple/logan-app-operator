@@ -84,6 +84,15 @@ func GetBoot(bootKey types.NamespacedName) *bootv1.JavaBoot {
 	return boot
 }
 
+func GetPhpBoot(bootKey types.NamespacedName) *bootv1.PhpBoot {
+	boot := &bootv1.PhpBoot{}
+	Eventually(func() error {
+		return framework.OperatorClient.restClient.Get().Namespace(bootKey.Namespace).Name(bootKey.Name).Resource("phpboots").Do().Into(boot)
+	}, defaultTimeout).
+		Should(Succeed())
+	return boot
+}
+
 func GetBootWithError(bootKey types.NamespacedName) (*bootv1.JavaBoot, error) {
 	boot := &bootv1.JavaBoot{}
 	err := framework.OperatorClient.restClient.Get().Namespace(bootKey.Namespace).Name(bootKey.Name).Resource("javaboots").Do().Into(boot)

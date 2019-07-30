@@ -9,6 +9,30 @@ import (
 	"log"
 )
 
+func CreateService(svr *corev1.Service) *corev1.Service {
+	service := &corev1.Service{}
+	var err error
+	Eventually(func() error {
+		service, err = framework.KubeClient.CoreV1().Services(svr.Namespace).Create(svr)
+		return err
+	}, defaultTimeout).
+		Should(Succeed())
+	WaitDefaultUpdate()
+	return service
+}
+
+func CreateServiceWithError(svr *corev1.Service) (*corev1.Service, error) {
+	service := &corev1.Service{}
+	var err error
+	Eventually(func() error {
+		service, err = framework.KubeClient.CoreV1().Services(svr.Namespace).Create(svr)
+		return err
+	}, defaultTimeout).
+		ShouldNot(Succeed())
+	WaitDefaultUpdate()
+	return service, err
+}
+
 func GetService(nn types.NamespacedName) *corev1.Service {
 	service := &corev1.Service{}
 	var err error
