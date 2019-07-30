@@ -1,6 +1,6 @@
 # logan-app-operator Release Notes
 
-## Version 0.3.0 - 7/2019
+## Version 0.3.0 - 7/30/2019
 
 * Improve travis dingding notification
 * Add timezone support, and default is Asia/Shanghai. 
