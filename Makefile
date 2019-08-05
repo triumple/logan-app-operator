@@ -5,7 +5,7 @@ all: test
 
 # Run tests
 test:
-	ginkgo -r
+	ginkgo -r pkg/
 
 dingding:
 	bash ./scripts/dingding.sh

@@ -25,6 +25,19 @@ func SampleBoot(bootKey types.NamespacedName) *bootv1.JavaBoot {
 	return javaboot
 }
 
+func SamplePhpBoot(bootKey types.NamespacedName) *bootv1.PhpBoot {
+	replicas := int32(1)
+	phpBoot := &bootv1.PhpBoot{
+		ObjectMeta: metav1.ObjectMeta{Name: bootKey.Name, Namespace: bootKey.Namespace},
+		Spec: bootv1.BootSpec{
+			Replicas: &replicas,
+			Image:    "logan-startkit-boot",
+			Version:  "1.2.1",
+		},
+	}
+	return phpBoot
+}
+
 func CreateBoot(obj runtime.Object) {
 	err := framework.Mgr.GetClient().Create(context.TODO(), obj)
 	if apierrors.IsInvalid(err) {
@@ -60,6 +73,24 @@ func UpdateBoot(boot *bootv1.JavaBoot) {
 	WaitDefaultUpdate()
 }
 
+func UpdatePhpBoot(boot *bootv1.PhpBoot) {
+	Eventually(func() error {
+		latestBoot := GetPhpBoot(types.NamespacedName{Name: boot.Name, Namespace: boot.Namespace})
+		latestBoot.ObjectMeta.Name = boot.Name
+		latestBoot.ObjectMeta.Namespace = boot.Namespace
+		latestBoot.Spec = boot.Spec
+		err := framework.Mgr.GetClient().Update(context.TODO(), latestBoot)
+		if apierrors.IsConflict(err) {
+			log.Printf("failed to update object, got an Conflict error: ")
+		}
+		if apierrors.IsInvalid(err) {
+			log.Printf("failed to update object, got an invalid object error: ")
+		}
+		return err
+	}, defaultTimeout, defaultWaitSec).Should(Succeed())
+	WaitDefaultUpdate()
+}
+
 func UpdateBootWithError(boot *bootv1.JavaBoot) error {
 	err := framework.Mgr.GetClient().Update(context.TODO(), boot)
 	if apierrors.IsInvalid(err) {
@@ -69,9 +100,9 @@ func UpdateBootWithError(boot *bootv1.JavaBoot) error {
 	return err
 }
 
-func DeleteBoot(javaboot *bootv1.JavaBoot) {
+func DeleteBoot(obj runtime.Object) {
 	Eventually(func() error {
-		return framework.Mgr.GetClient().Delete(context.TODO(), javaboot)
+		return framework.Mgr.GetClient().Delete(context.TODO(), obj)
 	}, defaultTimeout).Should(Succeed())
 }
 
