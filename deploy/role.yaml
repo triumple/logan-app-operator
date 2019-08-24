@@ -44,6 +44,8 @@ rules:
   - apps
   resourceNames:
   - logan-app-operator
+  - logan-app-operator-auto
+  - logan-app-operator-dev
   resources:
   - deployments/finalizers
   verbs:

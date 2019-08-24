@@ -15,6 +15,7 @@ import (
 	"github.com/logancloud/logan-app-operator/pkg/apis"
 	"github.com/logancloud/logan-app-operator/pkg/controller"
 
+	mgrMetrics "github.com/logancloud/logan-app-operator/cmd/manager/metrics"
 	mgrwebhook "github.com/logancloud/logan-app-operator/cmd/manager/webhook"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
@@ -124,7 +125,13 @@ func main() {
 	}
 
 	// Create Service object to expose the metrics port.
-	_, err = metrics.ExposeMetricsPort(ctx, metricsPort)
+	metricsSvr, err := metrics.ExposeMetricsPort(ctx, metricsPort)
+	if err != nil {
+		log.Info(err.Error())
+	}
+
+	// add Prometheus Scrape
+	_, err = mgrMetrics.AddPrometheusScrape(ctx, cfg, metricsSvr, metricsPort)
 	if err != nil {
 		log.Info(err.Error())
 	}
