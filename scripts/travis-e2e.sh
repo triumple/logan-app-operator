@@ -23,6 +23,7 @@ JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.ty
 oc replace configmap --filename test/resources/config.yaml
 
 #run test
-ginkgo -p -r test
+ginkgo -p --skip="\[Serial\]" -r test
+ginkgo --focus="\[Serial\]" -r test
 
 #"${SCRIPT_DIR}"/delete-minikube.sh

@@ -191,8 +191,8 @@ var _ = Describe("Testing CRD", func() {
 	Describe("testing create boot env", func() {
 		Context("test create boot env name", func() {
 			It("testing create ok boot env name which consist of alphabetic characters, digits, '_', '-', or '.', case 1/3", func() {
-				envVar := corev1.EnvVar {
-					Name: ".aA.t_-8",
+				envVar := corev1.EnvVar{
+					Name:  ".aA.t_-8",
 					Value: "logan-startkit-boot-custom-env-test",
 				}
 				(&(operatorFramework.E2E{
@@ -216,8 +216,8 @@ var _ = Describe("Testing CRD", func() {
 			})
 
 			It("testing create ok boot env name which consist of alphabetic characters, digits, '_', '-', or '.', case 2/3", func() {
-				envVar := corev1.EnvVar {
-					Name: "AaA.t_-8",
+				envVar := corev1.EnvVar{
+					Name:  "AaA.t_-8",
 					Value: "logan-startkit-boot-custom-env-test",
 				}
 				(&(operatorFramework.E2E{
@@ -241,8 +241,8 @@ var _ = Describe("Testing CRD", func() {
 			})
 
 			It("testing create ok boot env name which consist of alphabetic characters, digits, '_', '-', or '.', case 3/3", func() {
-				envVar := corev1.EnvVar {
-					Name: "_AaA.t_-8",
+				envVar := corev1.EnvVar{
+					Name:  "_AaA.t_-8",
 					Value: "logan-startkit-boot-custom-env-test",
 				}
 				(&(operatorFramework.E2E{
@@ -266,8 +266,8 @@ var _ = Describe("Testing CRD", func() {
 			})
 
 			It("testing create error boot env name which starts with number", func() {
-				envVar := corev1.EnvVar {
-					Name: "8aAt._-8",
+				envVar := corev1.EnvVar{
+					Name:  "8aAt._-8",
 					Value: "logan-startkit-boot-custom-env-test",
 				}
 				(&(operatorFramework.E2E{
@@ -283,8 +283,8 @@ var _ = Describe("Testing CRD", func() {
 			})
 
 			It("testing create error boot env name which consist of invalid characters(#)", func() {
-				envVar := corev1.EnvVar {
-					Name: ".a#A.t_-*8",
+				envVar := corev1.EnvVar{
+					Name:  ".a#A.t_-*8",
 					Value: "logan-startkit-boot-custom-env-test",
 				}
 				(&(operatorFramework.E2E{
@@ -300,8 +300,8 @@ var _ = Describe("Testing CRD", func() {
 			})
 
 			It("testing create ok boot env name with length of 1 characters", func() {
-				envVar := corev1.EnvVar {
-					Name: "E",
+				envVar := corev1.EnvVar{
+					Name:  "E",
 					Value: "logan-startkit-boot-custom-env-test",
 				}
 				(&(operatorFramework.E2E{
@@ -325,8 +325,8 @@ var _ = Describe("Testing CRD", func() {
 			})
 
 			It("testing create error boot env name with length of 0 characters", func() {
-				envVar := corev1.EnvVar {
-					Name: "",
+				envVar := corev1.EnvVar{
+					Name:  "",
 					Value: "logan-startkit-boot-custom-env-test",
 				}
 				(&(operatorFramework.E2E{
@@ -343,8 +343,8 @@ var _ = Describe("Testing CRD", func() {
 
 		Context("test create boot env value", func() {
 			It("testing create ok boot env value with string type, case 1/3", func() {
-				envVar := corev1.EnvVar {
-					Name: ".aA.t_-8",
+				envVar := corev1.EnvVar{
+					Name:  ".aA.t_-8",
 					Value: "true",
 				}
 				(&(operatorFramework.E2E{
@@ -368,8 +368,8 @@ var _ = Describe("Testing CRD", func() {
 			})
 
 			It("testing create ok boot env value with string type, case 2/3", func() {
-				envVar := corev1.EnvVar {
-					Name: ".aA.t_-8",
+				envVar := corev1.EnvVar{
+					Name:  ".aA.t_-8",
 					Value: "666.23",
 				}
 				(&(operatorFramework.E2E{
@@ -393,8 +393,8 @@ var _ = Describe("Testing CRD", func() {
 			})
 
 			It("testing create ok boot env value with string type, case 3/3", func() {
-				envVar := corev1.EnvVar {
-					Name: ".aA.t_-8",
+				envVar := corev1.EnvVar{
+					Name:  ".aA.t_-8",
 					Value: "",
 				}
 				(&(operatorFramework.E2E{

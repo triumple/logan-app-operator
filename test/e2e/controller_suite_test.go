@@ -129,7 +129,7 @@ var _ = Describe("Testing Boot", func() {
 				svc.Spec = service.Spec
 				svc.Namespace = javaBoot.Namespace
 				svc.Name = javaBoot.Name
-				_,err := operatorFramework.CreateServiceWithError(&svc)
+				_, err := operatorFramework.CreateServiceWithError(&svc)
 				Expect(err).Should(HaveOccurred())
 			})
 
@@ -174,8 +174,8 @@ var _ = Describe("Testing Boot", func() {
 
 		Context("test create boot custom", func() {
 			It("testing create boot custom env", func() {
-				envVar := corev1.EnvVar {
-					Name: "APPLICATION_NAME_CUSTOM",
+				envVar := corev1.EnvVar{
+					Name:  "APPLICATION_NAME_CUSTOM",
 					Value: "logan-startkit-boot-custom-env-test",
 				}
 				(&(operatorFramework.E2E{
@@ -199,8 +199,8 @@ var _ = Describe("Testing Boot", func() {
 			})
 
 			It("testing create boot with env APP_OPTS", func() {
-				envVar := corev1.EnvVar {
-					Name: "APP_OPTS",
+				envVar := corev1.EnvVar{
+					Name:  "APP_OPTS",
 					Value: "-Denv=test -Dtest_meta=http://logan-namor-config.logan-dev:8888",
 				}
 				(&(operatorFramework.E2E{
@@ -224,8 +224,8 @@ var _ = Describe("Testing Boot", func() {
 			})
 
 			It("testing create boot with env JAVA_OPTS", func() {
-				envVar := corev1.EnvVar {
-					Name: "JAVA_OPTS",
+				envVar := corev1.EnvVar{
+					Name:  "JAVA_OPTS",
 					Value: "-Xmx1024m -Xms512m -XX:NewRatio=1 -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=75 -XX:+UseCMSInitiatingOccupancyOnly -XX:ReservedCodeCacheSize=128M -XX:ParallelGCThreads=2 -XX:+ExplicitGCInvokesConcurrent -Duser.timezone=Asia/Shanghai",
 				}
 				(&(operatorFramework.E2E{

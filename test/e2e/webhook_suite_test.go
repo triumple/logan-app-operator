@@ -1,7 +1,9 @@
 package e2e
 
 import (
+	ghodssyaml "github.com/ghodss/yaml"
 	bootv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
+	"github.com/logancloud/logan-app-operator/pkg/logan"
 	operatorFramework "github.com/logancloud/logan-app-operator/test/framework"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -13,6 +15,7 @@ import (
 var _ = Describe("Testing Webhook", func() {
 	var bootKey types.NamespacedName
 	var javaBoot *bootv1.JavaBoot
+
 	BeforeEach(func() {
 		// Gen new namespace
 		bootKey = operatorFramework.GenResource()
@@ -123,7 +126,7 @@ var _ = Describe("Testing Webhook", func() {
 		})
 	})
 
-	Context("testing validating webhook", func() {
+	Describe("testing validating webhook", func() {
 		It("check env with create operation", func() {
 			(&(operatorFramework.E2E{
 				Build: func() {
@@ -217,6 +220,129 @@ var _ = Describe("Testing Webhook", func() {
 					Expect(found).Should(Equal(true))
 				},
 			})).Run()
+		})
+
+		Context("testing env with update operation annotation [Serial]", func() {
+			var configNN = types.NamespacedName{
+				Name:      "logan-app-operator-config",
+				Namespace: "logan",
+			}
+			var env = corev1.EnvVar{
+				Name:  "testKey",
+				Value: "testValue",
+			}
+			BeforeEach(func() {
+				// update config map
+				c := operatorFramework.GetConfig(configNN)
+				operator := c[logan.BootJava]
+
+				operator.AppSpec.Env = append(operator.AppSpec.Env, env)
+				c[logan.BootJava] = operator
+				updatedConfigContent, _ := ghodssyaml.Marshal(&c)
+
+				var configMap corev1.ConfigMap
+				configMap.Namespace = configNN.Namespace
+				configMap.Name = configNN.Name
+				configMap.Data = make(map[string]string)
+				configMap.Data["config.yaml"] = string(updatedConfigContent)
+				operatorFramework.UpdateConfigmap(&configMap)
+			})
+
+			AfterEach(func() {
+				// Clean config map
+				c := operatorFramework.GetConfig(configNN)
+				operator := c[logan.BootJava]
+
+				tmp := operator.AppSpec.Env[:0]
+				for _, value := range operator.AppSpec.Env {
+					if value.Name != env.Name {
+						tmp = append(tmp, value)
+					}
+				}
+				operator.AppSpec.Env = tmp
+				c[logan.BootJava] = operator
+				updatedConfigContent, _ := ghodssyaml.Marshal(&c)
+
+				var configMap corev1.ConfigMap
+				configMap.Namespace = configNN.Namespace
+				configMap.Name = configNN.Name
+				configMap.Data = make(map[string]string)
+				configMap.Data["config.yaml"] = string(updatedConfigContent)
+				operatorFramework.UpdateConfigmap(&configMap)
+			})
+
+			It("check modify/add env with update operation annotation", func() {
+				(&(operatorFramework.E2E{
+					Build: func() {
+						operatorFramework.CreateBoot(javaBoot)
+					},
+					Check: func() {
+						boot, err := operatorFramework.GetBootWithError(bootKey)
+						Expect(err).Should(Succeed())
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+					},
+					Update: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						for i, bootEnv := range boot.Spec.Env {
+							if bootEnv.Name == env.Name {
+								boot.Spec.Env[i].Value = "new_A"
+							}
+						}
+						err := operatorFramework.UpdateBootWithError(boot)
+						Expect(err).Should(HaveOccurred())
+					},
+					Recheck: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						found := false
+						for _, bootEnv := range boot.Spec.Env {
+							if bootEnv.Name == env.Name {
+								Expect(env.Value).Should(Equal(env.Value))
+								found = true
+							}
+						}
+
+						Expect(found).Should(Equal(true))
+					},
+				})).Run()
+			})
+
+			It("check delete env with update operation annotation", func() {
+				(&(operatorFramework.E2E{
+					Build: func() {
+						operatorFramework.CreateBoot(javaBoot)
+					},
+					Check: func() {
+						boot, err := operatorFramework.GetBootWithError(bootKey)
+						Expect(err).Should(Succeed())
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+					},
+					Update: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+
+						tmp := boot.Spec.Env[:0]
+						for _, value := range boot.Spec.Env {
+							if value.Name != env.Name {
+								tmp = append(tmp, value)
+							}
+						}
+						boot.Spec.Env = tmp
+						err := operatorFramework.UpdateBootWithError(boot)
+						Expect(err).Should(HaveOccurred())
+					},
+					Recheck: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						found := false
+						for _, bootEnv := range boot.Spec.Env {
+							if bootEnv.Name == env.Name {
+								Expect(env.Value).Should(Equal(env.Value))
+								found = true
+							}
+						}
+
+						Expect(found).Should(Equal(true))
+					},
+				})).Run()
+			})
 		})
 	})
 
