@@ -36,7 +36,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "logan-app-operator"
+              value: "logan-app-operator-auto"
             - name: LOGAN_ENV
               value: "auto"
             - name: CONFIGMAP_NAME
