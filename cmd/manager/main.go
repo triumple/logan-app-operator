@@ -58,6 +58,8 @@ func main() {
 
 	pflag.StringVar(&configFile, "config", "configs/config.yaml", "The path to the logan operator config.")
 
+	version := pflag.Bool("version",false,"Logan Operator Version")
+
 	pflag.Parse()
 
 	// Use a zap logr.Logger implementation.
@@ -70,6 +72,10 @@ func main() {
 	//logf.SetLogger(logf.ZapLoggerTo(os.Stderr, true)) //Debug Output
 
 	printVersion()
+
+	if *version == true{
+		os.Exit(0)
+	}
 
 	err := logancfg.InitByFile(configFile)
 	if err != nil {
