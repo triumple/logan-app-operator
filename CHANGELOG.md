@@ -1,5 +1,10 @@
 # logan-app-operator Release Notes
 
+## Version 0.4.0 - 8/29/2019
+
+* More e2e test case.
+* Add prometheus annotation support for operator's service when started.
+
 ## Version 0.3.0 - 7/30/2019
 
 * Improve travis dingding notification
