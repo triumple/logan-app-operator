@@ -15,7 +15,41 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"strconv"
 	"strings"
+	"time"
+	"fmt"
 )
+
+func (handler *BootHandler) ServiceStatis(depName string, namespace string, c client.Client) {
+	logger := handler.Logger
+	startTime := time.Now().UnixNano() / int64(time.Millisecond)
+	for {
+		time.Sleep(10 * time.Millisecond)
+		appSvcFound := &corev1.Service{}
+		appSvcName := depName
+		err := c.Get(context.TODO(), types.NamespacedName{Name: appSvcName, Namespace: namespace}, appSvcFound)
+		if err == nil {
+			break
+		}
+	}
+	s := fmt.Sprintf("serviceStatis, totalTime=%d, service_name=%s", time.Now().UnixNano() / int64(time.Millisecond) - startTime,depName)
+	logger.Info("serviceStatis","serviceStatis, totalTime", s)
+}
+
+func (handler *BootHandler) DeployStatis(depName string, namespace string, c client.Client) {
+	logger := handler.Logger
+	startTime := time.Now().UnixNano() / int64(time.Millisecond)
+	var depFound *appsv1.Deployment
+	for {
+		//time.Sleep(10 * time.Millisecond)
+		depFound = &appsv1.Deployment{}
+		err := c.Get(context.TODO(), types.NamespacedName{Name: depName, Namespace: namespace}, depFound)
+		if err == nil {
+			break
+		}
+	}
+	s := fmt.Sprintf("getDeployInfo, totalTime=%d, deploy_name=%s, dep=%v", time.Now().UnixNano() / int64(time.Millisecond) - startTime,depName,depFound)
+	logger.Info("deployStatis","getDeployInfo, totalTime", s)
+}
 
 // ReconcileCreate check the existence of components, if not exist, create new one.
 // 1. Deployment not found: Create Deployment, requeue=true
@@ -41,6 +75,7 @@ func (handler *BootHandler) ReconcileCreate() (reconcile.Result, bool, error) {
 				handler.EventFail(reason, dep.Name, err)
 				return reconcile.Result{}, true, err
 			}
+			//handler.deployStatis(depName, boot.Namespace, c)
 
 			handler.EventNormal(reason, dep.Name)
 			depFound = dep
@@ -72,6 +107,19 @@ func (handler *BootHandler) ReconcileCreate() (reconcile.Result, bool, error) {
 					handler.EventFail(reason, svc.Name, err)
 					return reconcile.Result{}, true, nil
 				}
+				//handler.serviceStatis(svc.Name, boot.Namespace, c)
+				/*
+				startTime := time.Now().UnixNano() / int64(time.Millisecond)
+				for {
+					depFound := &appsv1.Deployment{}
+					err := c.Get(context.TODO(), types.NamespacedName{Name: depName, Namespace: boot.Namespace}, depFound)
+					if err == nil {
+						break
+					}
+				}
+				s := fmt.Sprintf("getserviceInfo, totalTime=%d, service_name=%s", time.Now().UnixNano() / int64(time.Millisecond) - startTime,appSvcName)
+				logger.Info("getserviceInfo", "getserviceInfo, totalTime", s)
+				 */
 				handler.EventNormal(reason, svc.Name)
 				requeue = true
 			}

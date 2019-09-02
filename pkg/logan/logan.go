@@ -2,13 +2,12 @@ package logan
 
 import (
 	"os"
-	"runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 const (
 	// Version is the current operator version
-	Version = "0.4.0"
+	Version = "0.3.0"
 	// InnerVersion is the current operator inner version
 	InnerVersion = "1"
 
@@ -33,7 +32,7 @@ const (
 
 	// JavaAppKey is for JavaBoot type
 	JavaAppKey = "javaBoot"
-	// PhpAppKey is for PhpBoot type
+	// PhpAppKey is for PhpBoot typee
 	PhpAppKey = "phpBoot"
 	// PythonAppKey is for PythonBoot type
 	PythonAppKey = "pythonBoot"
@@ -79,5 +78,5 @@ func init() {
 		OperConfigmap = configMap
 	}
 
-	MaxConcurrentReconciles = runtime.NumCPU() * 2
+	MaxConcurrentReconciles = 4//runtime.NumCPU() * 2
 }

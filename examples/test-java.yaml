@@ -4,7 +4,7 @@ metadata:
   name: demo-javaboot
 spec:
   # Add fields here
-#  replicas: 1
+  replicas: 0
   image: "logancloud/logan-javaboot-sample"
   version: "latest"
 #  env:

@@ -19,9 +19,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"time"
+	"fmt"
 )
 
 var log = logf.Log.WithName("logan_controller_javaboot")
+var bootTimestamp map[string]int64
+var bootAction map[string]string
 
 // Add creates a new Boot Controller and adds it to the Manager.
 // The Manager will set fields on the Controller and Start it when the Manager is Started.
@@ -114,7 +118,18 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 		logger.Error(err, "Failed to get Boot")
 		return reconcile.Result{}, err
 	}
-
+	if _, ok := bootTimestamp[javaBoot.Name]; !ok {
+		if bootTimestamp == nil {
+			bootTimestamp = make(map[string]int64, 0)
+		}
+		bootTimestamp[javaBoot.Name] = time.Now().UnixNano() / int64(time.Millisecond)
+	}
+	if _, ok := bootAction[javaBoot.Name]; !ok {
+		if bootAction == nil {
+			bootAction = make(map[string]string, 0)
+		}
+		bootAction[javaBoot.Name] = "begin,"
+	}
 	handler = InitHandler(javaBoot, r.scheme, r.client, logger, r.recorder)
 
 	changed := handler.DefaultValue()
@@ -122,6 +137,7 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 	//Update the Boot's default Value
 	if changed {
 		reason := "Updating Boot with Defaulters"
+		bootAction[javaBoot.Name] = bootAction[javaBoot.Name] + "UpdateDefault,"
 		logger.Info(reason)
 		err = r.client.Update(context.TODO(), javaBoot)
 		if err != nil {
@@ -136,12 +152,17 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 	// 1. Check the existence of components, if not exist, create new one.
 	result, requeue, err := handler.ReconcileCreate()
 	if requeue {
+		bootAction[javaBoot.Name] = bootAction[javaBoot.Name] + "ReconcileCreate,"
+		handler.DeployStatis(javaBoot.Name, javaBoot.Namespace, handler.Client)
+		//handler.ServiceStatis(javaBoot.Name, javaBoot.Namespace, handler.Client)
 		return result, err
 	}
+
 
 	// 2. Handle the update logic of components
 	result, requeue, err = handler.ReconcileUpdate()
 	if requeue {
+		bootAction[javaBoot.Name] = bootAction[javaBoot.Name] + "ReconcileUpdate,"
 		return result, err
 	}
 
@@ -149,6 +170,7 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 
 	if updated {
 		reason := "Updating Boot Meta"
+		bootAction[javaBoot.Name] = bootAction[javaBoot.Name] + "UpdateBootMeta,"
 		logger.Info(reason, "new", javaBoot.Annotations)
 		err := r.client.Update(context.TODO(), javaBoot)
 		if err != nil {
@@ -162,6 +184,14 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 	}
 	if requeue {
 		return result, err
+	}
+	if _, ok := bootTimestamp[javaBoot.Name]; ok {
+		endTime := time.Now().UnixNano() / int64(time.Millisecond)
+		totalTime := endTime - bootTimestamp[javaBoot.Name]
+		s := fmt.Sprintf("java boot reconcile finish-%d-action-%s", totalTime, bootAction[javaBoot.Name])
+		logger.Info("statics", "finish", s)
+		delete(bootTimestamp, javaBoot.Name)
+		delete(bootAction, javaBoot.Name)
 	}
 
 	return reconcile.Result{}, nil

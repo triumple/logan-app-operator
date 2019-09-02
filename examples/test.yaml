@@ -1,0 +1,66 @@
+apiVersion: app.logancloud.com/v1
+kind: JavaBoot
+metadata:
+  annotations:
+    app.logancloud.com/env: generated
+    app.logancloud.com/type: deploy
+    app.logancloud.com/status.lastUpdateTimeStamp: '"2019-08-26T11:11:20Z"'
+    app.logancloud.com/boot-images: 'registry.logan.xiaopeng.local/xiaopeng/logan-quickstart-boot:latest'
+    app.logancloud.com/services: logan-quickstart-boot
+    app.logancloud.com/status.desired: '1'
+    app.logancloud.com/deploy: logan-quickstart-boot
+    app.logancloud.com/boot-envs: >-
+      [{"name":"SPRING_ZIPKIN_ENABLED","value":"true"},{"name":"SPRING_ZIPKIN_KAFKA_TOPIC","value":"logan-tracing"},{"name":"APP_OPTS","value":"-Denv=test
+      -Dtest_meta=http://logan-namor-config.logan:8888"},{"name":"SPRING_PROFILES_ACTIVE","value":"test"},{"name":"EUREKA_CLIENT_SERVICE-URL_defaultZone","value":"http://logan:Logan1234@logan-registry-0.logan-registry.logan:8761/eureka/,http://logan:Logan1234@logan-registry-1.logan-registry.logan:8761/eureka/"},{"name":"LOGAN_KARMA_CONSOLE_URI","value":"http://logan-gateway.test.logan.xiaopeng.local/logan-karma-api"},{"name":"KARMA_METRICS_PORT","value":"8080"},{"name":"SERVER_PORT","value":"8080"},{"name":"SPRING_APPLICATION_NAME","value":"logan-quickstart-boot"},{"name":"LOGAN_ZIPKIN_KAFKA_BOOTSTRAP-SERVERS","value":"10.192.31.77:9092"},{"name":"LOGAN_IDC","value":"gz1-1"},{"name":"LAST_DEPLOY","value":"1566815310372"}]
+    app.logancloud.com/status.available: '1'
+  clusterName: ''
+  selfLink: /apis/app.logancloud.com/v1/namespaces/logan/javaboots/logan-quickstart-boot
+  resourceVersion: '239214587'
+  name: logan-quickstart-boot
+  uid: 9f81ac0f-c7eb-11e9-b3bc-000c29052923
+  creationTimestamp: '2019-08-26T10:24:01Z'
+  generation: 0
+  namespace: logan
+spec:
+  port: 8080
+  subDomain: test.logan.xiaopeng.local
+  resources:
+    limits:
+      cpu: '2'
+      memory: 2Gi
+    requests:
+      cpu: 30m
+      memory: 512Mi
+  prometheus: 'true'
+  env:
+    - name: SPRING_ZIPKIN_ENABLED
+      value: 'true'
+    - name: SPRING_ZIPKIN_KAFKA_TOPIC
+      value: logan-tracing
+    - name: APP_OPTS
+      value: '-Denv=test -Dtest_meta=http://logan-namor-config.logan:8888'
+    - name: SPRING_PROFILES_ACTIVE
+      value: test
+    - name: EUREKA_CLIENT_SERVICE-URL_defaultZone
+      value: >-
+        http://logan:Logan1234@logan-registry-0.logan-registry.logan:8761/eureka/,http://logan:Logan1234@logan-registry-1.logan-registry.logan:8761/eureka/
+    - name: LOGAN_KARMA_CONSOLE_URI
+      value: 'http://logan-gateway.test.logan.xiaopeng.local/logan-karma-api'
+    - name: KARMA_METRICS_PORT
+      value: '8080'
+    - name: SERVER_PORT
+      value: '8080'
+    - name: SPRING_APPLICATION_NAME
+      value: logan-quickstart-boot
+    - name: LOGAN_ZIPKIN_KAFKA_BOOTSTRAP-SERVERS
+      value: '10.192.31.77:9092'
+    - name: LOGAN_IDC
+      value: gz1-1
+    - name: LAST_DEPLOY
+      value: '1566815310372'
+  version: latest
+  image: xiaopeng/logan-quickstart-boot
+  replicas: 1
+  health: /health
+  sessionAffinity: None
+status: {}
