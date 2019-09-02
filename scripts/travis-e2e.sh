@@ -28,7 +28,42 @@ JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.ty
 oc replace configmap --filename test/resources/config.yaml
 
 #run test
-ginkgo -p --skip="\[Serial\]" -r test
-ginkgo --focus="\[Serial\]" -r test
+function runTest()
+{
+    set +e
+    res="0"
+
+    # run normal test case
+    ginkgo -p --skip="\[Serial\]|\[Slow\]" -r test
+    sub_res=`echo $?`
+    if [ $sub_res != "0" ]; then
+        res=$sub_res
+    fi
+
+    # run serial test case
+    ginkgo --focus="\[Serial\]" -r test
+    sub_res=`echo $?`
+    if [ $sub_res != "0" ]; then
+        res=$sub_res
+    fi
+
+    # set WAIT_TIME, and run slow test case
+    set +u
+    if [ "${SLOW_WAIT_TIME}x" != "x" ]; then
+        export WAIT_TIME=${SLOW_WAIT_TIME}
+    else
+        export WAIT_TIME=5
+    fi
+    set -u
+    ginkgo -p --focus="\[Slow\]" -r test
+    sub_res=`echo $?`
+    if [ $sub_res != "0" ]; then
+        res=$sub_res
+    fi
+
+    set -e
+    exit $res
+}
+runTest
 
 #"${SCRIPT_DIR}"/delete-minikube.sh
