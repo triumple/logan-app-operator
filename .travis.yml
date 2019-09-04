@@ -25,10 +25,7 @@ before_install:
 install:
   - bash ./scripts/install.sh
 
-script:
-  - make travis-docker-build
-  - make test-e2e
-  - make travis-build
+script: make travis-docker-build && make test-e2e && make travis-build
 
 after_script:
   - docker logout
