@@ -58,7 +58,7 @@ func main() {
 
 	pflag.StringVar(&configFile, "config", "configs/config.yaml", "The path to the logan operator config.")
 
-	version := pflag.Bool("version",false,"Logan Operator Version")
+	version := pflag.Bool("version", false, "Logan Operator Version")
 
 	pflag.Parse()
 
@@ -73,7 +73,7 @@ func main() {
 
 	printVersion()
 
-	if *version == true{
+	if *version == true {
 		os.Exit(0)
 	}
 
@@ -137,9 +137,11 @@ func main() {
 	}
 
 	// add Prometheus Scrape
-	_, err = mgrMetrics.AddPrometheusScrape(ctx, cfg, metricsSvr, metricsPort)
-	if err != nil {
-		log.Info(err.Error())
+	if metricsSvr != nil {
+		_, err = mgrMetrics.AddPrometheusScrape(ctx, cfg, metricsSvr, metricsPort)
+		if err != nil {
+			log.Info(err.Error())
+		}
 	}
 
 	runningInCluster := true

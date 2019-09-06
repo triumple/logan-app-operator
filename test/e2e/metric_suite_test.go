@@ -1,4 +1,5 @@
 package e2e
+
 import (
 	"github.com/logancloud/logan-app-operator/cmd/manager/metrics"
 	operatorFramework "github.com/logancloud/logan-app-operator/test/framework"
@@ -8,12 +9,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-
 var _ = Describe("Testing Metric", func() {
 	It("Test Metric Service", func() {
 		operatorNN := types.NamespacedName{
-			Name:"logan-app-operator",
-			Namespace:"logan",
+			Name:      "logan-app-operator",
+			Namespace: "logan",
 		}
 
 		svr := operatorFramework.GetService(operatorNN)
