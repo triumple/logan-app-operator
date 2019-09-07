@@ -45,6 +45,18 @@ func GetService(nn types.NamespacedName) *corev1.Service {
 	return service
 }
 
+func GetServiceWithError(nn types.NamespacedName) (*corev1.Service, error) {
+	service := &corev1.Service{}
+	var err error
+	Eventually(func() error {
+		service, err = framework.KubeClient.CoreV1().Services(nn.Namespace).Get(nn.Name, metav1.GetOptions{})
+		return err
+	}, defaultTimeout).
+		ShouldNot(Succeed())
+	WaitDefaultUpdate()
+	return service, err
+}
+
 func UpdateService(svr *corev1.Service) *corev1.Service {
 	service := &corev1.Service{}
 	var err error

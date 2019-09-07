@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logan-app-operator-dev
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      name: logan-app-operator-dev
+  template:
+    metadata:
+      labels:
+        name: logan-app-operator-dev
+    spec:
+      serviceAccountName: logan-app-operator
+      containers:
+        - name: logan-app-operator
+          # Replace this with the built image name
+          image: logancloud/logan-app-operator:latest-e2e
+          command:
+          - logan-app-operator
+          args: ["--config", "/etc/logan/config.yaml", "--zap-devel", "--zap-level", "info"]
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: '2'
+              memory: 2Gi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+          env:
+            - name: WATCH_NAMESPACE
+              value: ""
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "logan-app-operator-dev"
+            - name: LOGAN_ENV
+              value: "dev"
+            - name: CONFIGMAP_NAME
+              value: "logan-app-operator-config-dev"
+          volumeMounts:
+            - mountPath: /etc/logan
+              name: logan-app-operator-config
+      volumes:
+        - name: logan-app-operator-config
+          configMap:
+            name: logan-app-operator-config-dev
+  strategy:
+    type: Recreate

@@ -58,6 +58,8 @@ type BootSpec struct {
 	Command []string `json:"command,omitempty"`
 	// SessionAffinity is SessionAffinity for boot's created service. If empty, will not set
 	SessionAffinity string `json:"sessionAffinity,omitempty"`
+	// NodePort will expose the service on each node’s IP at a random port, default is ``
+	NodePort string `json:"nodePort,omitempty"`
 }
 
 // BootStatus defines the observed state of Boot for specified types, as JavaBoot/PhpBoot/PythonBoot/NodeJSBoot

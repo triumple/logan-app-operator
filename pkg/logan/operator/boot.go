@@ -65,6 +65,11 @@ func SideCarServiceName(boot *appv1.Boot, port corev1.ContainerPort) string {
 	return boot.Name + "-" + port.Name
 }
 
+// NodePortServiceName return the name for nodeport service
+func NodePortServiceName(boot *appv1.Boot) string {
+	return boot.Name + "-external"
+}
+
 // ServiceLabels return the labels for the created Service
 func ServiceLabels(boot *appv1.Boot) map[string]string {
 	return map[string]string{"app": boot.Name, "logan/env": logan.OperDev}

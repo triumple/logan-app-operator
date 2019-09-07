@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"context"
 	bootv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
 	operatorFramework "github.com/logancloud/logan-app-operator/test/framework"
 	. "github.com/onsi/ginkgo"
@@ -48,7 +47,7 @@ var _ = Describe("Testing CRD", func() {
 					javaBoot.Name = bootKey.Name
 				},
 				Check: func() {
-					err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+					err := operatorFramework.CreateBootWithError(javaBoot)
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
@@ -61,7 +60,7 @@ var _ = Describe("Testing CRD", func() {
 					javaBoot.Name = bootKey.Name
 				},
 				Check: func() {
-					err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+					err := operatorFramework.CreateBootWithError(javaBoot)
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
@@ -74,7 +73,7 @@ var _ = Describe("Testing CRD", func() {
 					javaBoot.Name = bootKey.Name
 				},
 				Check: func() {
-					err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+					err := operatorFramework.CreateBootWithError(javaBoot)
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
@@ -115,7 +114,7 @@ var _ = Describe("Testing CRD", func() {
 					javaBoot.Name = bootKey.Name
 				},
 				Check: func() {
-					err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+					err := operatorFramework.CreateBootWithError(javaBoot)
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
@@ -128,7 +127,7 @@ var _ = Describe("Testing CRD", func() {
 					javaBoot.Name = bootKey.Name
 				},
 				Check: func() {
-					err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+					err := operatorFramework.CreateBootWithError(javaBoot)
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
@@ -141,7 +140,7 @@ var _ = Describe("Testing CRD", func() {
 					javaBoot.Name = bootKey.Name
 				},
 				Check: func() {
-					err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+					err := operatorFramework.CreateBootWithError(javaBoot)
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
@@ -168,7 +167,7 @@ var _ = Describe("Testing CRD", func() {
 					javaBoot.Name = bootKey.Name
 				},
 				Check: func() {
-					err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+					err := operatorFramework.CreateBootWithError(javaBoot)
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
@@ -181,7 +180,7 @@ var _ = Describe("Testing CRD", func() {
 					javaBoot.Name = bootKey.Name
 				},
 				Check: func() {
-					err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+					err := operatorFramework.CreateBootWithError(javaBoot)
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
@@ -276,7 +275,7 @@ var _ = Describe("Testing CRD", func() {
 						javaBoot.Name = bootKey.Name
 					},
 					Check: func() {
-						err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+						err := operatorFramework.CreateBootWithError(javaBoot)
 						Expect(err).Should(HaveOccurred())
 					},
 				})).Run()
@@ -293,7 +292,7 @@ var _ = Describe("Testing CRD", func() {
 						javaBoot.Name = bootKey.Name
 					},
 					Check: func() {
-						err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+						err := operatorFramework.CreateBootWithError(javaBoot)
 						Expect(err).Should(HaveOccurred())
 					},
 				})).Run()
@@ -334,7 +333,7 @@ var _ = Describe("Testing CRD", func() {
 						javaBoot.Spec.Env = append(javaBoot.Spec.Env, envVar)
 					},
 					Check: func() {
-						err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+						err := operatorFramework.CreateBootWithError(javaBoot)
 						Expect(err).Should(HaveOccurred())
 					},
 				})).Run()
@@ -458,7 +457,7 @@ var _ = Describe("Testing CRD", func() {
 					javaBoot.Name = bootKey.Name
 				},
 				Check: func() {
-					err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+					err := operatorFramework.CreateBootWithError(javaBoot)
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
@@ -472,7 +471,7 @@ var _ = Describe("Testing CRD", func() {
 					javaBoot.Name = bootKey.Name
 				},
 				Check: func() {
-					err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+					err := operatorFramework.CreateBootWithError(javaBoot)
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
@@ -532,7 +531,7 @@ var _ = Describe("Testing CRD", func() {
 					javaBoot.Name = bootKey.Name
 				},
 				Check: func() {
-					err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+					err := operatorFramework.CreateBootWithError(javaBoot)
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
@@ -607,7 +606,7 @@ var _ = Describe("Testing CRD", func() {
 					javaBoot.Spec.Health = &health
 				},
 				Check: func() {
-					err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+					err := operatorFramework.CreateBootWithError(javaBoot)
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
@@ -665,7 +664,7 @@ var _ = Describe("Testing CRD", func() {
 					javaBoot.Spec.Port = -1
 				},
 				Check: func() {
-					err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+					err := operatorFramework.CreateBootWithError(javaBoot)
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
@@ -677,7 +676,7 @@ var _ = Describe("Testing CRD", func() {
 					javaBoot.Spec.Port = 65536
 				},
 				Check: func() {
-					err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+					err := operatorFramework.CreateBootWithError(javaBoot)
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
@@ -798,7 +797,7 @@ var _ = Describe("Testing CRD", func() {
 						javaBoot.Spec.Resources = *resources
 					},
 					Check: func() {
-						err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+						err := operatorFramework.CreateBootWithError(javaBoot)
 						Expect(err).Should(HaveOccurred())
 					},
 				})).Run()
@@ -943,7 +942,51 @@ var _ = Describe("Testing CRD", func() {
 					javaBoot.Spec.SessionAffinity = "abc"
 				},
 				Check: func() {
-					err := framework.Mgr.GetClient().Create(context.TODO(), javaBoot)
+					err := operatorFramework.CreateBootWithError(javaBoot)
+					Expect(err).Should(HaveOccurred())
+				},
+			})).Run()
+		})
+	})
+
+	Describe("testing create boot nodePort", func() {
+		It("testing create ok boot nodePort 'true'", func() {
+			nodePort := "true"
+			(&(operatorFramework.E2E{
+				Build: func() {
+					javaBoot.Spec.NodePort = nodePort
+					operatorFramework.CreateBoot(javaBoot)
+				},
+				Check: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					Expect(boot.Name).Should(Equal(bootKey.Name))
+					Expect(boot.Spec.NodePort).Should(Equal(nodePort))
+				},
+			})).Run()
+		})
+
+		It("testing create ok boot nodePort 'false'", func() {
+			nodePort := "false"
+			(&(operatorFramework.E2E{
+				Build: func() {
+					javaBoot.Spec.NodePort = nodePort
+					operatorFramework.CreateBoot(javaBoot)
+				},
+				Check: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					Expect(boot.Name).Should(Equal(bootKey.Name))
+					Expect(boot.Spec.NodePort).Should(Equal(nodePort))
+				},
+			})).Run()
+		})
+
+		It("testing create error boot nodePort invalid", func() {
+			(&(operatorFramework.E2E{
+				Build: func() {
+					javaBoot.Spec.NodePort = "abc"
+				},
+				Check: func() {
+					err := operatorFramework.CreateBootWithError(javaBoot)
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
