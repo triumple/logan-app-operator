@@ -7,11 +7,6 @@ import (
 )
 
 const (
-	// Version is the current operator version
-	Version = "0.4.0"
-	// InnerVersion is the current operator inner version
-	InnerVersion = "1"
-
 	defaultEnv = "test"
 	oEnvKey    = "LOGAN_ENV"
 
