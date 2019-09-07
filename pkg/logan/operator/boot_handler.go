@@ -151,7 +151,7 @@ func (handler *BootHandler) NewDeployment() *appsv1.Deployment {
 										LabelSelector: &metav1.LabelSelector{
 											MatchExpressions: []metav1.LabelSelectorRequirement{
 												{
-													Key:      boot.AppKey,
+													Key:      BootNameKey,
 													Operator: "In",
 													Values:   []string{boot.Name},
 												},
