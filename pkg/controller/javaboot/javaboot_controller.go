@@ -19,6 +19,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	loganMetrics "github.com/logancloud/logan-app-operator/pkg/logan/metrics"
+	"time"
 )
 
 var log = logf.Log.WithName("logan_controller_javaboot")
@@ -98,6 +100,12 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 
 	logger.Info("Reconciling JavaBoot")
 
+	// Update metrics after processing each item
+	reconcileStartTS := time.Now()
+	defer func() {
+		loganMetrics.UpdateReconcileTimeMetrics(time.Now().Sub(reconcileStartTS), "javaboot-controller")
+	}()
+
 	var handler *operator.BootHandler
 
 	// Fetch the Boot instance
@@ -112,6 +120,7 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 		}
 		// Error reading the object - requeue the request.
 		logger.Error(err, "Failed to get Boot")
+		loganMetrics.UpdateReconcileErrorsMetrics("GetBoot", "javaboot-controller")
 		return reconcile.Result{}, err
 	}
 
@@ -126,6 +135,7 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 		err = r.client.Update(context.TODO(), javaBoot)
 		if err != nil {
 			logger.Info("Failed to update Boot", "boot", javaBoot)
+			loganMetrics.UpdateReconcileErrorsMetrics("UpdateDefaulters", "javaboot-controller")
 			handler.EventFail(reason, javaBoot.Name, err)
 			return reconcile.Result{Requeue: true}, nil
 		}
@@ -135,12 +145,18 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 
 	// 1. Check the existence of components, if not exist, create new one.
 	result, requeue, err := handler.ReconcileCreate()
+	if err != nil {
+		loganMetrics.UpdateReconcileErrorsMetrics("ReconcileCreate", "javaboot-controller")
+	}
 	if requeue {
 		return result, err
 	}
 
 	// 2. Handle the update logic of components
 	result, requeue, err = handler.ReconcileUpdate()
+	if err != nil {
+		loganMetrics.UpdateReconcileErrorsMetrics("ReconcileUpdate", "javaboot-controller")
+	}
 	if requeue {
 		return result, err
 	}

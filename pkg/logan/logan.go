@@ -4,6 +4,7 @@ import (
 	"os"
 	"runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	loganMetrics "github.com/logancloud/logan-app-operator/pkg/logan/metrics"
 )
 
 const (
@@ -80,4 +81,6 @@ func init() {
 	}
 
 	MaxConcurrentReconciles = runtime.NumCPU() * 2
+
+	loganMetrics.Init()
 }

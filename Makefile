@@ -1,5 +1,5 @@
 # Image URL to use all building/pushing image targets
-IMG ?= logancloud/logan-app-operator:latest
+IMG ?= registry.logan.xiaopeng.local/logancloud/logan-app-operator:lxw-test
 
 all: test
 
