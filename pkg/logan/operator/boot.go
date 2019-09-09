@@ -125,7 +125,7 @@ func Decode(boot *appv1.Boot, origin string) (string, bool) {
 	return ret, replaced
 }
 
-// DecodeEnvs replace the envVars, transforms the key with ${APP} and ${ENV}
+// DecodeEnvs replace the envVars, transforms the key with ${APP} and ${ENV} and ${PORT}
 func DecodeEnvs(boot *appv1.Boot, envVars []corev1.EnvVar) bool {
 	updated := false
 	for i, envVar := range envVars {
@@ -138,6 +138,24 @@ func DecodeEnvs(boot *appv1.Boot, envVars []corev1.EnvVar) bool {
 		envVars[i] = *replaceEnv
 	}
 
+	return updated
+}
+
+// DecodeVolumes replace the volumes, transforms the ClaimName with ${APP} and ${ENV} and ${PORT}
+func DecodeVolumes(boot *appv1.Boot, volumes []corev1.Volume) bool {
+	updated := false
+	for i, volume := range volumes {
+		if volume.PersistentVolumeClaim == nil {
+			continue
+		}
+		replaceVol := volume.DeepCopy()
+		value, replaced := Decode(boot, volume.PersistentVolumeClaim.ClaimName)
+		replaceVol.PersistentVolumeClaim.ClaimName = value
+		if replaced {
+			updated = true
+		}
+		volumes[i] = *replaceVol
+	}
 	return updated
 }
 

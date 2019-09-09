@@ -192,6 +192,11 @@ func (handler *BootHandler) NewDeployment() *appsv1.Deployment {
 				DecodeEnvs(boot, c.Env)
 			}
 		}
+
+		volumes := dep.Spec.Template.Spec.Volumes
+		if volumes != nil && len(volumes) > 0 {
+			DecodeVolumes(boot, volumes)
+		}
 	}
 
 	_ = controllerutil.SetControllerReference(handler.OperatorBoot, dep, handler.Scheme)
