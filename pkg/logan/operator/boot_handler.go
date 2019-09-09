@@ -6,19 +6,15 @@ import (
 	appv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
 	"github.com/logancloud/logan-app-operator/pkg/logan"
 	"github.com/logancloud/logan-app-operator/pkg/logan/config"
+	"github.com/logancloud/logan-app-operator/pkg/logan/util"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/logancloud/logan-app-operator/pkg/logan/util"
-	corev1 "k8s.io/api/core/v1"
-
-	"k8s.io/apimachinery/pkg/util/intstr"
-
-	appsv1 "k8s.io/api/apps/v1"
 )
 
 const (
@@ -151,8 +147,8 @@ func (handler *BootHandler) NewDeployment() *appsv1.Deployment {
 										LabelSelector: &metav1.LabelSelector{
 											MatchExpressions: []metav1.LabelSelectorRequirement{
 												{
-													Key:      boot.AppKey,
-													Operator: "In",
+													Key:      BootNameKey,
+													Operator: metav1.LabelSelectorOpIn,
 													Values:   []string{boot.Name},
 												},
 											},

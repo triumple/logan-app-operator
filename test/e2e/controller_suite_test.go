@@ -2,12 +2,14 @@ package e2e
 
 import (
 	bootv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
+	"github.com/logancloud/logan-app-operator/pkg/logan/operator"
 	operatorFramework "github.com/logancloud/logan-app-operator/test/framework"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"strconv"
 	"strings"
@@ -169,6 +171,23 @@ var _ = Describe("Testing Boot", func() {
 				Expect(serviceByBoot.ObjectMeta.UID).Should(Equal(serviceByService.ObjectMeta.UID))
 				Expect(len(serviceByBoot.ObjectMeta.OwnerReferences)).Should(Equal(1))
 				Expect(serviceByBoot.ObjectMeta.OwnerReferences[0].UID).Should(Equal(boot.ObjectMeta.UID))
+			})
+
+			It("testing create boot with PodAntiAffinity", func() {
+				operatorFramework.CreateBoot(javaBoot)
+
+				boot := operatorFramework.GetBoot(bootKey)
+				Expect(boot.Name).Should(Equal(bootKey.Name))
+
+				deploy := operatorFramework.GetDeployment(bootKey)
+
+				//PodAntiAffinity check
+				expressions := deploy.Spec.Template.Spec.Affinity.PodAntiAffinity.
+					PreferredDuringSchedulingIgnoredDuringExecution[0].
+					PodAffinityTerm.LabelSelector.MatchExpressions[0]
+				Expect(expressions.Key).Should(Equal(operator.BootNameKey))
+				Expect(expressions.Operator).Should(Equal(metav1.LabelSelectorOpIn))
+				Expect(expressions.Values).Should(Equal([]string{bootKey.Name}))
 			})
 		})
 
