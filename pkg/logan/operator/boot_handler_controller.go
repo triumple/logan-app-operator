@@ -58,7 +58,7 @@ func (handler *BootHandler) ReconcileCreate() (reconcile.Result, bool, error) {
 	if err != nil && errors.IsNotFound(err) {
 		reason := "Creating Service"
 		if errors.IsNotFound(err) {
-			// App Service not found, create app Service and sidecar services if necessary.
+			// App Service not found, create app Service and sidecar/nodePort services if necessary.
 			// need to consider individually in the future
 
 			// Creating all services
@@ -271,7 +271,7 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 	return reconcile.Result{}, false, nil
 }
 
-// reconcileUpdateService handle update logic/sidecar of Service
+// reconcileUpdateService handle update logic/sidecar/nodePort of Service
 func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service, deploy *appsv1.Deployment) (reconcile.Result, bool, error) {
 	boot := handler.Boot
 	logger := handler.Logger
@@ -356,8 +356,8 @@ func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service, deploy *
 		handler.EventNormal(reason, svc.GetName())
 	}
 
-	//handle update sidecar of Service
-	result, requeue, err := handler.reconcileUpdateSidecarService(deploy)
+	//handle update sidecar/nodePort of Service
+	result, requeue, err := handler.reconcileUpdateOtherService(deploy)
 	if err != nil {
 		return reconcile.Result{Requeue: true}, true, err
 	}
@@ -369,8 +369,8 @@ func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service, deploy *
 	return reconcile.Result{}, false, nil
 }
 
-// reconcileUpdateSidecarService handle update sidecar of Service
-func (handler *BootHandler) reconcileUpdateSidecarService(deploy *appsv1.Deployment) (reconcile.Result, bool, error) {
+// reconcileUpdateOtherService handle update sidecar/nodePort of Service
+func (handler *BootHandler) reconcileUpdateOtherService(deploy *appsv1.Deployment) (reconcile.Result, bool, error) {
 	c := handler.Client
 	boot := handler.Boot
 	logger := handler.Logger
@@ -382,7 +382,7 @@ func (handler *BootHandler) reconcileUpdateSidecarService(deploy *appsv1.Deploym
 
 	updated := false
 	expectSvcs := handler.NewServices(deploy)
-	// update or delete  sidecar service
+	// update or delete  sidecar/nodePort service
 	for _, runtimeSvc := range runtimeSvcs.Items {
 		// skip app service
 		if runtimeSvc.Name == boot.Name {
@@ -424,7 +424,7 @@ func (handler *BootHandler) reconcileUpdateSidecarService(deploy *appsv1.Deploym
 
 				// 4. Check annotation
 				// Annotation is removed
-				if runtimeSvc.Annotations == nil {
+				if runtimeSvc.Annotations == nil && expectSvc.Annotations != nil {
 					modify = true
 					runtimeSvc.Annotations = expectSvc.Annotations
 				}
@@ -441,23 +441,23 @@ func (handler *BootHandler) reconcileUpdateSidecarService(deploy *appsv1.Deploym
 		}
 
 		if !found {
-			logger.Info("Deleting Sidecar Service", "service", runtimeSvc.Name)
+			logger.Info("Deleting Other Service", "service", runtimeSvc.Name)
 
 			err := c.Delete(context.TODO(), &runtimeSvc)
 			if err != nil {
-				logger.Error(err, "Failed to delete Sidecar Service", "service", runtimeSvc.Name)
-				handler.EventFail("Failed to delete Sidecar Service", runtimeSvc.Name, err)
+				logger.Error(err, "Failed to delete Other Service", "service", runtimeSvc.Name)
+				handler.EventFail("Failed to delete Other Service", runtimeSvc.Name, err)
 				return reconcile.Result{Requeue: true}, true, err
 			}
 
 			updated = true
 		} else if modify {
-			logger.Info("Updating Sidecar Service", "service", runtimeSvc.Name)
+			logger.Info("Updating Other Service", "service", runtimeSvc.Name)
 
 			err := c.Update(context.TODO(), &runtimeSvc)
 			if err != nil {
-				logger.Error(err, "Failed to update Sidecar Service", "service", runtimeSvc.Name)
-				handler.EventFail("Failed to update Sidecar Service", runtimeSvc.Name, err)
+				logger.Error(err, "Failed to update Other Service", "service", runtimeSvc.Name)
+				handler.EventFail("Failed to update Other Service", runtimeSvc.Name, err)
 				return reconcile.Result{Requeue: true}, true, err
 			}
 
@@ -465,7 +465,7 @@ func (handler *BootHandler) reconcileUpdateSidecarService(deploy *appsv1.Deploym
 		}
 	}
 
-	// new sidecar service
+	// new sidecar/nodePort service
 	for _, expectSvc := range expectSvcs {
 		// skip app service
 		if expectSvc.Name == boot.Name {
@@ -480,11 +480,11 @@ func (handler *BootHandler) reconcileUpdateSidecarService(deploy *appsv1.Deploym
 		}
 
 		if notFound {
-			logger.Info("Creating Sidecar Service", "service", expectSvc.Name)
+			logger.Info("Creating Other Service", "service", expectSvc.Name)
 			err := c.Create(context.TODO(), expectSvc)
 			if err != nil {
-				logger.Error(err, "Failed to create Sidecar Service", "service", expectSvc.Name)
-				handler.EventFail("Failed to create Sidecar Service", expectSvc.Name, err)
+				logger.Error(err, "Failed to create Other Service", "service", expectSvc.Name)
+				handler.EventFail("Failed to create Other Service", expectSvc.Name, err)
 				return reconcile.Result{Requeue: true}, true, err
 			}
 			updated = true

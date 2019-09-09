@@ -293,8 +293,14 @@ func (handler *BootHandler) NewServices(dep *appsv1.Deployment) []*corev1.Servic
 	//bootCfg := handler.Config
 	// app Service
 	prometheusScrape := allowPrometheusScrape(boot, handler.Config.AppSpec)
-	bootSvc := handler.createService(int(boot.Spec.Port), boot.Name, prometheusScrape)
+	bootSvc := handler.createService(int(boot.Spec.Port), boot.Name, prometheusScrape, corev1.ServiceTypeClusterIP)
 	allSvcs := []*corev1.Service{bootSvc}
+
+	// only dev environment and nodePort true, create nodePort service
+	if handler.Boot.Spec.NodePort == "true" && logan.OperDev == "dev" {
+		svcName := NodePortServiceName(boot)
+		allSvcs = append(allSvcs, handler.createService(int(boot.Spec.Port), svcName, false, corev1.ServiceTypeNodePort))
+	}
 
 	// additional sidecar Service
 	if len(dep.Spec.Template.Spec.Containers) > 1 {
@@ -303,7 +309,7 @@ func (handler *BootHandler) NewServices(dep *appsv1.Deployment) []*corev1.Servic
 			if sidecarContainer.Ports != nil {
 				for _, port := range sidecarContainer.Ports {
 					svcName := SideCarServiceName(boot, port)
-					allSvcs = append(allSvcs, handler.createService(int(port.ContainerPort), svcName, true))
+					allSvcs = append(allSvcs, handler.createService(int(port.ContainerPort), svcName, true, corev1.ServiceTypeClusterIP))
 				}
 			}
 		}
@@ -313,7 +319,7 @@ func (handler *BootHandler) NewServices(dep *appsv1.Deployment) []*corev1.Servic
 }
 
 // createService returns a new created Service instance
-func (handler *BootHandler) createService(port int, name string, prometheusScrape bool) *corev1.Service {
+func (handler *BootHandler) createService(port int, name string, prometheusScrape bool, serviceType corev1.ServiceType) *corev1.Service {
 	boot := handler.Boot
 
 	svc := &corev1.Service{
@@ -338,7 +344,7 @@ func (handler *BootHandler) createService(port int, name string, prometheusScrap
 			},
 		},
 		Selector: PodLabels(boot),
-		Type:     corev1.ServiceTypeClusterIP,
+		Type:     serviceType,
 	}
 
 	if boot.Spec.SessionAffinity != "" {

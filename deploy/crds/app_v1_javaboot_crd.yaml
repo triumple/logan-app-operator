@@ -136,6 +136,11 @@ spec:
                 - ""
                 - "ClientIP"
                 - "None"
+            nodePort:
+              type: string
+              enum:
+                - "true"
+                - "false"
           required:
             - image
             - version
