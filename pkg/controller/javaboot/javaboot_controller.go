@@ -162,7 +162,9 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 	}
 
 	result, requeue, updated, err := handler.ReconcileUpdateBootMeta()
-
+	if err != nil {
+		loganMetrics.UpdateReconcileErrorsMetrics("ReconcileUpdateBootMeta", "javaboot-controller")
+	}
 	if updated {
 		reason := "Updating Boot Meta"
 		logger.Info(reason, "new", javaBoot.Annotations)
