@@ -405,9 +405,23 @@ func (handler *BootHandler) reconcileUpdateOtherService(deploy *appsv1.Deploymen
 				runtimePort := runtimeSvc.Spec.Ports[0]
 				expectPort := expectSvc.Spec.Ports[0]
 				if runtimePort.Name != expectPort.Name ||
-					runtimePort.Port != expectPort.Port {
+					!reflect.DeepEqual(runtimePort.TargetPort, expectPort.TargetPort) {
 					modify = true
 					runtimeSvc.Spec.Ports = expectSvc.Spec.Ports
+				}
+
+				if runtimeSvc.Spec.Type == corev1.ServiceTypeClusterIP &&
+					runtimePort.Port != expectPort.Port {
+					modify = true
+					runtimeSvc.Spec.Ports[0].Port = expectPort.Port
+				}
+
+				// make sure Port equal to NodePort
+				if runtimeSvc.Spec.Type == corev1.ServiceTypeNodePort &&
+					runtimePort.NodePort != runtimePort.Port {
+					modify = true
+					runtimeSvc.Spec.Ports[0].Port = runtimePort.NodePort
+					runtimeSvc.Spec.Ports[0].NodePort = runtimePort.NodePort
 				}
 
 				// 2. check OwnerReferences

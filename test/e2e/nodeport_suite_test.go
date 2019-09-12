@@ -46,7 +46,7 @@ var _ = Describe("Testing nodePort Boot", func() {
 					service := operatorFramework.GetService(nodePortBootKey)
 					Expect(service.Name).Should(Equal(nodePortBootKey.Name))
 					Expect(service.Spec.Type).Should(Equal(corev1.ServiceTypeNodePort))
-					Expect(service.Spec.Ports[0].NodePort).ShouldNot(Equal(""))
+					Expect(service.Spec.Ports[0].NodePort).Should(Equal(service.Spec.Ports[0].Port))
 				},
 				Update: func() {
 					boot := operatorFramework.GetBoot(bootKey)
@@ -88,7 +88,7 @@ var _ = Describe("Testing nodePort Boot", func() {
 					service := operatorFramework.GetService(nodePortBootKey)
 					Expect(service.Name).Should(Equal(nodePortBootKey.Name))
 					Expect(service.Spec.Type).Should(Equal(corev1.ServiceTypeNodePort))
-					Expect(service.Spec.Ports[0].NodePort).ShouldNot(Equal(""))
+					Expect(service.Spec.Ports[0].NodePort).Should(Equal(service.Spec.Ports[0].Port))
 				},
 			})).Run()
 		})
