@@ -19,9 +19,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	loganMetrics "github.com/logancloud/logan-app-operator/pkg/logan/metrics"
+	"time"
 )
 
 var log = logf.Log.WithName("logan_controller_nodejsboot")
+var bootType = "NodeJSBoot"
 
 // Add creates a new Boot Controller and adds it to the Manager.
 // The Manager will set fields on the Controller and Start it when the Manager is Started.
@@ -97,6 +100,11 @@ func (r *ReconcileNodeJSBoot) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	logger.Info("Reconciling NodeJSBoot")
+	// Update metrics after processing each Reconcile
+	reconcileStartTS := time.Now()
+	defer func() {
+		loganMetrics.UpdateReconcileTime(bootType, time.Now().Sub(reconcileStartTS))
+	}()
 
 	var handler *operator.BootHandler
 
@@ -104,6 +112,7 @@ func (r *ReconcileNodeJSBoot) Reconcile(request reconcile.Request) (reconcile.Re
 	nodejsBoot := &appv1.NodeJSBoot{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, nodejsBoot)
 	if err != nil {
+		loganMetrics.UpdateMainStageErrors(bootType, loganMetrics.RECONCILE_GET_BOOT_STAGE, request.Name)
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
@@ -126,6 +135,7 @@ func (r *ReconcileNodeJSBoot) Reconcile(request reconcile.Request) (reconcile.Re
 		err = r.client.Update(context.TODO(), nodejsBoot)
 		if err != nil {
 			logger.Info("Failed to update Boot", "boot", nodejsBoot)
+			loganMetrics.UpdateMainStageErrors(bootType, loganMetrics.RECONCILE_UPDATE_BOOT_DEFAULTERS_STAGE, nodejsBoot.Name)
 			handler.EventFail(reason, nodejsBoot.Name, err)
 			return reconcile.Result{Requeue: true}, nil
 		}
@@ -154,6 +164,7 @@ func (r *ReconcileNodeJSBoot) Reconcile(request reconcile.Request) (reconcile.Re
 		if err != nil {
 			// Other place will modify the status? So it will sometimes occur.
 			logger.Info("Failed to update Boot Metadata", "err", err.Error())
+			loganMetrics.UpdateReconcileErrors(bootType, loganMetrics.RECONCILE_UPDATE_BOOT_META_STAGE, loganMetrics.RECONCILE_UPDATE_BOOT_META_SUBSTAGE, nodejsBoot.Name)
 
 			handler.EventFail(reason, nodejsBoot.Name, err)
 			return reconcile.Result{Requeue: true}, nil
