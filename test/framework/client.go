@@ -7,10 +7,12 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+// OperatorClient is the struct for operator rest client interface
 type OperatorClient struct {
 	restClient rest.Interface
 }
 
+// NewForConfig will return operator rest client according to config
 func NewForConfig(c *rest.Config) (*OperatorClient, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {

@@ -14,6 +14,7 @@ import (
 
 var defaultTimeout = 1 * time.Minute
 
+// Framework is the struct for e2e test framework
 type Framework struct {
 	Mgr            manager.Manager
 	KubeClient     kubernetes.Interface
@@ -27,12 +28,14 @@ var (
 	framework *Framework
 )
 
+// InitFramework will return framework object
 func InitFramework() (*Framework, error) {
 	var err error
 	framework, err = New()
 	return framework, err
 }
 
+// New will new the item defined in Framework structure
 func New() (*Framework, error) {
 	kubeconfig, err := config.GetConfig()
 	if err != nil {
@@ -52,9 +55,12 @@ func New() (*Framework, error) {
 		Namespace:      "",
 		MapperProvider: restmapper.NewDynamicRESTMapper,
 	})
+	if err != nil {
+		return nil, errors.Wrap(err, "creating new manager failed")
+	}
 
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		return nil, errors.Wrap(err, "creating new manager failed")
+		return nil, errors.Wrap(err, "creating add to scheme failed")
 	}
 
 	restClient, err := NewForConfig(kubeconfig)
