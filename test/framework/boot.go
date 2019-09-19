@@ -3,7 +3,7 @@ package framework
 import (
 	"context"
 	bootv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -11,6 +11,7 @@ import (
 	"log"
 )
 
+// SampleBoot will return a sample JavaBoot object
 func SampleBoot(bootKey types.NamespacedName) *bootv1.JavaBoot {
 	replicas := int32(1)
 	javaboot := &bootv1.JavaBoot{
@@ -25,6 +26,7 @@ func SampleBoot(bootKey types.NamespacedName) *bootv1.JavaBoot {
 	return javaboot
 }
 
+// SamplePhpBoot will return a sample PhpBoot object
 func SamplePhpBoot(bootKey types.NamespacedName) *bootv1.PhpBoot {
 	replicas := int32(1)
 	phpBoot := &bootv1.PhpBoot{
@@ -38,16 +40,18 @@ func SamplePhpBoot(bootKey types.NamespacedName) *bootv1.PhpBoot {
 	return phpBoot
 }
 
+// CreateBoot will create Boot in kubernetes
 func CreateBoot(obj runtime.Object) {
 	err := framework.Mgr.GetClient().Create(context.TODO(), obj)
 	if apierrors.IsInvalid(err) {
 		log.Printf("failed to create object, got an invalid object error:")
 		return
 	}
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 	WaitDefaultUpdate()
 }
 
+// CreateBootWithError will create Boot in kubernetes, return error if occur
 func CreateBootWithError(obj runtime.Object) error {
 	err := framework.Mgr.GetClient().Create(context.TODO(), obj)
 	if apierrors.IsInvalid(err) {
@@ -57,8 +61,9 @@ func CreateBootWithError(obj runtime.Object) error {
 	return err
 }
 
+// UpdateBoot will update JavaBoot to kubernetes
 func UpdateBoot(boot *bootv1.JavaBoot) {
-	Eventually(func() error {
+	gomega.Eventually(func() error {
 		latestBoot := GetBoot(types.NamespacedName{Name: boot.Name, Namespace: boot.Namespace})
 		latestBoot.Spec = boot.Spec
 		err := framework.Mgr.GetClient().Update(context.TODO(), latestBoot)
@@ -69,12 +74,13 @@ func UpdateBoot(boot *bootv1.JavaBoot) {
 			log.Printf("failed to update object, got an invalid object error: ")
 		}
 		return err
-	}, defaultTimeout, defaultWaitSec).Should(Succeed())
+	}, defaultTimeout, defaultWaitSec).Should(gomega.Succeed())
 	WaitDefaultUpdate()
 }
 
+// UpdatePhpBoot will update PhpBoot to kubernetes
 func UpdatePhpBoot(boot *bootv1.PhpBoot) {
-	Eventually(func() error {
+	gomega.Eventually(func() error {
 		latestBoot := GetPhpBoot(types.NamespacedName{Name: boot.Name, Namespace: boot.Namespace})
 		latestBoot.ObjectMeta.Name = boot.Name
 		latestBoot.ObjectMeta.Namespace = boot.Namespace
@@ -87,10 +93,11 @@ func UpdatePhpBoot(boot *bootv1.PhpBoot) {
 			log.Printf("failed to update object, got an invalid object error: ")
 		}
 		return err
-	}, defaultTimeout, defaultWaitSec).Should(Succeed())
+	}, defaultTimeout, defaultWaitSec).Should(gomega.Succeed())
 	WaitDefaultUpdate()
 }
 
+// UpdateBootWithError will update JavaBoot to kubernetes, return error if occur
 func UpdateBootWithError(boot *bootv1.JavaBoot) error {
 	err := framework.Mgr.GetClient().Update(context.TODO(), boot)
 	if apierrors.IsInvalid(err) {
@@ -100,30 +107,34 @@ func UpdateBootWithError(boot *bootv1.JavaBoot) error {
 	return err
 }
 
+// DeleteBoot will delete Boot from kubernetes
 func DeleteBoot(obj runtime.Object) {
-	Eventually(func() error {
+	gomega.Eventually(func() error {
 		return framework.Mgr.GetClient().Delete(context.TODO(), obj)
-	}, defaultTimeout).Should(Succeed())
+	}, defaultTimeout).Should(gomega.Succeed())
 }
 
+// GetBoot will get JavaBoot with boot key from kubernetes, return JavaBoot
 func GetBoot(bootKey types.NamespacedName) *bootv1.JavaBoot {
 	boot := &bootv1.JavaBoot{}
-	Eventually(func() error {
+	gomega.Eventually(func() error {
 		return framework.OperatorClient.restClient.Get().Namespace(bootKey.Namespace).Name(bootKey.Name).Resource("javaboots").Do().Into(boot)
 	}, defaultTimeout).
-		Should(Succeed())
+		Should(gomega.Succeed())
 	return boot
 }
 
+// GetPhpBoot will get PhpBoot with boot key from kubernetes, return PhpBoot
 func GetPhpBoot(bootKey types.NamespacedName) *bootv1.PhpBoot {
 	boot := &bootv1.PhpBoot{}
-	Eventually(func() error {
+	gomega.Eventually(func() error {
 		return framework.OperatorClient.restClient.Get().Namespace(bootKey.Namespace).Name(bootKey.Name).Resource("phpboots").Do().Into(boot)
 	}, defaultTimeout).
-		Should(Succeed())
+		Should(gomega.Succeed())
 	return boot
 }
 
+// GetBootWithError will get JavaBoot with boot key from kubernetes, return JavaBoot and error
 func GetBootWithError(bootKey types.NamespacedName) (*bootv1.JavaBoot, error) {
 	boot := &bootv1.JavaBoot{}
 	err := framework.OperatorClient.restClient.Get().Namespace(bootKey.Namespace).Name(bootKey.Name).Resource("javaboots").Do().Into(boot)

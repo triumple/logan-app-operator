@@ -12,10 +12,14 @@ import (
 const (
 	defaultWaitSec = 1
 
+	// WAITTIME_KEY is for WAIT_TIME env key
 	WAITTIME_KEY = "WAIT_TIME"
-	FOUCS_KEY    = "GINKGO_FOCUS"
+
+	// FOCUS_KEY is for ginkgo GINKGO_FOCUS env key
+	FOCUS_KEY    = "GINKGO_FOCUS"
 )
 
+// GenResource will return random bootKey
 func GenResource() types.NamespacedName {
 	id := uuid.New().String()
 	bootKey := types.NamespacedName{
@@ -24,10 +28,12 @@ func GenResource() types.NamespacedName {
 	return bootKey
 }
 
+// WaitUpdate will sleep specific time in seconds
 func WaitUpdate(sec int) {
 	time.Sleep(time.Duration(sec) * time.Second)
 }
 
+// WaitDefaultUpdate will sleep default time(defaultWaitSec) in seconds
 func WaitDefaultUpdate() {
 	WaitUpdate(waitTime)
 }
@@ -35,7 +41,7 @@ func WaitDefaultUpdate() {
 var waitTime int
 
 func init() {
-	focus, found := os.LookupEnv(FOUCS_KEY)
+	focus, found := os.LookupEnv(FOCUS_KEY)
 	if found {
 		config.GinkgoConfig.FocusString = focus
 	}
