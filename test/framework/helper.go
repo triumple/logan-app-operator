@@ -13,7 +13,7 @@ const (
 	defaultWaitSec = 1
 
 	WAITTIME_KEY = "WAIT_TIME"
-	FOUCS_KEY    = "GINKGO_FOCUS"
+	FOCUS_KEY    = "GINKGO_FOCUS"
 )
 
 func GenResource() types.NamespacedName {
@@ -35,7 +35,7 @@ func WaitDefaultUpdate() {
 var waitTime int
 
 func init() {
-	focus, found := os.LookupEnv(FOUCS_KEY)
+	focus, found := os.LookupEnv(FOCUS_KEY)
 	if found {
 		config.GinkgoConfig.FocusString = focus
 	}

@@ -52,9 +52,12 @@ func New() (*Framework, error) {
 		Namespace:      "",
 		MapperProvider: restmapper.NewDynamicRESTMapper,
 	})
+	if err != nil {
+		return nil, errors.Wrap(err, "creating new manager failed")
+	}
 
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		return nil, errors.Wrap(err, "creating new manager failed")
+		return nil, errors.Wrap(err, "creating add to scheme failed")
 	}
 
 	restClient, err := NewForConfig(kubeconfig)

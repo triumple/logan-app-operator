@@ -6,6 +6,7 @@ import (
 	appv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
 	"github.com/logancloud/logan-app-operator/pkg/logan"
 	"github.com/logancloud/logan-app-operator/pkg/logan/config"
+	loganMetrics "github.com/logancloud/logan-app-operator/pkg/logan/metrics"
 	"github.com/logancloud/logan-app-operator/pkg/logan/operator"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -19,7 +20,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	loganMetrics "github.com/logancloud/logan-app-operator/pkg/logan/metrics"
 	"time"
 )
 
