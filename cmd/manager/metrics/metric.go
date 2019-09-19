@@ -12,17 +12,28 @@ import (
 )
 
 const (
-	PrometheusPathAnnotationKey     = "prometheus.io/path"
-	PrometheusPathAnnotationValue   = "/metrics"
-	PrometheusPortAnnotationKey     = "prometheus.io/port"
-	PrometheusSchemeAnnotationKey   = "prometheus.io/scheme"
+	// PrometheusPathAnnotationKey is the Boot's created service's prometheus path annotation key
+	PrometheusPathAnnotationKey = "prometheus.io/path"
+	// PrometheusPathAnnotationValue is the Boot's created service's prometheus path annotation value
+	PrometheusPathAnnotationValue = "/metrics"
+
+	// PrometheusPortAnnotationKey is the Boot's created service's prometheus port annotation key
+	PrometheusPortAnnotationKey = "prometheus.io/port"
+
+	// PrometheusSchemeAnnotationKey is the Boot's created service's prometheus scheme annotation key
+	PrometheusSchemeAnnotationKey = "prometheus.io/scheme"
+	// PrometheusSchemeAnnotationValue is the Boot's created service's prometheus scheme annotation value
 	PrometheusSchemeAnnotationValue = "http"
-	PrometheusScrapeAnnotationKey   = "prometheus.io/scrape"
+
+	// PrometheusScrapeAnnotationKey is the Boot's created service's prometheus scrape annotation key
+	PrometheusScrapeAnnotationKey = "prometheus.io/scrape"
+	// PrometheusScrapeAnnotationValue is the Boot's created service's prometheus scrape annotation value
 	PrometheusScrapeAnnotationValue = "true"
 )
 
 var log = logf.Log.WithName("metrics")
 
+// AddPrometheusScrape will add prometheus annotations to service
 func AddPrometheusScrape(ctx context.Context, config *rest.Config, svr *v1.Service, port int32) (*v1.Service, error) {
 	if svr.Annotations == nil {
 		svr.Annotations = make(map[string]string)
@@ -70,6 +81,9 @@ func updateService(ctx context.Context, client crclient.Client, s *v1.Service) (
 		Name:      s.Name,
 		Namespace: s.Namespace,
 	}, existingService)
+	if err != nil {
+		return nil, err
+	}
 
 	s.ResourceVersion = existingService.ResourceVersion
 	if existingService.Spec.Type == v1.ServiceTypeClusterIP {

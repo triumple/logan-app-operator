@@ -23,6 +23,7 @@ const (
 	// PrometheusPortKey is the Boot's created service's prometheus annotation key
 	PrometheusPortKey = "prometheus.io/port"
 
+	// BootNameKey is the boot name's label selector key
 	BootNameKey = "bootName"
 )
 
@@ -77,7 +78,6 @@ func ServiceLabels(boot *appv1.Boot) map[string]string {
 	return map[string]string{"app": boot.Name, "logan/env": logan.OperDev}
 }
 
-// ServiceAnnotation return the annotations for the created Service
 func allowPrometheusScrape(boot *appv1.Boot, appSpec *config.AppSpec) bool {
 	if boot.Spec.Prometheus != "" {
 		prometheusScrape, _ := strconv.ParseBool(boot.Spec.Prometheus)
@@ -86,6 +86,7 @@ func allowPrometheusScrape(boot *appv1.Boot, appSpec *config.AppSpec) bool {
 	return *appSpec.Settings.PrometheusScrape
 }
 
+// ServiceAnnotation return the annotations for the created Service
 func ServiceAnnotation(prometheusScrape bool, port int) map[string]string {
 	if prometheusScrape == true {
 		return map[string]string{

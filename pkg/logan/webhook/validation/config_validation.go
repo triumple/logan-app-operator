@@ -15,6 +15,7 @@ import (
 	"strings"
 )
 
+// ConfigValidator is the struct for webhook config validation
 type ConfigValidator struct {
 	client            client.Client
 	decoder           types.Decoder
@@ -23,6 +24,7 @@ type ConfigValidator struct {
 
 var _ admission.Handler = &ConfigValidator{}
 
+// ConfigValidator will handle webhook config validation
 func (vHandler *ConfigValidator) Handle(ctx context.Context, req types.Request) types.Response {
 	if !vHandler.targetConfig(req) {
 		return admission.ValidationResponse(true, "")
