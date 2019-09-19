@@ -13,6 +13,7 @@ const (
 	defaultConfigMap = "logan-app-operator-config"
 	oConfigMapKey    = "CONFIGMAP_NAME"
 
+	// ConfigFilename is for config file name
 	ConfigFilename = "config.yaml"
 
 	// BootJava is for JavaBoot type
@@ -41,8 +42,10 @@ const (
 // OperDev is operator's running dev
 var OperDev string
 
+// OperConfigmap is operator's config map
 var OperConfigmap string
 
+// MaxConcurrentReconciles is max concurrent reconciles
 var MaxConcurrentReconciles int
 
 var log = logf.Log.WithName("logan_util")

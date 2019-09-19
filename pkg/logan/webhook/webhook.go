@@ -150,6 +150,7 @@ func DecodeWebBoot(req types.Request, decoder types.Decoder) (*appv1.WebBoot, er
 	return boot, nil
 }
 
+// ValidationResponse will response admission result
 func ValidationResponse(allowed bool, code int32, reason string) types.Response {
 	resp := types.Response{
 		Response: &admissionv1beta1.AdmissionResponse{
