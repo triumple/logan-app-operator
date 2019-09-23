@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 	"time"
 )
 
@@ -21,7 +22,6 @@ type Framework struct {
 	HTTPClient     *http.Client
 	MasterHost     string
 	DefaultTimeout time.Duration
-	OperatorClient *OperatorClient
 }
 
 var (
@@ -55,6 +55,7 @@ func New() (*Framework, error) {
 		Namespace:      "",
 		MapperProvider: restmapper.NewDynamicRESTMapper,
 	})
+
 	if err != nil {
 		return nil, errors.Wrap(err, "creating new manager failed")
 	}
@@ -63,19 +64,16 @@ func New() (*Framework, error) {
 		return nil, errors.Wrap(err, "creating add to scheme failed")
 	}
 
-	restClient, err := NewForConfig(kubeconfig)
-	if err != nil {
-		return nil, errors.Wrap(err, "creating Rest-client failed")
-	}
-
 	f := &Framework{
 		Mgr:            mgr,
 		MasterHost:     kubeconfig.Host,
 		KubeClient:     cli,
-		OperatorClient: restClient,
 		HTTPClient:     httpc,
 		DefaultTimeout: time.Minute,
 	}
+
+	// start go client list-watch
+	go mgr.Start(signals.SetupSignalHandler())
 
 	return f, nil
 }

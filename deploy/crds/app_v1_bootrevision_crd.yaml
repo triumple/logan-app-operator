@@ -1,0 +1,151 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: bootrevisions.app.logancloud.com
+spec:
+  group: app.logancloud.com
+  names:
+    kind: BootRevision
+    listKind: BootRevisionList
+    plural: bootrevisions
+    singular: bootrevision
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+          properties:
+            name:
+              type: string
+              minLength: 1
+              maxLength: 54
+              pattern: ^[a-z]([-a-z0-9]*[a-z0-9])?$
+          required:
+            - name
+        spec:
+          type: object
+          properties:
+            env:
+              items:
+                properties:
+                  name:
+                    type: string
+                    pattern: ^[-._a-zA-Z][-._a-zA-Z0-9]*$
+                  value:
+                    type: string
+              type: array
+            health:
+              type: string
+              minLength: 0
+              maxLength: 2048
+            prometheus:
+              type: string
+              enum:
+                - ""
+                - "true"
+                - "false"
+            image:
+              type: string
+            nodeSelector:
+              type: object
+            port:
+              format: int32
+              type: integer
+              minimum: 1
+              maximum: 65535
+            replicas:
+              format: int32
+              type: integer
+              minimum: 0
+              maximum: 100
+            resources:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
+                    memory:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
+                    storage:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
+                    ephemeral-storage:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
+                    memory:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
+                    storage:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
+                    ephemeral-storage:
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                      pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
+            subDomain:
+              type: string
+            version:
+              type: string
+            command:
+              type: array
+              items:
+                type: string
+            sessionAffinity:
+              type: string
+              enum:
+                - ""
+                - "ClientIP"
+                - "None"
+            nodePort:
+              type: string
+              enum:
+                - "true"
+                - "false"
+          required:
+            - image
+            - version
+        status:
+          type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true

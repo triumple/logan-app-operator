@@ -84,6 +84,7 @@ initcrd:
 	oc create -f deploy/crds/app_v1_pythonboot_crd.yaml
 	oc create -f deploy/crds/app_v1_nodejsboot_crd.yaml
 	oc create -f deploy/crds/app_v1_webboot_crd.yaml
+	oc create -f deploy/crds/app_v1_bootrevision_crd.yaml
 
 # Redeploy Operator
 redeploy: recm rerole recrd
@@ -109,6 +110,7 @@ recrd:
 	oc replace -f deploy/crds/app_v1_pythonboot_crd.yaml
 	oc replace -f deploy/crds/app_v1_nodejsboot_crd.yaml
 	oc replace -f deploy/crds/app_v1_webboot_crd.yaml
+	oc replace -f deploy/crds/app_v1_bootrevision_crd.yaml
 
 # test java
 test-java:

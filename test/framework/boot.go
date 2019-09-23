@@ -118,7 +118,7 @@ func DeleteBoot(obj runtime.Object) {
 func GetBoot(bootKey types.NamespacedName) *bootv1.JavaBoot {
 	boot := &bootv1.JavaBoot{}
 	gomega.Eventually(func() error {
-		return framework.OperatorClient.restClient.Get().Namespace(bootKey.Namespace).Name(bootKey.Name).Resource("javaboots").Do().Into(boot)
+		return framework.Mgr.GetClient().Get(context.TODO(), bootKey, boot)
 	}, defaultTimeout).
 		Should(gomega.Succeed())
 	return boot
@@ -128,7 +128,7 @@ func GetBoot(bootKey types.NamespacedName) *bootv1.JavaBoot {
 func GetPhpBoot(bootKey types.NamespacedName) *bootv1.PhpBoot {
 	boot := &bootv1.PhpBoot{}
 	gomega.Eventually(func() error {
-		return framework.OperatorClient.restClient.Get().Namespace(bootKey.Namespace).Name(bootKey.Name).Resource("phpboots").Do().Into(boot)
+		return framework.Mgr.GetClient().Get(context.TODO(), bootKey, boot)
 	}, defaultTimeout).
 		Should(gomega.Succeed())
 	return boot
@@ -137,6 +137,6 @@ func GetPhpBoot(bootKey types.NamespacedName) *bootv1.PhpBoot {
 // GetBootWithError will get JavaBoot with boot key from kubernetes, return JavaBoot and error
 func GetBootWithError(bootKey types.NamespacedName) (*bootv1.JavaBoot, error) {
 	boot := &bootv1.JavaBoot{}
-	err := framework.OperatorClient.restClient.Get().Namespace(bootKey.Namespace).Name(bootKey.Name).Resource("javaboots").Do().Into(boot)
+	err := framework.Mgr.GetClient().Get(context.TODO(), bootKey, boot)
 	return boot, err
 }

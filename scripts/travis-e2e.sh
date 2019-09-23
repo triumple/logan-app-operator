@@ -39,7 +39,7 @@ function runTest()
     res="0"
 
     # run normal test case
-    ginkgo -p --skip="\[Serial\]|\[Slow\]" -r test
+    ginkgo --skip="\[Serial\]|\[Slow\]" -r test
     sub_res=`echo $?`
     if [ $sub_res != "0" ]; then
         res=$sub_res

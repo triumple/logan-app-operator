@@ -2,7 +2,7 @@ package e2e
 
 import (
 	bootv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
-	"github.com/logancloud/logan-app-operator/pkg/logan/operator"
+	"github.com/logancloud/logan-app-operator/pkg/logan/util/keys"
 	operatorFramework "github.com/logancloud/logan-app-operator/test/framework"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -185,7 +185,7 @@ var _ = Describe("Testing Boot", func() {
 				expressions := deploy.Spec.Template.Spec.Affinity.PodAntiAffinity.
 					PreferredDuringSchedulingIgnoredDuringExecution[0].
 					PodAffinityTerm.LabelSelector.MatchExpressions[0]
-				Expect(expressions.Key).Should(Equal(operator.BootNameKey))
+				Expect(expressions.Key).Should(Equal(keys.BootNameKey))
 				Expect(expressions.Operator).Should(Equal(metav1.LabelSelectorOpIn))
 				Expect(expressions.Values).Should(Equal([]string{bootKey.Name}))
 			})

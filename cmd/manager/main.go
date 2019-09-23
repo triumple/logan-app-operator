@@ -47,6 +47,9 @@ func printVersion() {
 	log.Info(fmt.Sprintf("Logan Operator Inner Version: %s", logan.InnerVersion))
 	log.Info(fmt.Sprintf("Logan Operator Env: %s", logan.OperDev))
 	log.Info(fmt.Sprintf("Logan Operator Config: %s", configFile))
+	log.Info(fmt.Sprintf("Logan Operator MutationDefaulter: %t", logan.MutationDefaulter))
+	log.Info(fmt.Sprintf("Logan Operator BizEnvs: %v", logan.BizEnvs))
+	log.Info(fmt.Sprintf("Logan Operator Revision Max History: %d", logan.MaxHistory))
 }
 
 func main() {

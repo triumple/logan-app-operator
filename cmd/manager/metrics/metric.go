@@ -3,32 +3,13 @@ package metrics
 import (
 	"context"
 	"fmt"
+	"github.com/logancloud/logan-app-operator/pkg/logan/util/keys"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"strconv"
-)
-
-const (
-	// PrometheusPathAnnotationKey is the Boot's created service's prometheus path annotation key
-	PrometheusPathAnnotationKey = "prometheus.io/path"
-	// PrometheusPathAnnotationValue is the Boot's created service's prometheus path annotation value
-	PrometheusPathAnnotationValue = "/metrics"
-
-	// PrometheusPortAnnotationKey is the Boot's created service's prometheus port annotation key
-	PrometheusPortAnnotationKey = "prometheus.io/port"
-
-	// PrometheusSchemeAnnotationKey is the Boot's created service's prometheus scheme annotation key
-	PrometheusSchemeAnnotationKey = "prometheus.io/scheme"
-	// PrometheusSchemeAnnotationValue is the Boot's created service's prometheus scheme annotation value
-	PrometheusSchemeAnnotationValue = "http"
-
-	// PrometheusScrapeAnnotationKey is the Boot's created service's prometheus scrape annotation key
-	PrometheusScrapeAnnotationKey = "prometheus.io/scrape"
-	// PrometheusScrapeAnnotationValue is the Boot's created service's prometheus scrape annotation value
-	PrometheusScrapeAnnotationValue = "true"
 )
 
 var log = logf.Log.WithName("metrics")
@@ -39,10 +20,10 @@ func AddPrometheusScrape(ctx context.Context, config *rest.Config, svr *v1.Servi
 		svr.Annotations = make(map[string]string)
 	}
 
-	svr.Annotations[PrometheusPathAnnotationKey] = PrometheusPathAnnotationValue
-	svr.Annotations[PrometheusPortAnnotationKey] = strconv.Itoa(int(port))
-	svr.Annotations[PrometheusSchemeAnnotationKey] = PrometheusSchemeAnnotationValue
-	svr.Annotations[PrometheusScrapeAnnotationKey] = PrometheusScrapeAnnotationValue
+	svr.Annotations[keys.PrometheusPathAnnotationKey] = keys.PrometheusPathAnnotationValue
+	svr.Annotations[keys.PrometheusPortAnnotationKey] = strconv.Itoa(int(port))
+	svr.Annotations[keys.PrometheusSchemeAnnotationKey] = keys.PrometheusSchemeAnnotationValue
+	svr.Annotations[keys.PrometheusScrapeAnnotationKey] = keys.PrometheusScrapeAnnotationValue
 
 	service, err := updatePrometheusService(ctx, config, svr)
 	if err != nil {

@@ -40,6 +40,9 @@ type BootSpec struct {
 	// Defaults to 1.
 	Replicas *int32 `json:"replicas,omitempty"`
 	// Env is list of environment variables to set in the app container.
+	// +optional
+	// +patchMergeKey=name
+	// +patchStrategy=merge
 	Env []corev1.EnvVar `json:"env,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 	// Port that are exposed by the app container
 	Port int32 `json:"port,omitempty"`
