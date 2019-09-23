@@ -1,5 +1,12 @@
 package framework
 
+// E2E is the struct for e2e test stage
+// 	- Build is for building e2e test context
+// 	- Check is for checking result for previous Build
+//	- Update is for updating e2e test context
+// 	- Recheck is for checking result for previous Update
+// 	- BuildAndCheck is composed of Build and Check
+//	- UpdateAndCheck is composed of Update and Check
 type E2E struct {
 	Build          func()
 	Check          func()
@@ -9,6 +16,7 @@ type E2E struct {
 	UpdateAndCheck func()
 }
 
+// Run is the entry point for each e2e test
 func (e2e *E2E) Run() {
 	if e2e.Build != nil {
 		e2e.Build()

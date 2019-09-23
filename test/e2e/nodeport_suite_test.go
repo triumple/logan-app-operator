@@ -30,7 +30,7 @@ var _ = Describe("Testing nodePort Boot", func() {
 	Describe("testing update nodePort boot", func() {
 		It("testing update nodePort from true to false", func() {
 			nodePortBootKey := types.NamespacedName{
-				Name: bootKey.Name + "-external",
+				Name:      bootKey.Name + "-external",
 				Namespace: bootKey.Namespace,
 			}
 			(&(operatorFramework.E2E{
@@ -63,7 +63,7 @@ var _ = Describe("Testing nodePort Boot", func() {
 
 		It("testing update nodePort from false to true", func() {
 			nodePortBootKey := types.NamespacedName{
-				Name: bootKey.Name + "-external",
+				Name:      bootKey.Name + "-external",
 				Namespace: bootKey.Namespace,
 			}
 			(&(operatorFramework.E2E{
