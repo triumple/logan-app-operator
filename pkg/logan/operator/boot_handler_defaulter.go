@@ -179,7 +179,83 @@ func (handler *BootHandler) DefaultValue() bool {
 
 	envChanged := handler.DefaultEnvValue()
 
-	return changed || envChanged
+	pvcChanged := handler.DefaultPvcValue()
+
+	return changed || envChanged || pvcChanged
+}
+
+// DefaultPvcValue will handle the pvc changed.
+// Return true if should be updated, false if should not be updated
+func (handler *BootHandler) DefaultPvcValue() bool {
+	logger := handler.Logger
+	boot := handler.Boot
+	bootSpec := handler.OperatorSpec
+	bootMeta := handler.OperatorMeta
+
+	//Pvc:
+	// annotation-1: Boot Spec is modified，clear value of annotation's pvc and generation
+	if bootMeta.Annotations == nil {
+		bootMeta.Annotations = make(map[string]string)
+	}
+
+	annotationMap := map[string]string{
+		BootPvcsAnnotationKey:       "",
+		BootDeployPvcsAnnotationKey: "",
+	}
+
+	updatePvcMeta := func() {
+		if bootSpec.Pvc == nil || len(bootSpec.Pvc) == 0 {
+			annotationMap[BootPvcsAnnotationKey] = ""
+		} else {
+			pvcStr, err := MarshalPvcVars(bootSpec.Pvc)
+			if err != nil {
+				logger.Error(err, "Encoding boot's pvc error.")
+			}
+			annotationMap[BootPvcsAnnotationKey] = pvcStr
+		}
+
+		vols := make([]corev1.VolumeMount, 0)
+		if handler.Config.AppSpec.Container != nil &&
+			handler.Config.AppSpec.Container.VolumeMounts != nil {
+			vols = append(vols, handler.Config.AppSpec.Container.VolumeMounts...)
+		}
+
+		if bootSpec.Pvc != nil && len(bootSpec.Pvc) > 0 {
+			vols = append(vols, ConvertVolumeMount(bootSpec.Pvc)...)
+		}
+
+		if len(vols) > 0 {
+			DecodeVolumeMounts(boot, vols)
+			volStr, err := MarshalVolumeMountVars(vols)
+			if err != nil {
+				logger.Error(err, "Encoding boot's vol error.")
+			}
+			annotationMap[BootDeployPvcsAnnotationKey] = volStr
+		} else {
+			annotationMap[BootDeployPvcsAnnotationKey] = ""
+		}
+	}
+
+	bootMetaPvcStr, ok := bootMeta.Annotations[BootPvcsAnnotationKey]
+	// created boot or previous pvc is empty
+	if !ok || bootMetaPvcStr == "" {
+		updatePvcMeta()
+	} else {
+		//check update
+		previousPvc, err := DecodePvcVars(bootMetaPvcStr)
+		if err != nil {
+			logger.Error(err, "Decoding annotation's pvc error.")
+			return false
+		}
+		if PvcVarsEq(previousPvc, bootSpec.Pvc) {
+			return false
+		} else {
+			updatePvcMeta()
+		}
+	}
+
+	updated := handler.UpdateAnnotation(annotationMap)
+	return updated
 }
 
 // DefaultEnvValue will handle the env changed.

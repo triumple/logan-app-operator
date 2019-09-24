@@ -10,12 +10,23 @@ import (
 	"github.com/logancloud/logan-app-operator/pkg/logan/util"
 	"github.com/logancloud/logan-app-operator/pkg/logan/webhook"
 	admssionv1beta1 "k8s.io/api/admission/v1beta1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"net/http"
+	"reflect"
+	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/types"
+	"strings"
+)
+
+const (
+	Shared = "shared"
+
+	dns1123Label = "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
 )
 
 // BootValidator is a Handler that implements interfaces: admission.Handler, inject.Client and inject.Decoder
@@ -97,6 +108,12 @@ func (vHandler *BootValidator) Validate(req types.Request) (string, bool, error)
 			logger.Info(msg)
 			return msg, false, nil
 		}
+
+		msg, valid = vHandler.CheckPvc(boot, operation)
+		if !valid {
+			logger.Info(msg)
+			return msg, false, nil
+		}
 	}
 
 	logger.Info("Validation Boot valid: ",
@@ -143,6 +160,97 @@ func (vHandler *BootValidator) BootNameExist(boot *v1.Boot) (string, bool) {
 	}
 
 	return "", true
+}
+
+// CheckPvc check the boot's pvc, pvc should exist and the label match the boot.
+// Returns
+//    msg: error message
+//    valid: If valid false, otherwise false
+func (vHandler *BootValidator) CheckPvc(boot *v1.Boot, operation admssionv1beta1.Operation) (string, bool) {
+	if boot.Spec.Pvc == nil {
+		logger.Info("Pvc is nil, valid is true.")
+		return "", true
+	}
+
+	for _, pvc := range boot.Spec.Pvc {
+		valid, err := vHandler.validatePvc(boot, pvc)
+		if !valid {
+			return err, false
+		}
+
+		pvcName, _ := operator.Decode(boot, pvc.Name)
+		_, shared, owner, err := vHandler.checkPvcOwner(boot, pvc)
+		if err != "" {
+			return err, false
+		}
+
+		if !shared && !owner {
+			return fmt.Sprintf("the pvc %s's label don't match the boot %s. the pvc %s also is not a shared pvc.",
+				pvcName, boot.Name, pvcName), false
+		}
+	}
+
+	return "", true
+}
+
+func (vHandler *BootValidator) validatePvc(boot *appv1.Boot, pvcMount appv1.PersistentVolumeClaimMount) (bool, string) {
+	pvcName, _ := operator.Decode(boot, pvcMount.Name)
+	if len(pvcName) == 0 || len(pvcName) > 63 {
+		return false, fmt.Sprintf("the pvc name %s must be not empty and no more than 63 characters", pvcName)
+	}
+
+	if isOk, _ := regexp.MatchString(dns1123Label, pvcName); !isOk {
+		return false, fmt.Sprintf("the pvc %s is a DNS-1123 label. "+
+			"a DNS-1123 label must consist of lower case alphanumeric characters, '-' or '.', "+
+			"and must start and end with an alphanumeric character "+
+			"(e.g. 'my-name',  or '123-abc', regex used for validation is '%s')",
+			pvcName, dns1123Label)
+	}
+
+	if len(pvcMount.MountPath) == 0 || strings.Index(pvcMount.MountPath, ":") >= 0 {
+		return false, "the pvc MountPath must be not empty and  not contain ':'"
+	}
+
+	return true, ""
+}
+
+func (vHandler *BootValidator) checkPvcOwner(boot *appv1.Boot, pvcMount appv1.PersistentVolumeClaimMount) (bool, bool, bool, string) {
+	c := vHandler.client
+
+	pvc := &corev1.PersistentVolumeClaim{}
+
+	pvcName, _ := operator.Decode(boot, pvcMount.Name)
+
+	err := c.Get(context.TODO(),
+		k8stypes.NamespacedName{
+			Namespace: boot.Namespace,
+			Name:      pvcName,
+		}, pvc)
+
+	if err != nil && errors.IsNotFound(err) {
+		return false, false, false, fmt.Sprintf("the pvc %s  don't exist in namespace %s.",
+			pvcName, boot.Namespace)
+	}
+
+	if pvc.Labels != nil {
+		shared, found := pvc.Labels[Shared]
+		if found {
+			if "true" == shared {
+				if pvcMount.ReadOnly == true {
+					return true, true, false, ""
+				} else {
+					return true, true, false,
+						fmt.Sprintf("the pvc %s is a shared pvc, should be readOnly", pvcName)
+				}
+			}
+		}
+
+		podLabels := operator.PodLabels(boot)
+		if reflect.DeepEqual(podLabels, pvc.Labels) {
+			return true, false, true, ""
+		}
+	}
+	return true, false, false, ""
 }
 
 // CheckEnvKeys check the boot's env keys.

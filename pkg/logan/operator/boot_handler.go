@@ -29,6 +29,10 @@ const (
 	EnvAnnotationValue = "generated"
 	// BootEnvsAnnotationKey is the annotation key for storing previous envs
 	BootEnvsAnnotationKey = "app.logancloud.com/boot-envs"
+	// BootPvcsAnnotationKey is the annotation key for storing previous pvcs
+	BootPvcsAnnotationKey = "app.logancloud.com/boot-pvcs"
+	// BootDeployPvcsAnnotationKey is the annotation key for storing previous deploy pvcs
+	BootDeployPvcsAnnotationKey = "app.logancloud.com/boot-deploy-pvcs"
 	// BootImagesAnnotationKey is the annotation key for storing previous images
 	BootImagesAnnotationKey = "app.logancloud.com/boot-images"
 
@@ -192,11 +196,23 @@ func (handler *BootHandler) NewDeployment() *appsv1.Deployment {
 				DecodeEnvs(boot, c.Env)
 			}
 		}
+	}
 
-		volumes := dep.Spec.Template.Spec.Volumes
-		if volumes != nil && len(volumes) > 0 {
-			DecodeVolumes(boot, volumes)
+	//add app pvc
+	if boot.Spec.Pvc != nil && len(boot.Spec.Pvc) > 0 {
+		vols := ConvertVolume(boot.Spec.Pvc)
+		if vols != nil {
+			if dep.Spec.Template.Spec.Volumes == nil {
+				dep.Spec.Template.Spec.Volumes = make([]corev1.Volume, 0)
+			}
+			dep.Spec.Template.Spec.Volumes = append(dep.Spec.Template.Spec.Volumes, vols...)
 		}
+	}
+
+	// decode
+	volumes := dep.Spec.Template.Spec.Volumes
+	if volumes != nil && len(volumes) > 0 {
+		DecodeVolumes(boot, volumes)
 	}
 
 	_ = controllerutil.SetControllerReference(handler.OperatorBoot, dep, handler.Scheme)
@@ -237,6 +253,18 @@ func (handler *BootHandler) NewAppContainer() *corev1.Container {
 		err := util.MergeOverride(&appContainer, *specContainer)
 		if err != nil {
 			handler.Logger.Error(err, "Merge error.", "type", "container")
+		}
+	}
+
+	// add pvc
+	if boot.Spec.Pvc != nil && len(boot.Spec.Pvc) > 0 {
+		if appContainer.VolumeMounts == nil {
+			appContainer.VolumeMounts = make([]corev1.VolumeMount, 0)
+		}
+		vols := ConvertVolumeMount(boot.Spec.Pvc)
+		if vols != nil {
+			appContainer.VolumeMounts = append(appContainer.VolumeMounts, vols...)
+			DecodeVolumeMounts(boot, appContainer.VolumeMounts)
 		}
 	}
 

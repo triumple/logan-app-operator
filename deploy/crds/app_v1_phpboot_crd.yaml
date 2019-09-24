@@ -141,6 +141,19 @@ spec:
               enum:
                 - "true"
                 - "false"
+            pvc:
+              type: array
+              items:
+                properties:
+                  name:
+                    type: string
+                    minLength: 1
+                    maxLength: 63
+                  readOnly:
+                    type: boolean
+                  mountPath:
+                    type: string
+                    minLength: 1
           required:
             - image
             - version

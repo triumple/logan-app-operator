@@ -257,9 +257,32 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 		rebootUpdated = true
 	}
 
+	// 10 Check vol
+	deployVols := deploy.Spec.Template.Spec.Containers[0].VolumeMounts
+	bootVolStr, ok := boot.Annotations[BootDeployPvcsAnnotationKey]
+	if ok && bootVolStr != "" {
+		bootVols, err := DecodeVolumeMountVars(bootVolStr)
+		if err != nil {
+			logger.Error(err, "can not decode VolumeMount", "Deploy", deploy.Name,
+				BootDeployPvcsAnnotationKey, bootVolStr)
+			return reconcile.Result{Requeue: true}, true, err
+		}
+
+		if !VolumeMountVarsEq(deployVols, bootVols) {
+			logger.Info(reason, "type", "VolumeMounts", "Deploy", deploy.Name,
+				"old", deployVols, "new", bootVols, BootDeployPvcsAnnotationKey, bootVolStr)
+			rebootUpdated = true
+		}
+	} else if deployVols != nil {
+		logger.Info(reason, "type", "VolumeMounts", "Deploy", deploy.Name,
+			"old", deployVols, "new", nil)
+		rebootUpdated = true
+	}
+
 	if rebootUpdated {
 		updateDeploy := handler.NewDeployment()
 		deploy.Spec = updateDeploy.Spec
+		logger.Info("this update will cause rolling update", "Deploy", deploy.Name)
 	}
 
 	if updated || rebootUpdated {
@@ -269,7 +292,7 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 			loganMetrics.UpdateReconcileErrors(boot.Kind, loganMetrics.RECONCILE_UPDATE_STAGE, loganMetrics.RECONCILE_UPDATE_DEPLOYMENT_SUBSTAGE, boot.Name)
 			handler.EventFail(reason, deploy.GetName(), err)
 
-			return reconcile.Result{}, true, err
+			return reconcile.Result{Requeue: true}, true, err
 		}
 
 		handler.EventNormal(reason, deploy.GetName())

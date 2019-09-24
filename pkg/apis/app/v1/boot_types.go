@@ -60,6 +60,8 @@ type BootSpec struct {
 	SessionAffinity string `json:"sessionAffinity,omitempty"`
 	// NodePort will expose the service on each node’s IP at a random port, default is ``
 	NodePort string `json:"nodePort,omitempty"`
+	// pvc is list of PersistentVolumeClaim to set in the app container.
+	Pvc []PersistentVolumeClaimMount `json:"pvc,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 }
 
 // BootStatus defines the observed state of Boot for specified types, as JavaBoot/PhpBoot/PythonBoot/NodeJSBoot
@@ -72,4 +74,18 @@ type BootStatus struct {
 	Type     string `json:"type,omitempty"`
 	Deploy   string `json:"deploy,omitempty"`
 	Services string `json:"services,omitempty"`
+}
+
+// PersistentVolumeClaimMount defines the Boot match a PersistentVolumeClaim
+// +k8s:openapi-gen=true
+type PersistentVolumeClaimMount struct {
+	// This must match the Name of a PersistentVolumeClaim.
+	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
+	// Mounted read-only if true, read-write otherwise (false or unspecified).
+	// Defaults to false.
+	// +optional
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,2,opt,name=readOnly"`
+	// Path within the container at which the volume should be mounted.  Must
+	// not contain ':'.
+	MountPath string `json:"mountPath" protobuf:"bytes,3,opt,name=mountPath"`
 }

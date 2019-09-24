@@ -147,20 +147,45 @@ func DecodeEnvs(boot *appv1.Boot, envVars []corev1.EnvVar) bool {
 	return updated
 }
 
-// DecodeVolumes replace the volumes, transforms the ClaimName with ${APP} and ${ENV} and ${PORT}
+// DecodeVolumes replace the volumes, transforms the name and ClaimName with ${APP} and ${ENV} and ${PORT}
 func DecodeVolumes(boot *appv1.Boot, volumes []corev1.Volume) bool {
 	updated := false
 	for i, volume := range volumes {
-		if volume.PersistentVolumeClaim == nil {
-			continue
-		}
+
 		replaceVol := volume.DeepCopy()
-		value, replaced := Decode(boot, volume.PersistentVolumeClaim.ClaimName)
-		replaceVol.PersistentVolumeClaim.ClaimName = value
+
+		if volume.PersistentVolumeClaim != nil {
+			value, replaced := Decode(boot, volume.PersistentVolumeClaim.ClaimName)
+			replaceVol.PersistentVolumeClaim.ClaimName = value
+			if replaced {
+				updated = true
+			}
+		}
+
+		value, replaced := Decode(boot, volume.Name)
+		replaceVol.Name = value
 		if replaced {
 			updated = true
 		}
+
 		volumes[i] = *replaceVol
+	}
+	return updated
+}
+
+// DecodeVolumeMounts replace the volumeMounts, transforms the name with ${APP} and ${ENV} and ${PORT}
+func DecodeVolumeMounts(boot *appv1.Boot, volumeMounts []corev1.VolumeMount) bool {
+	updated := false
+	for i, vol := range volumeMounts {
+		replaceVol := vol.DeepCopy()
+
+		value, replaced := Decode(boot, vol.Name)
+		replaceVol.Name = value
+		if replaced {
+			updated = true
+		}
+
+		volumeMounts[i] = *replaceVol
 	}
 	return updated
 }
@@ -203,6 +228,82 @@ func EnvVarsEq(env1, env2 []corev1.EnvVar) bool {
 	return true
 }
 
+// MarshalPvcVars marshal the []PersistentVolumeClaimMount to string
+func MarshalPvcVars(pvcs []appv1.PersistentVolumeClaimMount) (string, error) {
+	configPvcsSe, err := json.Marshal(pvcs)
+	configPvcs := fmt.Sprintf("%s", configPvcsSe)
+	return configPvcs, err
+}
+
+// DecodePvcVars unmarshal the string to []PersistentVolumeClaimMount
+func DecodePvcVars(str string) ([]appv1.PersistentVolumeClaimMount, error) {
+	var pvcVars []appv1.PersistentVolumeClaimMount
+
+	err := json.Unmarshal([]byte(str), &pvcVars)
+
+	return pvcVars, err
+}
+
+// PvcVarsEq return true if pvc1 and pvc2 is equal.
+func PvcVarsEq(pvc1, pvc2 []appv1.PersistentVolumeClaimMount) bool {
+	// If one is nil, the other must also be nil.
+	if (pvc1 == nil) != (pvc2 == nil) {
+		return false
+	}
+
+	if len(pvc1) != len(pvc2) {
+		return false
+	}
+
+	for i := range pvc1 {
+		aPvc := pvc1[i]
+		bPvc := pvc2[i]
+		if aPvc != bPvc {
+			return false
+		}
+	}
+
+	return true
+}
+
+// MarshalVolumeMountVars marshal the []VolumeMount to string
+func MarshalVolumeMountVars(vols []corev1.VolumeMount) (string, error) {
+	configVolsSe, err := json.Marshal(vols)
+	configVols := fmt.Sprintf("%s", configVolsSe)
+	return configVols, err
+}
+
+// DecodeVolumeMountVars unmarshal the string to []VolumeMount
+func DecodeVolumeMountVars(str string) ([]corev1.VolumeMount, error) {
+	var volVars []corev1.VolumeMount
+
+	err := json.Unmarshal([]byte(str), &volVars)
+
+	return volVars, err
+}
+
+// PvcVarsEq return true if vol1 and vol2 is equal.
+func VolumeMountVarsEq(vol1, vol2 []corev1.VolumeMount) bool {
+	// If one is nil, the other must also be nil.
+	if (vol1 == nil) != (vol2 == nil) {
+		return false
+	}
+
+	if len(vol1) != len(vol2) {
+		return false
+	}
+
+	for i := range vol1 {
+		aVol := vol1[i]
+		bVol := vol2[i]
+		if aVol != bVol {
+			return false
+		}
+	}
+
+	return true
+}
+
 // GetConfigSpec returns the config.AppSpec for the Boot.
 func GetConfigSpec(boot *appv1.Boot) *config.AppSpec {
 	if boot.BootType == logan.BootJava {
@@ -235,6 +336,44 @@ func DecodeAnnotationEnvs(boot *appv1.Boot) ([]corev1.EnvVar, error) {
 	}
 
 	return bootMetaEnvs, nil
+}
+
+// ConvertVolumeMount Convert the PersistentVolumeClaimMount to VolumeMount
+func ConvertVolumeMount(pvcs []appv1.PersistentVolumeClaimMount) []corev1.VolumeMount {
+	if pvcs == nil || len(pvcs) == 0 {
+		return nil
+	}
+	vols := make([]corev1.VolumeMount, 0)
+	for _, pvc := range pvcs {
+		vol := corev1.VolumeMount{
+			Name:      pvc.Name,
+			ReadOnly:  pvc.ReadOnly,
+			MountPath: pvc.MountPath,
+		}
+		vols = append(vols, vol)
+	}
+	return vols
+}
+
+// ConvertVolume Convert the PersistentVolumeClaimMount to Volume
+func ConvertVolume(pvcs []appv1.PersistentVolumeClaimMount) []corev1.Volume {
+	if pvcs == nil || len(pvcs) == 0 {
+		return nil
+	}
+	vols := make([]corev1.Volume, 0)
+	for _, pvc := range pvcs {
+		vol := corev1.Volume{
+			Name: pvc.Name,
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: pvc.Name,
+					ReadOnly:  pvc.ReadOnly,
+				},
+			},
+		}
+		vols = append(vols, vol)
+	}
+	return vols
 }
 
 // GetProfileBootConfig gets the Boot's config by profile annotation
