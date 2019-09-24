@@ -1,15 +1,18 @@
 package e2e
 
 import (
+	"fmt"
 	ghodssyaml "github.com/ghodss/yaml"
 	bootv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
 	"github.com/logancloud/logan-app-operator/pkg/logan"
+	"github.com/logancloud/logan-app-operator/pkg/logan/config"
 	operatorFramework "github.com/logancloud/logan-app-operator/test/framework"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"strings"
 )
 
 var _ = Describe("Testing Webhook", func() {
@@ -342,6 +345,264 @@ var _ = Describe("Testing Webhook", func() {
 						Expect(found).Should(Equal(true))
 					},
 				})).Run()
+			})
+		})
+
+		Context("testing pvc with create operation", func() {
+			var bootKey types.NamespacedName
+			var phpBoot *bootv1.PhpBoot
+			var pvc *corev1.PersistentVolumeClaim
+
+			BeforeEach(func() {
+				// Gen new namespace
+				bootKey = operatorFramework.GenResource()
+				operatorFramework.CreateNamespace(bootKey.Namespace)
+
+				phpBoot = operatorFramework.SamplePhpBoot(bootKey)
+				if phpBoot.ObjectMeta.Annotations == nil {
+					phpBoot.ObjectMeta.Annotations = make(map[string]string)
+				}
+				phpBoot.ObjectMeta.Annotations[config.BootProfileAnnotationKey] = "vol"
+			})
+
+			AfterEach(func() {
+				// Clean namespace
+				operatorFramework.DeleteNamespace(bootKey.Namespace)
+			})
+			Context("test create boot pvc webhook", func() {
+				BeforeEach(func() {
+					pvc = operatorFramework.SamplePvc(bootKey, false)
+					operatorFramework.CreatePvc(pvc)
+				})
+
+				It("check nas pvc name with APP env ok", func() {
+					pvcName := operatorFramework.GetEnvPvcName(false)
+					expectPvcName := operatorFramework.GetPvcName(bootKey, false)
+					(&(operatorFramework.E2E{
+						Build: func() {
+							pvcObject := bootv1.PersistentVolumeClaimMount{
+								Name:      pvcName,
+								MountPath: "/var/logs",
+							}
+							phpBoot.Spec.Pvc = append(phpBoot.Spec.Pvc, pvcObject)
+							operatorFramework.CreateBoot(phpBoot)
+						},
+						Check: func() {
+							// check boot
+							boot := operatorFramework.GetPhpBoot(bootKey)
+							hasPvc, _ := operatorFramework.IsInBootPvc(pvcName, boot.Spec.Pvc)
+							Expect(hasPvc).Should(Equal(true))
+
+							// check deployment
+							deploy := operatorFramework.GetDeployment(bootKey)
+							hasPvc, vol := operatorFramework.IsInDeploymentPvc(expectPvcName, deploy.Spec.Template.Spec.Volumes)
+							Expect(hasPvc).Should(Equal(true))
+							Expect(vol.PersistentVolumeClaim.ClaimName).Should(Equal(expectPvcName))
+						},
+					})).Run()
+				})
+
+				It("check nas pvc name with APP env too long", func() {
+					addStr := "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyza-nas"
+
+					// 63 chars
+					pvcName := "${APP}" + addStr
+					expectPvcName := bootKey.Name + addStr
+
+					(&(operatorFramework.E2E{
+						Build: func() {
+							pvcObject := bootv1.PersistentVolumeClaimMount{
+								Name:      pvcName,
+								MountPath: "/var/logs",
+							}
+							phpBoot.Spec.Pvc = append(phpBoot.Spec.Pvc, pvcObject)
+						},
+						Check: func() {
+							err := operatorFramework.CreateBootWithError(phpBoot)
+							Expect(err).Should(HaveOccurred())
+							errStr := fmt.Sprintf("admission webhook \"validation.app.logancloud.com\" denied the request: the pvc name %s must be not empty and no more than 63 characters", expectPvcName)
+							Expect(true).Should(Equal(strings.Contains(err.Error(), errStr)))
+						},
+					})).Run()
+				})
+
+				It("check nas pvc name regex not match", func() {
+					addStr := ".nas"
+					pvcName := "${APP}" + addStr
+					expectPvcName := bootKey.Name + addStr
+
+					(&(operatorFramework.E2E{
+						Build: func() {
+							pvcObject := bootv1.PersistentVolumeClaimMount{
+								Name:      pvcName,
+								MountPath: "/var/logs",
+							}
+							phpBoot.Spec.Pvc = append(phpBoot.Spec.Pvc, pvcObject)
+						},
+						Check: func() {
+							err := operatorFramework.CreateBootWithError(phpBoot)
+							Expect(err).Should(HaveOccurred())
+							errStr := fmt.Sprintf("admission webhook \"validation.app.logancloud.com\" denied the request: the pvc %s is a DNS-1123 label.", expectPvcName)
+							Expect(true).Should(Equal(strings.Contains(err.Error(), errStr)))
+						},
+					})).Run()
+				})
+
+				It("check shared pvc name with APP env ok", func() {
+					pvc = operatorFramework.SamplePvc(bootKey, true)
+					operatorFramework.CreatePvc(pvc)
+
+					pvcName := operatorFramework.GetEnvPvcName(true)
+					expectPvcName := operatorFramework.GetPvcName(bootKey, true)
+					(&(operatorFramework.E2E{
+						Build: func() {
+							pvcObject := bootv1.PersistentVolumeClaimMount{
+								Name:      pvcName,
+								MountPath: "/var/logs",
+							}
+							phpBoot.Spec.Pvc = append(phpBoot.Spec.Pvc, pvcObject)
+							operatorFramework.CreateBoot(phpBoot)
+						},
+						Check: func() {
+							// check boot
+							boot := operatorFramework.GetPhpBoot(bootKey)
+							hasPvc, _ := operatorFramework.IsInBootPvc(pvcName, boot.Spec.Pvc)
+							Expect(hasPvc).Should(Equal(true))
+
+							// check deployment
+							deploy := operatorFramework.GetDeployment(bootKey)
+							hasPvc, vol := operatorFramework.IsInDeploymentPvc(expectPvcName, deploy.Spec.Template.Spec.Volumes)
+							Expect(hasPvc).Should(Equal(true))
+							Expect(vol.PersistentVolumeClaim.ClaimName).Should(Equal(expectPvcName))
+						},
+					})).Run()
+				})
+
+				It("check shared pvc name with APP env too long", func() {
+					addStr := "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrst-shared-nas"
+
+					// 63 chars
+					pvcName := "${APP}" + addStr
+					expectPvcName := bootKey.Name + addStr
+
+					(&(operatorFramework.E2E{
+						Build: func() {
+							pvcObject := bootv1.PersistentVolumeClaimMount{
+								Name:      pvcName,
+								MountPath: "/var/logs",
+							}
+							phpBoot.Spec.Pvc = append(phpBoot.Spec.Pvc, pvcObject)
+						},
+						Check: func() {
+							err := operatorFramework.CreateBootWithError(phpBoot)
+							Expect(err).Should(HaveOccurred())
+							errStr := fmt.Sprintf("admission webhook \"validation.app.logancloud.com\" denied the request: the pvc name %s must be not empty and no more than 63 characters", expectPvcName)
+							Expect(true).Should(Equal(strings.Contains(err.Error(), errStr)))
+						},
+					})).Run()
+				})
+
+				It("check shared pvc name regex not match", func() {
+					addStr := ".shared.nas"
+					pvcName := "${APP}" + addStr
+					expectPvcName := bootKey.Name + addStr
+
+					(&(operatorFramework.E2E{
+						Build: func() {
+							pvcObject := bootv1.PersistentVolumeClaimMount{
+								Name:      pvcName,
+								MountPath: "/var/logs",
+							}
+							phpBoot.Spec.Pvc = append(phpBoot.Spec.Pvc, pvcObject)
+						},
+						Check: func() {
+							err := operatorFramework.CreateBootWithError(phpBoot)
+							Expect(err).Should(HaveOccurred())
+							errStr := fmt.Sprintf("admission webhook \"validation.app.logancloud.com\" denied the request: the pvc %s is a DNS-1123 label.", expectPvcName)
+							Expect(true).Should(Equal(strings.Contains(err.Error(), errStr)))
+						},
+					})).Run()
+				})
+
+				It("check pvc mountPath with ':'", func() {
+					pvcName := operatorFramework.GetEnvPvcName(false)
+					//expectPvcName := operatorFramework.GetPvcName(bootKey, false)
+					(&(operatorFramework.E2E{
+						Build: func() {
+							pvcObject := bootv1.PersistentVolumeClaimMount{
+								Name:      pvcName,
+								MountPath: "a:b",
+							}
+							phpBoot.Spec.Pvc = append(phpBoot.Spec.Pvc, pvcObject)
+						},
+						Check: func() {
+							err := operatorFramework.CreateBootWithError(phpBoot)
+							Expect(err).Should(HaveOccurred())
+							errStr := fmt.Sprintf("admission webhook \"validation.app.logancloud.com\" denied the request: the pvc MountPath must be not empty and  not contain ':'")
+							Expect(true).Should(Equal(strings.Contains(err.Error(), errStr)))
+						},
+					})).Run()
+				})
+			})
+
+			Context("test create boot pvc label mismatch", func() {
+				It("check nas pvc label mismatch case 1", func() {
+					labels := map[string]string{
+						"app":      "havok",
+						"bootName": bootKey.Name,
+					}
+					pvc = operatorFramework.SamplePvcWithLabels(bootKey, false, labels)
+					operatorFramework.CreatePvc(pvc)
+
+					pvcName := operatorFramework.GetEnvPvcName(false)
+					expectPvcName := operatorFramework.GetPvcName(bootKey, false)
+
+					(&(operatorFramework.E2E{
+						Build: func() {
+							pvcObject := bootv1.PersistentVolumeClaimMount{
+								Name:      pvcName,
+								MountPath: "/var/logs",
+							}
+							phpBoot.Spec.Pvc = append(phpBoot.Spec.Pvc, pvcObject)
+						},
+						Check: func() {
+							err := operatorFramework.CreateBootWithError(phpBoot)
+							Expect(err).Should(HaveOccurred())
+							errStr := fmt.Sprintf("admission webhook \"validation.app.logancloud.com\" denied the request: the pvc %s's label don't match the boot %s", expectPvcName, bootKey.Name)
+							Expect(true).Should(Equal(strings.Contains(err.Error(), errStr)))
+						},
+					})).Run()
+				})
+
+				It("check nas pvc label mismatch case 2", func() {
+					labels := map[string]string{
+						"app":      "havok",
+						"bootName": bootKey.Name,
+						"bootType": "php",
+						"abc":      "123",
+					}
+					pvc = operatorFramework.SamplePvcWithLabels(bootKey, false, labels)
+					operatorFramework.CreatePvc(pvc)
+
+					pvcName := operatorFramework.GetEnvPvcName(false)
+					expectPvcName := operatorFramework.GetPvcName(bootKey, false)
+
+					(&(operatorFramework.E2E{
+						Build: func() {
+							pvcObject := bootv1.PersistentVolumeClaimMount{
+								Name:      pvcName,
+								MountPath: "/var/logs",
+							}
+							phpBoot.Spec.Pvc = append(phpBoot.Spec.Pvc, pvcObject)
+						},
+						Check: func() {
+							err := operatorFramework.CreateBootWithError(phpBoot)
+							Expect(err).Should(HaveOccurred())
+							errStr := fmt.Sprintf("admission webhook \"validation.app.logancloud.com\" denied the request: the pvc %s's label don't match the boot %s", expectPvcName, bootKey.Name)
+							Expect(true).Should(Equal(strings.Contains(err.Error(), errStr)))
+						},
+					})).Run()
+				})
 			})
 		})
 	})

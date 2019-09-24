@@ -2,12 +2,14 @@ package e2e
 
 import (
 	bootv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
+	"github.com/logancloud/logan-app-operator/pkg/logan/config"
 	operatorFramework "github.com/logancloud/logan-app-operator/test/framework"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
+	"strings"
 )
 
 var _ = Describe("Testing CRD", func() {
@@ -990,6 +992,173 @@ var _ = Describe("Testing CRD", func() {
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
+		})
+	})
+
+	Describe("testing create boot pvc", func() {
+		var bootKey types.NamespacedName
+		var phpBoot *bootv1.PhpBoot
+		var pvc *corev1.PersistentVolumeClaim
+
+		BeforeEach(func() {
+			// Gen new namespace
+			bootKey = operatorFramework.GenResource()
+			operatorFramework.CreateNamespace(bootKey.Namespace)
+
+			phpBoot = operatorFramework.SamplePhpBoot(bootKey)
+			if phpBoot.ObjectMeta.Annotations == nil {
+				phpBoot.ObjectMeta.Annotations = make(map[string]string)
+			}
+			phpBoot.ObjectMeta.Annotations[config.BootProfileAnnotationKey] = "vol"
+
+			pvc = operatorFramework.SamplePvc(bootKey, false)
+			operatorFramework.CreatePvc(pvc)
+		})
+
+		AfterEach(func() {
+			// Clean namespace
+			operatorFramework.DeleteNamespace(bootKey.Namespace)
+		})
+
+		Context("test create boot pvc name", func() {
+			It("testing create boot with pvc name ok", func() {
+				pvcName := operatorFramework.GetPvcName(bootKey, false)
+				(&(operatorFramework.E2E{
+					Build: func() {
+						pvcObject := bootv1.PersistentVolumeClaimMount{
+							Name:      pvcName,
+							MountPath: "/var/logs",
+						}
+						phpBoot.Spec.Pvc = append(phpBoot.Spec.Pvc, pvcObject)
+						operatorFramework.CreateBoot(phpBoot)
+					},
+					Check: func() {
+						// check boot
+						boot := operatorFramework.GetPhpBoot(bootKey)
+						hasPvc, _ := operatorFramework.IsInBootPvc(pvcName, boot.Spec.Pvc)
+						Expect(hasPvc).Should(Equal(true))
+
+						// check deployment
+						deploy := operatorFramework.GetDeployment(bootKey)
+						hasPvc, vol := operatorFramework.IsInDeploymentPvc(pvcName, deploy.Spec.Template.Spec.Volumes)
+						Expect(hasPvc).Should(Equal(true))
+						Expect(vol.PersistentVolumeClaim.ClaimName).Should(Equal(pvcName))
+					},
+				})).Run()
+			})
+
+			It("testing create error boot pvc name empty", func() {
+				(&(operatorFramework.E2E{
+					Build: func() {
+						pvc := bootv1.PersistentVolumeClaimMount{
+							Name:      "",
+							MountPath: "abc",
+						}
+						phpBoot.Spec.Pvc = append(phpBoot.Spec.Pvc, pvc)
+					},
+					Check: func() {
+						err := operatorFramework.CreateBootWithError(phpBoot)
+						Expect(err).Should(HaveOccurred())
+						errStr := "spec.pvc.name in body should be at least 1 chars long"
+						Expect(true).Should(Equal(strings.Contains(err.Error(), errStr)))
+					},
+				})).Run()
+			})
+
+			It("testing create error boot pvc name too long", func() {
+				(&(operatorFramework.E2E{
+					Build: func() {
+						pvc := bootv1.PersistentVolumeClaimMount{
+							Name:      "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz",
+							MountPath: "abc",
+						}
+						phpBoot.Spec.Pvc = append(phpBoot.Spec.Pvc, pvc)
+					},
+					Check: func() {
+						err := operatorFramework.CreateBootWithError(phpBoot)
+						Expect(err).Should(HaveOccurred())
+						errStr := "spec.pvc.name in body should be at most 63 chars long"
+						Expect(true).Should(Equal(strings.Contains(err.Error(), errStr)))
+					},
+				})).Run()
+			})
+		})
+
+		Context("test create boot pvc readonly", func() {
+			It("testing create boot pvc readonly true", func() {
+				pvcName := operatorFramework.GetPvcName(bootKey, false)
+				(&(operatorFramework.E2E{
+					Build: func() {
+						pvcObject := bootv1.PersistentVolumeClaimMount{
+							Name:      pvcName,
+							ReadOnly:  true,
+							MountPath: "/var/logs",
+						}
+						phpBoot.Spec.Pvc = append(phpBoot.Spec.Pvc, pvcObject)
+						operatorFramework.CreateBoot(phpBoot)
+					},
+					Check: func() {
+						// check boot
+						boot := operatorFramework.GetPhpBoot(bootKey)
+						hasPvc, _ := operatorFramework.IsInBootPvc(pvcName, boot.Spec.Pvc)
+						Expect(hasPvc).Should(Equal(true))
+
+						// check deployment
+						deploy := operatorFramework.GetDeployment(bootKey)
+						hasPvc, vol := operatorFramework.IsInDeploymentPvc(pvcName, deploy.Spec.Template.Spec.Volumes)
+						Expect(hasPvc).Should(Equal(true))
+						Expect(vol.PersistentVolumeClaim.ClaimName).Should(Equal(pvcName))
+					},
+				})).Run()
+			})
+
+			It("testing create boot pvc readonly false", func() {
+				pvcName := operatorFramework.GetPvcName(bootKey, false)
+				(&(operatorFramework.E2E{
+					Build: func() {
+						pvcObject := bootv1.PersistentVolumeClaimMount{
+							Name:      pvcName,
+							ReadOnly:  false,
+							MountPath: "/var/logs",
+						}
+						phpBoot.Spec.Pvc = append(phpBoot.Spec.Pvc, pvcObject)
+						operatorFramework.CreateBoot(phpBoot)
+					},
+					Check: func() {
+						// check boot
+						boot := operatorFramework.GetPhpBoot(bootKey)
+						hasPvc, _ := operatorFramework.IsInBootPvc(pvcName, boot.Spec.Pvc)
+						Expect(hasPvc).Should(Equal(true))
+
+						// check deployment
+						deploy := operatorFramework.GetDeployment(bootKey)
+						hasPvc, vol := operatorFramework.IsInDeploymentPvc(pvcName, deploy.Spec.Template.Spec.Volumes)
+						Expect(hasPvc).Should(Equal(true))
+						Expect(vol.PersistentVolumeClaim.ClaimName).Should(Equal(pvcName))
+					},
+				})).Run()
+			})
+		})
+
+		Context("test create boot pvc mountPath", func() {
+			It("testing create error boot pvc mountPath empty", func() {
+				pvcName := operatorFramework.GetPvcName(bootKey, false)
+				(&(operatorFramework.E2E{
+					Build: func() {
+						pvc := bootv1.PersistentVolumeClaimMount{
+							Name:      pvcName,
+							MountPath: "",
+						}
+						phpBoot.Spec.Pvc = append(phpBoot.Spec.Pvc, pvc)
+					},
+					Check: func() {
+						err := operatorFramework.CreateBootWithError(phpBoot)
+						Expect(err).Should(HaveOccurred())
+						errStr := "spec.pvc.mountPath in body should be at least 1 chars long"
+						Expect(true).Should(Equal(strings.Contains(err.Error(), errStr)))
+					},
+				})).Run()
+			})
 		})
 	})
 })
