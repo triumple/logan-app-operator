@@ -1,5 +1,15 @@
 # logan-app-operator Release Notes
 
+## Version 0.5.0 - 9/25/2019
+
+* Boot support pvc 
+* Boot support nodePort service 
+* Raise go report grade 
+* Add custom metrics for reconcile time and errors 
+* Add [Serial] and [Slow] label to e2e test cases
+* Bugfix: PodAntiAffinity label selector
+* Bugfix: travis continue to tag version after fail
+
 ## Version 0.4.0 - 8/29/2019
 
 * More e2e test case.
