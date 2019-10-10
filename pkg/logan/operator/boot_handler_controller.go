@@ -279,6 +279,21 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 		rebootUpdated = true
 	}
 
+	// 11 Check RestartedAt
+	if !updated && !rebootUpdated {
+		if bootRestartedAt, ok := boot.Annotations[BootRestartedAtAnnotationKey]; ok {
+			if deploy.Spec.Template.Annotations == nil {
+				deploy.Spec.Template.Annotations = make(map[string]string)
+			}
+
+			deployRestartedAt, ok := deploy.Spec.Template.Annotations[BootRestartedAtAnnotationKey]
+			if !ok || bootRestartedAt != deployRestartedAt {
+				deploy.Spec.Template.Annotations[BootRestartedAtAnnotationKey] = bootRestartedAt
+				updated = true
+			}
+		}
+	}
+
 	if rebootUpdated {
 		updateDeploy := handler.NewDeployment()
 		deploy.Spec = updateDeploy.Spec

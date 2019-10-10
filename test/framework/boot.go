@@ -66,6 +66,7 @@ func UpdateBoot(boot *bootv1.JavaBoot) {
 	gomega.Eventually(func() error {
 		latestBoot := GetBoot(types.NamespacedName{Name: boot.Name, Namespace: boot.Namespace})
 		latestBoot.Spec = boot.Spec
+		latestBoot.Annotations = boot.Annotations
 		err := framework.Mgr.GetClient().Update(context.TODO(), latestBoot)
 		if apierrors.IsConflict(err) {
 			log.Printf("failed to update object, got an Conflict error: ")
