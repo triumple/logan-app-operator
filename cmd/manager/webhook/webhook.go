@@ -38,7 +38,9 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 	rules := admissionregistrationv1beta1.RuleWithOperations{
 		Operations: []admissionregistrationv1beta1.OperationType{
 			admissionregistrationv1beta1.Create,
-			admissionregistrationv1beta1.Update},
+			admissionregistrationv1beta1.Update,
+			//admissionregistrationv1beta1.Delete,
+		},
 		Rule: admissionregistrationv1beta1.Rule{
 			APIGroups:   []string{"app.logancloud.com"},
 			APIVersions: []string{"v1"},
@@ -53,7 +55,6 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 	mutationWh, err := builder.NewWebhookBuilder().
 		Name(mutationName).
 		Mutating().
-		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update).
 		Rules(rules).
 		Handlers(mutationHandler).
 		WithManager(mgr).
@@ -63,11 +64,13 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 	}
 
 	// 2. Create a webhook(boot validation)
-	validationHandler := &bootvalidation.BootValidator{}
+	validationHandler := &bootvalidation.BootValidator{
+		Schema:   mgr.GetScheme(),
+		Recorder: mgr.GetRecorder("logan-webhook-validation"),
+	}
 	validationWh, err := builder.NewWebhookBuilder().
 		Name(validationName).
 		Validating().
-		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update).
 		Rules(rules).
 		Handlers(validationHandler).
 		WithManager(mgr).
@@ -95,7 +98,6 @@ func RegisterWebhook(mgr manager.Manager, log logr.Logger, operatorNs string) {
 	validationConfigWh, err := builder.NewWebhookBuilder().
 		Name(validationConfigName).
 		Validating().
-		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update, admissionregistrationv1beta1.Delete).
 		Rules(configRules).
 		Handlers(validationConfigHandler).
 		WithManager(mgr).

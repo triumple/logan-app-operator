@@ -7,6 +7,7 @@ import (
 	appv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
 	"github.com/logancloud/logan-app-operator/pkg/logan"
 	"github.com/logancloud/logan-app-operator/pkg/logan/config"
+	"github.com/logancloud/logan-app-operator/pkg/logan/util/keys"
 	corev1 "k8s.io/api/core/v1"
 	"strconv"
 	"strings"
@@ -19,12 +20,6 @@ import (
 const (
 	// HttpPortName is the Boot's created service port name
 	HttpPortName = "http"
-
-	// PrometheusPortKey is the Boot's created service's prometheus annotation key
-	PrometheusPortKey = "prometheus.io/port"
-
-	// BootNameKey is the boot name's label selector key
-	BootNameKey = "bootName"
 )
 
 // DeployLabels return labels for the created Deploy
@@ -60,7 +55,7 @@ func AppContainerImageName(boot *appv1.Boot, appSpec *config.AppSpec) string {
 // PodLabels return labels for the created Pod
 func PodLabels(boot *appv1.Boot) map[string]string {
 	//return map[string]string{"app": "havok", boot.AppKey: boot.Name}
-	return map[string]string{"app": "havok", BootNameKey: boot.Name, "bootType": boot.BootType}
+	return map[string]string{"app": "havok", keys.BootNameKey: boot.Name, keys.BootTypeKey: boot.BootType}
 }
 
 // SideCarServiceName return the name for sidecar service
@@ -90,10 +85,10 @@ func allowPrometheusScrape(boot *appv1.Boot, appSpec *config.AppSpec) bool {
 func ServiceAnnotation(prometheusScrape bool, port int) map[string]string {
 	if prometheusScrape == true {
 		return map[string]string{
-			"prometheus.io/path":   "/prometheus",
-			PrometheusPortKey:      strconv.Itoa(port),
-			"prometheus.io/scheme": "http",
-			"prometheus.io/scrape": "true",
+			keys.PrometheusPathAnnotationKey:   "/prometheus",
+			keys.PrometheusPortAnnotationKey:   strconv.Itoa(port),
+			keys.PrometheusSchemeAnnotationKey: keys.PrometheusSchemeAnnotationValue,
+			keys.PrometheusScrapeAnnotationKey: keys.PrometheusScrapeAnnotationValue,
 		}
 	}
 	return nil
@@ -323,7 +318,7 @@ func GetConfigSpec(boot *appv1.Boot) *config.AppSpec {
 
 // DecodeAnnotationEnvs decodes the annotation's env
 func DecodeAnnotationEnvs(boot *appv1.Boot) ([]corev1.EnvVar, error) {
-	bootMetaEnvsStr := boot.Annotations[BootEnvsAnnotationKey]
+	bootMetaEnvsStr := boot.Annotations[keys.BootEnvsAnnotationKey]
 	if bootMetaEnvsStr == "" {
 		// Boot's env is empty.
 		return nil, nil

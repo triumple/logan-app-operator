@@ -11,14 +11,16 @@ import (
 	"github.com/logancloud/logan-app-operator/pkg/controller/phpboot"
 	"github.com/logancloud/logan-app-operator/pkg/controller/pythonboot"
 	"github.com/logancloud/logan-app-operator/pkg/controller/webboot"
+	"github.com/logancloud/logan-app-operator/pkg/logan"
 	"github.com/logancloud/logan-app-operator/pkg/logan/operator"
+	"github.com/logancloud/logan-app-operator/pkg/logan/util"
+	"github.com/logancloud/logan-app-operator/pkg/logan/util/keys"
 	"github.com/logancloud/logan-app-operator/pkg/logan/webhook"
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"net/http"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
@@ -30,7 +32,7 @@ import (
 
 // BootMutator is a Handler that implements interfaces: admission.Handler, inject.Client and inject.Decoder
 type BootMutator struct {
-	client   client.Client
+	client   util.K8SClient
 	decoder  types.Decoder
 	Schema   *runtime.Scheme
 	Recorder record.EventRecorder
@@ -52,7 +54,7 @@ func (mHandler *BootMutator) Handle(ctx context.Context, req types.Request) type
 		return admission.ErrorResponse(http.StatusInternalServerError, err)
 	}
 
-	logger.V(2).Info("patch", "result", patchResponse)
+	logger.V(1).Info("patch", "result", patchResponse)
 
 	return patchResponse
 }
@@ -174,13 +176,7 @@ func PatchResponseFromRaw(original, current []byte) types.Response {
 }
 
 func mutationDefault(handler *operator.BootHandler, req types.Request, bootName string) {
-	mutationDefaulter := false
-	ns, found := os.LookupEnv("MUTATION_DEFAULTER")
-	if found && ns == "true" {
-		mutationDefaulter = true
-	}
-
-	if mutationDefaulter {
+	if logan.MutationDefaulter {
 		changed := handler.DefaultValue()
 
 		//Update the Boot's default Value
@@ -208,7 +204,7 @@ func mutationBoot(metaData *metav1.ObjectMeta, req types.Request) {
 			metaData.Annotations = metaAnnotation
 		}
 
-		metaAnnotation[operator.StatusModificationTimeAnnotationKey] = operator.GetCurrentTimestamp()
+		metaAnnotation[keys.StatusModificationTimeAnnotationKey] = operator.GetCurrentTimestamp()
 	}
 }
 
@@ -216,7 +212,7 @@ var _ inject.Client = &BootMutator{}
 
 // InjectClient will inject client into BootMutator
 func (mHandler *BootMutator) InjectClient(c client.Client) error {
-	mHandler.client = c
+	mHandler.client = util.NewClient(c)
 	return nil
 }
 

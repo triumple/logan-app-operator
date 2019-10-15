@@ -39,6 +39,8 @@ spec:
               value: "logan-app-operator"
             - name: LOGAN_ENV
               value: "staging"
+            - name: BIZ_ENVS
+              value: "BUILD_TIME,BRANCH_NAME,LAST_DEPLOY"
           volumeMounts:
             - mountPath: /etc/logan
               name: logan-app-operator-config

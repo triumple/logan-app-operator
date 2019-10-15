@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/logancloud/logan-app-operator/pkg/logan"
 	loganMetrics "github.com/logancloud/logan-app-operator/pkg/logan/metrics"
+	"github.com/logancloud/logan-app-operator/pkg/logan/util/keys"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -259,18 +260,18 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 
 	// 10 Check vol
 	deployVols := deploy.Spec.Template.Spec.Containers[0].VolumeMounts
-	bootVolStr, ok := boot.Annotations[BootDeployPvcsAnnotationKey]
+	bootVolStr, ok := boot.Annotations[keys.BootDeployPvcsAnnotationKey]
 	if ok && bootVolStr != "" {
 		bootVols, err := DecodeVolumeMountVars(bootVolStr)
 		if err != nil {
 			logger.Error(err, "can not decode VolumeMount", "Deploy", deploy.Name,
-				BootDeployPvcsAnnotationKey, bootVolStr)
+				keys.BootDeployPvcsAnnotationKey, bootVolStr)
 			return reconcile.Result{Requeue: true}, true, err
 		}
 
 		if !VolumeMountVarsEq(deployVols, bootVols) {
 			logger.Info(reason, "type", "VolumeMounts", "Deploy", deploy.Name,
-				"old", deployVols, "new", bootVols, BootDeployPvcsAnnotationKey, bootVolStr)
+				"old", deployVols, "new", bootVols, keys.BootDeployPvcsAnnotationKey, bootVolStr)
 			rebootUpdated = true
 		}
 	} else if deployVols != nil {
@@ -344,9 +345,9 @@ func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service, deploy *
 
 	// Annotation port is changed
 	if svc.Annotations != nil {
-		svcAnnoPort := svc.Annotations[PrometheusPortKey]
+		svcAnnoPort := svc.Annotations[keys.PrometheusPortAnnotationKey]
 		if svcAnnoPort != strconv.Itoa(int(boot.Spec.Port)) {
-			svc.Annotations[PrometheusPortKey] = strconv.Itoa(int(boot.Spec.Port))
+			svc.Annotations[keys.PrometheusPortAnnotationKey] = strconv.Itoa(int(boot.Spec.Port))
 			updated = true
 		}
 	}
@@ -478,7 +479,7 @@ func (handler *BootHandler) reconcileUpdateOtherService(deploy *appsv1.Deploymen
 
 				// Annotation port is changed
 				if runtimeSvc.Annotations != nil {
-					svcAnnoPort := runtimeSvc.Annotations[PrometheusPortKey]
+					svcAnnoPort := runtimeSvc.Annotations[keys.PrometheusPortAnnotationKey]
 					if svcAnnoPort != strconv.Itoa(int(expectSvc.Spec.Ports[0].Port)) {
 						runtimeSvc.Annotations = expectSvc.Annotations
 						modify = true
@@ -593,8 +594,10 @@ func (handler *BootHandler) ReconcileUpdateBootMeta() (reconcile.Result, bool, b
 	}
 
 	// 3. Update Boot's annotation if needed.
+	// 3.1 Update Boot's annotation StatusAvailable
 	podList := &corev1.PodList{}
-	labelSelector := labels.SelectorFromSet(PodLabels(boot))
+	podLabels := PodLabels(boot)
+	labelSelector := labels.SelectorFromSet(podLabels)
 	listOptions := &client.ListOptions{Namespace: boot.Namespace, LabelSelector: labelSelector}
 	err = c.List(context.TODO(), listOptions, podList)
 	if err != nil {
@@ -603,7 +606,7 @@ func (handler *BootHandler) ReconcileUpdateBootMeta() (reconcile.Result, bool, b
 		return reconcile.Result{}, true, false, err
 	}
 
-	runningCount := len(podList.Items)
+	runningCount := depFound.Status.Replicas
 	//for _, pod := range podList.Items {
 	//	podStatus := pod.Status.Phase
 	//	if podStatus == corev1.PodRunning {
@@ -611,15 +614,61 @@ func (handler *BootHandler) ReconcileUpdateBootMeta() (reconcile.Result, bool, b
 	//	}
 	//}
 
+	// 3.2 Update Boot's annotation revision
+	//   select latest revision. set it
+	revisionLst, _ := c.ListRevision(boot.Namespace, podLabels)
+	latestRevision := revisionLst.SelectLatestRevision()
+
+	// 3.2.1 Update Boot's revison's annotation
+	//    set the latest revison's phase to active
+	revisionAnnotationMap := map[string]string{}
+	if runningCount == *boot.Spec.Replicas && runningCount == depFound.Status.AvailableReplicas {
+		revisionAnnotationMap[keys.BootRevisionPhaseAnnotationKey] = RevisionPhaseActive
+	} else {
+		revisionAnnotationMap[keys.BootRevisionPhaseAnnotationKey] = RevisionPhaseRunning
+	}
+
+	if latestRevision != nil {
+		revisionUpdated := updateRevisionAnnotation(latestRevision, revisionAnnotationMap)
+		if revisionUpdated {
+			reason := "Updating Boot Revision Meta"
+			logger.Info(reason, "new", revisionAnnotationMap, "revision", latestRevision)
+			err := c.Update(context.TODO(), latestRevision)
+			if err != nil {
+				logger.Info("Failed to update Boot Revision Metadata", "err", err.Error())
+				handler.EventFail(reason, latestRevision.Name, err)
+				return reconcile.Result{Requeue: true}, true, false, err
+			}
+			handler.EventNormal(reason, latestRevision.Name)
+		}
+	} else {
+		logger.Info("can not find latest Revision", "boot", boot)
+	}
+
+	//requeue := false
+	//if revisionAnnotationMap[keys.BootRevisionPhaseAnnotationKey] == RevisionPhaseRunning {
+	//	logger.V(1).Info("Revision is running,should requeue", "revision", latestRevision)
+	//	requeue = true
+	//}
+
+	// 4 Update boot Meta
 	annotationMap := map[string]string{
-		DeployAnnotationKey:          depFound.Name,
-		AppTypeAnnotationKey:         AppTypeAnnotationDeploy,
-		ServicesAnnotationKey:        TransferServiceNames(svcList.Items),
-		StatusAvailableAnnotationKey: strconv.Itoa(runningCount),
-		StatusDesiredAnnotationKey:   strconv.Itoa(int(*boot.Spec.Replicas)),
+		keys.DeployAnnotationKey:          depFound.Name,
+		keys.AppTypeAnnotationKey:         keys.AppTypeAnnotationDeploy,
+		keys.ServicesAnnotationKey:        TransferServiceNames(svcList.Items),
+		keys.StatusAvailableAnnotationKey: strconv.Itoa(int(runningCount)),
+		keys.StatusDesiredAnnotationKey:   strconv.Itoa(int(*boot.Spec.Replicas)),
+	}
+
+	if latestRevision != nil {
+		annotationMap[keys.BootRevisionIdAnnotationKey] = strconv.Itoa(latestRevision.GetRevisionId())
 	}
 
 	updated := handler.UpdateAnnotation(annotationMap)
+
+	//if requeue {
+	//	return reconcile.Result{RequeueAfter: time.Second * 10}, true, updated, nil
+	//}
 
 	return reconcile.Result{}, false, updated, nil
 }

@@ -8,12 +8,12 @@ import (
 	"github.com/logancloud/logan-app-operator/pkg/logan/config"
 	loganMetrics "github.com/logancloud/logan-app-operator/pkg/logan/metrics"
 	"github.com/logancloud/logan-app-operator/pkg/logan/operator"
+	"github.com/logancloud/logan-app-operator/pkg/logan/util"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -35,7 +35,7 @@ func Add(mgr manager.Manager) error {
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	return &ReconcileJavaBoot{
-		client:   mgr.GetClient(),
+		client:   util.NewClient(mgr.GetClient()),
 		scheme:   mgr.GetScheme(),
 		recorder: mgr.GetRecorder("javaboot-controller"),
 	}
@@ -82,7 +82,7 @@ var _ reconcile.Reconciler = &ReconcileJavaBoot{}
 type ReconcileJavaBoot struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client   client.Client
+	client   util.K8SClient
 	scheme   *runtime.Scheme
 	recorder record.EventRecorder
 }
@@ -126,6 +126,7 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 
 	handler = InitHandler(javaBoot, r.scheme, r.client, logger, r.recorder)
 
+	//if !logan.MutationDefaulter {
 	changed := handler.DefaultValue()
 
 	//Update the Boot's default Value
@@ -142,6 +143,7 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 		handler.EventNormal(reason, javaBoot.Name)
 		return reconcile.Result{Requeue: true}, nil
 	}
+	//}
 
 	// 1. Check the existence of components, if not exist, create new one.
 	result, requeue, err := handler.ReconcileCreate()
@@ -180,7 +182,7 @@ func (r *ReconcileJavaBoot) Reconcile(request reconcile.Request) (reconcile.Resu
 
 // InitHandler will create the Handler for handling logic of Boot
 func InitHandler(javaBoot *appv1.JavaBoot, scheme *runtime.Scheme,
-	client client.Client, logger logr.Logger, recorder record.EventRecorder) (handler *operator.BootHandler) {
+	client util.K8SClient, logger logr.Logger, recorder record.EventRecorder) (handler *operator.BootHandler) {
 	boot := javaBoot.DeepCopyBoot()
 
 	bootCfg := config.JavaConfig

@@ -1,7 +1,7 @@
 package e2e
 
 import (
-	"github.com/logancloud/logan-app-operator/cmd/manager/metrics"
+	"github.com/logancloud/logan-app-operator/pkg/logan/util/keys"
 	operatorFramework "github.com/logancloud/logan-app-operator/test/framework"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -22,9 +22,9 @@ var _ = Describe("Testing Metric", func() {
 		Expect(svr.Spec.Ports[0].TargetPort).Should(Equal(intstr.FromInt(8383)))
 		Expect(svr.Spec.Ports[0].Name).Should(Equal("metrics"))
 
-		Expect(svr.Annotations[metrics.PrometheusPathAnnotationKey]).Should(Equal(metrics.PrometheusPathAnnotationValue))
-		Expect(svr.Annotations[metrics.PrometheusPortAnnotationKey]).Should(Equal("8383"))
-		Expect(svr.Annotations[metrics.PrometheusSchemeAnnotationKey]).Should(Equal(metrics.PrometheusSchemeAnnotationValue))
-		Expect(svr.Annotations[metrics.PrometheusScrapeAnnotationKey]).Should(Equal(metrics.PrometheusScrapeAnnotationValue))
+		Expect(svr.Annotations[keys.PrometheusPathAnnotationKey]).Should(Equal(keys.PrometheusPathAnnotationValue))
+		Expect(svr.Annotations[keys.PrometheusPortAnnotationKey]).Should(Equal("8383"))
+		Expect(svr.Annotations[keys.PrometheusSchemeAnnotationKey]).Should(Equal(keys.PrometheusSchemeAnnotationValue))
+		Expect(svr.Annotations[keys.PrometheusScrapeAnnotationKey]).Should(Equal(keys.PrometheusScrapeAnnotationValue))
 	})
 })

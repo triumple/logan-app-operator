@@ -3,6 +3,7 @@ package operator
 import (
 	appv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
 	"github.com/logancloud/logan-app-operator/pkg/logan/util"
+	"github.com/logancloud/logan-app-operator/pkg/logan/util/keys"
 	corev1 "k8s.io/api/core/v1"
 	"strconv"
 )
@@ -199,19 +200,19 @@ func (handler *BootHandler) DefaultPvcValue() bool {
 	}
 
 	annotationMap := map[string]string{
-		BootPvcsAnnotationKey:       "",
-		BootDeployPvcsAnnotationKey: "",
+		keys.BootPvcsAnnotationKey:       "",
+		keys.BootDeployPvcsAnnotationKey: "",
 	}
 
 	updatePvcMeta := func() {
 		if bootSpec.Pvc == nil || len(bootSpec.Pvc) == 0 {
-			annotationMap[BootPvcsAnnotationKey] = ""
+			annotationMap[keys.BootPvcsAnnotationKey] = ""
 		} else {
 			pvcStr, err := MarshalPvcVars(bootSpec.Pvc)
 			if err != nil {
 				logger.Error(err, "Encoding boot's pvc error.")
 			}
-			annotationMap[BootPvcsAnnotationKey] = pvcStr
+			annotationMap[keys.BootPvcsAnnotationKey] = pvcStr
 		}
 
 		vols := make([]corev1.VolumeMount, 0)
@@ -230,13 +231,13 @@ func (handler *BootHandler) DefaultPvcValue() bool {
 			if err != nil {
 				logger.Error(err, "Encoding boot's vol error.")
 			}
-			annotationMap[BootDeployPvcsAnnotationKey] = volStr
+			annotationMap[keys.BootDeployPvcsAnnotationKey] = volStr
 		} else {
-			annotationMap[BootDeployPvcsAnnotationKey] = ""
+			annotationMap[keys.BootDeployPvcsAnnotationKey] = ""
 		}
 	}
 
-	bootMetaPvcStr, ok := bootMeta.Annotations[BootPvcsAnnotationKey]
+	bootMetaPvcStr, ok := bootMeta.Annotations[keys.BootPvcsAnnotationKey]
 	// created boot or previous pvc is empty
 	if !ok || bootMetaPvcStr == "" {
 		updatePvcMeta()
@@ -272,11 +273,11 @@ func (handler *BootHandler) DefaultEnvValue() bool {
 	if bootMeta.Annotations == nil {
 		bootMeta.Annotations = make(map[string]string)
 	}
-	bootMetaEnvsStr := bootMeta.Annotations[BootEnvsAnnotationKey]
+	bootMetaEnvsStr := bootMeta.Annotations[keys.BootEnvsAnnotationKey]
 	if bootMetaEnvsStr == "" {
 		// Annotation "boot-envs" is empty, means it is newly created.
 		// Clear value of annotation's env to let it do the Env Defaulters.
-		bootMeta.Annotations[EnvAnnotationKey] = ""
+		bootMeta.Annotations[keys.EnvAnnotationKey] = ""
 	} else {
 		// Annotation "boot-envs" is not empty, we need to check if it is modified.
 		bootMetaEnvs, err := DecodeEnvVars(bootMetaEnvsStr)
@@ -289,26 +290,26 @@ func (handler *BootHandler) DefaultEnvValue() bool {
 		if EnvVarsEq(bootMetaEnvs, bootSpec.Env) {
 			if handler.ImageChange() {
 				// Image is changed, we need to merge the envs.
-				bootMeta.Annotations[EnvAnnotationKey] = ""
+				bootMeta.Annotations[keys.EnvAnnotationKey] = ""
 			} else {
 				// Not changed, do nothing.
 				return false
 			}
 		} else {
 			// Env is changed, clear value of annotation's env to let it do the Env Defaulters.
-			bootMeta.Annotations[EnvAnnotationKey] = ""
+			bootMeta.Annotations[keys.EnvAnnotationKey] = ""
 		}
 	}
 
-	metaEnv := bootMeta.Annotations[EnvAnnotationKey]
+	metaEnv := bootMeta.Annotations[keys.EnvAnnotationKey]
 	// annotation-2: New Boot or Boot's spec is modified, do the Env Defaulters.
 	if metaEnv != "" {
 		return false
 	}
 
 	annotationMap := map[string]string{
-		EnvAnnotationKey:        string(EnvAnnotationValue),
-		BootImagesAnnotationKey: AppContainerImageName(handler.Boot, handler.Config.AppSpec),
+		keys.EnvAnnotationKey:        string(keys.EnvAnnotationValue),
+		keys.BootImagesAnnotationKey: AppContainerImageName(handler.Boot, handler.Config.AppSpec),
 	}
 
 	var changed bool
@@ -349,7 +350,7 @@ func (handler *BootHandler) DefaultEnvValue() bool {
 	if err != nil {
 		logger.Error(err, "Encoding boot'env error.")
 	}
-	bootMeta.Annotations[BootEnvsAnnotationKey] = bootEnvStr
+	bootMeta.Annotations[keys.BootEnvsAnnotationKey] = bootEnvStr
 
 	return changed
 }
@@ -362,7 +363,7 @@ func (handler *BootHandler) ImageChange() bool {
 	if bootMeta.Annotations == nil {
 		bootMeta.Annotations = make(map[string]string)
 	}
-	bootMetaImageStr := bootMeta.Annotations[BootImagesAnnotationKey]
+	bootMetaImageStr := bootMeta.Annotations[keys.BootImagesAnnotationKey]
 	if bootMetaImageStr == "" {
 		// Annotation "boot-images" is empty, means it is newly created.
 		return true

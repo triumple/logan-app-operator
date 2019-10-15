@@ -7,13 +7,13 @@ import (
 	"github.com/logancloud/logan-app-operator/pkg/logan"
 	"github.com/logancloud/logan-app-operator/pkg/logan/config"
 	"github.com/logancloud/logan-app-operator/pkg/logan/util"
+	"github.com/logancloud/logan-app-operator/pkg/logan/util/keys"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/record"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -22,35 +22,6 @@ const (
 	defaultImagePullPolicy       = "Always"
 	defaultRevisionHistoryLimits = int(5)
 	defaultWeight                = 100
-
-	// EnvAnnotationKey is the annotation key for storing when changed env
-	EnvAnnotationKey = "app.logancloud.com/env"
-	// EnvAnnotationValue is default value for for env
-	EnvAnnotationValue = "generated"
-	// BootEnvsAnnotationKey is the annotation key for storing previous envs
-	BootEnvsAnnotationKey = "app.logancloud.com/boot-envs"
-	// BootPvcsAnnotationKey is the annotation key for storing previous pvcs
-	BootPvcsAnnotationKey = "app.logancloud.com/boot-pvcs"
-	// BootDeployPvcsAnnotationKey is the annotation key for storing previous deploy pvcs
-	BootDeployPvcsAnnotationKey = "app.logancloud.com/boot-deploy-pvcs"
-	// BootImagesAnnotationKey is the annotation key for storing previous images
-	BootImagesAnnotationKey = "app.logancloud.com/boot-images"
-
-	// DeployAnnotationKey is the annotation key for storing boot's current Deployment name
-	DeployAnnotationKey = "app.logancloud.com/deploy"
-	// ServicesAnnotationKey is the annotation key for storing boot's current services name list
-	ServicesAnnotationKey = "app.logancloud.com/services"
-	// AppTypeAnnotationKey is the annotation key for storing boot's type
-	AppTypeAnnotationKey = "app.logancloud.com/type"
-	// AppTypeAnnotationDeploy is the annotation value for Deployment
-	AppTypeAnnotationDeploy = "deploy"
-
-	// StatusAvailableAnnotationKey is the annotation key for storing boot's current pods
-	StatusAvailableAnnotationKey = "app.logancloud.com/status.available"
-	// StatusDesiredAnnotationKey is the annotation key for storing boot's desired pods
-	StatusDesiredAnnotationKey = "app.logancloud.com/status.desired"
-	// StatusModificationTimeAnnotationKey is the annotation key for storing boot's type
-	StatusModificationTimeAnnotationKey = "app.logancloud.com/status.lastUpdateTimeStamp"
 
 	eventTypeNormal  = "Normal"
 	eventTypeWarning = "Warning"
@@ -66,7 +37,7 @@ type BootHandler struct {
 	Config *config.BootConfig
 
 	Scheme   *runtime.Scheme
-	Client   client.Client
+	Client   util.K8SClient
 	Logger   logr.Logger
 	Recorder record.EventRecorder
 }
@@ -151,7 +122,7 @@ func (handler *BootHandler) NewDeployment() *appsv1.Deployment {
 										LabelSelector: &metav1.LabelSelector{
 											MatchExpressions: []metav1.LabelSelectorRequirement{
 												{
-													Key:      BootNameKey,
+													Key:      keys.BootNameKey,
 													Operator: metav1.LabelSelectorOpIn,
 													Values:   []string{boot.Name},
 												},

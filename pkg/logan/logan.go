@@ -4,6 +4,8 @@ import (
 	"os"
 	"runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -15,6 +17,10 @@ const (
 
 	// ConfigFilename is for config file name
 	ConfigFilename = "config.yaml"
+
+	oMutationDefaulterKey  = "MUTATION_DEFAULTER"
+	oRevisionMaxHistoryKey = "MAX_HISTORY"
+	oBizENVKey             = "BIZ_ENVS"
 
 	// BootJava is for JavaBoot type
 	BootJava = "java"
@@ -48,6 +54,12 @@ var OperConfigmap string
 // MaxConcurrentReconciles is max concurrent reconciles
 var MaxConcurrentReconciles int
 
+var MutationDefaulter bool
+
+var MaxHistory int
+
+var BizEnvs map[string]bool
+
 var log = logf.Log.WithName("logan_util")
 
 func init() {
@@ -75,6 +87,45 @@ func init() {
 		OperConfigmap = defaultConfigMap
 	} else {
 		OperConfigmap = configMap
+	}
+
+	mutationDefaulter, found := os.LookupEnv(oMutationDefaulterKey)
+	if !found {
+		log.Info("MUTATION_DEFAULTER not set, use default", "MUTATION_DEFAULTER", false)
+		MutationDefaulter = false
+	} else {
+		b, err := strconv.ParseBool(mutationDefaulter)
+		if err != nil {
+			log.Error(err, "MUTATION_DEFAULTER parse error, use default", "MUTATION_DEFAULTER", false)
+			MutationDefaulter = false
+		} else {
+			MutationDefaulter = b
+		}
+	}
+
+	maxHistory, found := os.LookupEnv(oRevisionMaxHistoryKey)
+	if !found {
+		log.Info("MAX_HISTORY not set, use default", "MAX_HISTORY", 10)
+		MaxHistory = 10
+	} else {
+		i, err := strconv.Atoi(maxHistory)
+		if err != nil {
+			log.Error(err, "MAX_HISTORY parse error, use default", "MAX_HISTORY", 10)
+			MaxHistory = 10
+		} else {
+			MaxHistory = i
+		}
+	}
+
+	bizEnvs, found := os.LookupEnv(oBizENVKey)
+	if !found {
+		log.Info("BIZ_ENVS not set, use default", "BIZ_ENVS", "")
+		BizEnvs = make(map[string]bool)
+	} else {
+		BizEnvs = make(map[string]bool)
+		for _, val := range strings.Split(bizEnvs, ",") {
+			BizEnvs[val] = true
+		}
 	}
 
 	MaxConcurrentReconciles = runtime.NumCPU() * 2
