@@ -8,6 +8,14 @@ set -u
 # print each command before executing it
 set -x
 
+
+# check skip test
+set +u
+    if [ "${SKIP_TEST}x" != "x" ]; then
+        exit 0
+    fi
+set -u
+
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 
 "${SCRIPT_DIR}"/create-minikube.sh
@@ -37,9 +45,10 @@ function runTest()
 {
     set +e
     res="0"
+    export GO111MODULE=on
 
-    # run normal test case
-    ginkgo --skip="\[Serial\]|\[Slow\]" -r test
+    # run revision test case
+    ginkgo -p --focus="\[Revision\]" -r test
     sub_res=`echo $?`
     if [ $sub_res != "0" ]; then
         res=$sub_res
@@ -51,6 +60,28 @@ function runTest()
     if [ $sub_res != "0" ]; then
         res=$sub_res
     fi
+
+    # run CRD test case
+    ginkgo -p --focus="\[CRD\]" -r test
+    sub_res=`echo $?`
+    if [ $sub_res != "0" ]; then
+        res=$sub_res
+    fi
+
+    # run CONTROLLER test case
+    ginkgo -p --focus="\[CONTROLLER\]" -r test
+    sub_res=`echo $?`
+    if [ $sub_res != "0" ]; then
+        res=$sub_res
+    fi
+
+    # run normal test case
+    ginkgo --skip="\[Serial\]|\[Slow\]|\[Revision\]|\[CRD\]|\[CONTROLLER\]" -r test
+    sub_res=`echo $?`
+    if [ $sub_res != "0" ]; then
+        res=$sub_res
+    fi
+
 
     # set WAIT_TIME, and run slow test case
     set +u

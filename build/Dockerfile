@@ -1,5 +1,5 @@
 FROM registry.access.redhat.com/rhel7:latest as rhel7
-FROM registry.access.redhat.com/ubi7-dev-preview/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi7/ubi-minimal:latest
 
 # copy zoneinfo from rhel7 to ubi-minimal
 COPY  --from=rhel7 /usr/share/zoneinfo /usr/share/zoneinfo

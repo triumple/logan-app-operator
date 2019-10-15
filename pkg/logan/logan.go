@@ -54,10 +54,13 @@ var OperConfigmap string
 // MaxConcurrentReconciles is max concurrent reconciles
 var MaxConcurrentReconciles int
 
+// MutationDefaulter is whether to modify in the webhook phase
 var MutationDefaulter bool
 
+// MutationDefaulter is the maximum number of revisions retained
 var MaxHistory int
 
+// BizEnvs is what ENV needs to be filtered
 var BizEnvs map[string]bool
 
 var log = logf.Log.WithName("logan_util")

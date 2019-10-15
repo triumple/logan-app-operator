@@ -54,7 +54,7 @@ const (
 	BootRevisionHashAnnotationKey = "app.logancloud.com/hash"
 	// BootRevisionPhaseAnnotationKey is the annotation key for boot revision's phase
 	BootRevisionPhaseAnnotationKey = "app.logancloud.com/phase"
-	// BootRevisionPhaseAnnotationKey is the annotation key for boot revision's the differences from the previous version
+	// BootRevisionDiffAnnotationKey is the annotation key for boot revision's the differences from the previous version
 	BootRevisionDiffAnnotationKey = "app.logancloud.com/diff"
 	// BootRevisionRetryAnnotationKey is the annotation key for boot revision's fail retry times
 	BootRevisionRetryAnnotationKey = "app.logancloud.com/retry"

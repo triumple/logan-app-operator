@@ -168,7 +168,6 @@ func (vHandler *BootValidator) recordRevision(inputBoot *v1.Boot, req types.Requ
 	boot.Spec = *spec
 	boot.ObjectMeta = *meta
 
-
 	// init a revision
 	revisionBoot := operator.InitBootRevision(boot)
 	hashcode := revisionBoot.BootHash()
@@ -200,54 +199,56 @@ func (vHandler *BootValidator) recordRevision(inputBoot *v1.Boot, req types.Requ
 		}
 
 		return true, nil
-	} else {
-		latestRevision := revisionList.SelectLatestRevision()
-		latestHash := latestRevision.Annotations[keys.BootRevisionHashAnnotationKey]
-		logger.V(1).Info("The latest revisionBoot's BootHash", "BootHash", latestHash, "revision", latestRevision)
-
-		if latestHash != hashcode {
-
-			// Add a new revision to history
-			latestRevisionId := latestRevision.GetRevisionId()
-			newRevisionId := latestRevisionId + 1
-			revisionBoot.Annotations[keys.BootRevisionIdAnnotationKey] = strconv.Itoa(newRevisionId)
-			revisionBoot.Annotations[keys.BootRevisionPhaseAnnotationKey] = operator.RevisionPhaseRunning
-			revisionBoot.Annotations[keys.BootRevisionDiffAnnotationKey] = operator.RevisionDiff(*revisionBoot, *latestRevision)
-			revisionBoot.Annotations[keys.BootRevisionRetryAnnotationKey] = "0"
-			revisionBoot.Name = revisionBoot.Name + "-" + revisionBoot.Annotations[keys.BootRevisionIdAnnotationKey]
-			revisionBoot.Labels = bootLabels
-
-			logger.Info("Add a new revision to history", "revision", revisionBoot)
-			err = c.Create(context.TODO(), revisionBoot)
-			if err != nil {
-				logger.Error(err, "Can not create revision", "revision", revisionBoot)
-				return false, err
-			}
-
-			// Update the previous revision's phase
-			latestPhase := latestRevision.Annotations[keys.BootRevisionPhaseAnnotationKey]
-			newPhase := latestPhase
-			if latestPhase == operator.RevisionPhaseRunning {
-				newPhase = operator.RevisionPhaseCancel
-			} else if latestPhase == operator.RevisionPhaseActive {
-				newPhase = operator.RevisionPhaseComplete
-			}
-			latestRevision.Annotations[keys.BootRevisionPhaseAnnotationKey] = newPhase
-			logger.Info("Update the previous revision's phase", "revision", latestRevision, "from", latestPhase, "to", newPhase)
-			err = c.Update(context.TODO(), latestRevision)
-			if err != nil {
-				logger.Error(err, "Can not update the previous revision's phase", "revision", latestRevision)
-				return false, err
-			}
-
-			// keep max history revision
-			return vHandler.keepRevisionMaxSizeLimit(revisionList, logan.MaxHistory-1)
-		} else {
-			//maybe just scale or redeploy
-			logger.V(1).Info("No need to do revision with boot", "revision", revisionBoot)
-			return true, nil
-		}
 	}
+
+	// Compared to the previous revision
+	latestRevision := revisionList.SelectLatestRevision()
+	latestHash := latestRevision.Annotations[keys.BootRevisionHashAnnotationKey]
+	logger.V(1).Info("The latest revisionBoot's BootHash", "BootHash", latestHash, "revision", latestRevision)
+
+	// something change
+	if latestHash != hashcode {
+		// Add a new revision to history
+		latestRevisionId := latestRevision.GetRevisionId()
+		newRevisionId := latestRevisionId + 1
+		revisionBoot.Annotations[keys.BootRevisionIdAnnotationKey] = strconv.Itoa(newRevisionId)
+		revisionBoot.Annotations[keys.BootRevisionPhaseAnnotationKey] = operator.RevisionPhaseRunning
+		revisionBoot.Annotations[keys.BootRevisionDiffAnnotationKey] = operator.RevisionDiff(*revisionBoot, *latestRevision)
+		revisionBoot.Annotations[keys.BootRevisionRetryAnnotationKey] = "0"
+		revisionBoot.Name = revisionBoot.Name + "-" + revisionBoot.Annotations[keys.BootRevisionIdAnnotationKey]
+		revisionBoot.Labels = bootLabels
+
+		logger.Info("Add a new revision to history", "revision", revisionBoot)
+		err = c.Create(context.TODO(), revisionBoot)
+		if err != nil {
+			logger.Error(err, "Can not create revision", "revision", revisionBoot)
+			return false, err
+		}
+
+		// Update the previous revision's phase
+		latestPhase := latestRevision.Annotations[keys.BootRevisionPhaseAnnotationKey]
+		newPhase := latestPhase
+		if latestPhase == operator.RevisionPhaseRunning {
+			newPhase = operator.RevisionPhaseCancel
+		} else if latestPhase == operator.RevisionPhaseActive {
+			newPhase = operator.RevisionPhaseComplete
+		}
+		latestRevision.Annotations[keys.BootRevisionPhaseAnnotationKey] = newPhase
+		logger.Info("Update the previous revision's phase", "revision", latestRevision, "from", latestPhase, "to", newPhase)
+		err = c.Update(context.TODO(), latestRevision)
+		if err != nil {
+			logger.Error(err, "Can not update the previous revision's phase", "revision", latestRevision)
+			return false, err
+		}
+
+		// keep max history revision
+		return vHandler.keepRevisionMaxSizeLimit(revisionList, logan.MaxHistory-1)
+	}
+
+	//maybe just scale or redeploy
+	logger.V(1).Info("No need to do revision with boot", "revision", revisionBoot)
+	return true, nil
+
 }
 
 // mergeBootDefaultValue will merge boot config with operator app config
@@ -446,10 +447,10 @@ func (vHandler *BootValidator) checkPvcOwner(boot *appv1.Boot, pvcMount appv1.Pe
 			if "true" == shared {
 				if pvcMount.ReadOnly == true {
 					return true, true, false, ""
-				} else {
-					return true, true, false,
-						fmt.Sprintf("the pvc %s is a shared pvc, should be readOnly", pvcName)
 				}
+				return true, true, false,
+					fmt.Sprintf("the pvc %s is a shared pvc, should be readOnly", pvcName)
+
 			}
 		}
 

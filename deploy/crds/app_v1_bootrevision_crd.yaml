@@ -17,13 +17,17 @@ spec:
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        appKey:
+          type: string
+        bootType:
           type: string
         kind:
           description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
@@ -36,10 +40,19 @@ spec:
           required:
             - name
         spec:
-          type: object
+          description: spec contains the desired behavior of the Boot
           properties:
-            env:
+            command:
+              description: Command is command for boot's container. If empty, will
+                use image's ENTRYPOINT, specified here if needed override.
               items:
+                type: string
+              type: array
+            env:
+              description: Env is list of environment variables to set in the app
+                container. +patchMergeKey=name +patchStrategy=merge
+              items:
+                type: object
                 properties:
                   name:
                     type: string
@@ -48,30 +61,77 @@ spec:
                     type: string
               type: array
             health:
+              description: Health is check path for the app container.
               type: string
               minLength: 0
               maxLength: 2048
+            image:
+              description: Image is the app container' image. Image must not have
+                a tag version.
+              type: string
+            nodePort:
+              description: NodePort will expose the service on each node’s IP at a
+                random port, default is ``
+              type: string
+              enum:
+                - "true"
+                - "false"
+            nodeSelector:
+              additionalProperties:
+                type: string
+              description: NodeSelector is a selector which must be true for the pod
+                to fit on a node. Selector which must match a node's labels for the
+                pod to be scheduled on that node.
+              type: object
+            port:
+              description: Port that are exposed by the app container
+              format: int32
+              type: integer
+              minimum: 1
+              maximum: 65535
             prometheus:
+              description: Prometheus will scrape metrics from the service, default
+                is `true`
               type: string
               enum:
                 - ""
                 - "true"
                 - "false"
-            image:
-              type: string
-            nodeSelector:
-              type: object
-            port:
-              format: int32
-              type: integer
-              minimum: 1
-              maximum: 65535
+            pvc:
+              description: pvc is list of PersistentVolumeClaim to set in the app
+                container. +patchMergeKey=name +patchStrategy=merge
+              items:
+                properties:
+                  mountPath:
+                    description: Path within the container at which the volume should
+                      be mounted.  Must not contain ':'.
+                    type: string
+                    minLength: 1
+                  name:
+                    description: This must match the Name of a PersistentVolumeClaim.
+                    type: string
+                    minLength: 1
+                    maxLength: 63
+                  readOnly:
+                    description: Mounted read-only if true, read-write otherwise (false
+                      or unspecified). Defaults to false.
+                    type: boolean
+                required:
+                - name
+                - mountPath
+                type: object
+              type: array
             replicas:
+              description: Replicas is the number of desired replicas. This is a pointer
+                to distinguish between explicit zero and unspecified. Defaults to
+                1.
               format: int32
               type: integer
               minimum: 0
               maximum: 100
             resources:
+              description: Resources is the compute resource requirements for the
+                app container
               type: object
               properties:
                 limits:
@@ -120,30 +180,37 @@ spec:
                       minLength: 1
                       maxLength: 63
                       pattern: ^([+]?[0-9.]+)([eEinumkKMGTP]*[+]?[0-9]*)$
-            subDomain:
-              type: string
-            version:
-              type: string
-            command:
-              type: array
-              items:
-                type: string
             sessionAffinity:
+              description: SessionAffinity is SessionAffinity for boot's created service.
+                If empty, will not set
               type: string
               enum:
                 - ""
                 - "ClientIP"
                 - "None"
-            nodePort:
+            subDomain:
+              description: Reserved, not used. for latter use
               type: string
-              enum:
-                - "true"
-                - "false"
+            version:
+              description: Version is the app container's image version.
+              type: string
           required:
-            - image
-            - version
-        status:
+          - image
+          - version
           type: object
+        status:
+          description: status contains the last observed state of the BootStatus
+          properties:
+            deploy:
+              type: string
+            services:
+              type: string
+            type:
+              type: string
+          type: object
+      required:
+      - bootType
+      - appKey
   version: v1
   versions:
   - name: v1

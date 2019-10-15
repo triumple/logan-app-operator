@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-var _ = Describe("Testing CRD", func() {
+var _ = Describe("Testing CRD [CRD]", func() {
 	var bootKey types.NamespacedName
 	var javaBoot *bootv1.JavaBoot
 	BeforeEach(func() {
@@ -996,14 +996,14 @@ var _ = Describe("Testing CRD", func() {
 	})
 
 	Describe("testing create boot pvc", func() {
-		var bootKey types.NamespacedName
+		//var bootKey types.NamespacedName
 		var phpBoot *bootv1.PhpBoot
 		var pvc *corev1.PersistentVolumeClaim
 
 		BeforeEach(func() {
 			// Gen new namespace
-			bootKey = operatorFramework.GenResource()
-			operatorFramework.CreateNamespace(bootKey.Namespace)
+			// bootKey = operatorFramework.GenResource()
+			// operatorFramework.CreateNamespace(bootKey.Namespace)
 
 			phpBoot = operatorFramework.SamplePhpBoot(bootKey)
 			if phpBoot.ObjectMeta.Annotations == nil {
@@ -1017,7 +1017,7 @@ var _ = Describe("Testing CRD", func() {
 
 		AfterEach(func() {
 			// Clean namespace
-			operatorFramework.DeleteNamespace(bootKey.Namespace)
+			// operatorFramework.DeleteNamespace(bootKey.Namespace)
 		})
 
 		Context("test create boot pvc name", func() {
