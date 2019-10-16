@@ -277,7 +277,7 @@ func DecodeVolumeMountVars(str string) ([]corev1.VolumeMount, error) {
 	return volVars, err
 }
 
-// PvcVarsEq return true if vol1 and vol2 is equal.
+// VolumeMountVarsEq return true if vol1 and vol2 is equal.
 func VolumeMountVarsEq(vol1, vol2 []corev1.VolumeMount) bool {
 	// If one is nil, the other must also be nil.
 	if (vol1 == nil) != (vol2 == nil) {

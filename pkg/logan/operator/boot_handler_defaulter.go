@@ -250,9 +250,8 @@ func (handler *BootHandler) DefaultPvcValue() bool {
 		}
 		if PvcVarsEq(previousPvc, bootSpec.Pvc) {
 			return false
-		} else {
-			updatePvcMeta()
 		}
+		updatePvcMeta()
 	}
 
 	updated := handler.UpdateAnnotation(annotationMap)

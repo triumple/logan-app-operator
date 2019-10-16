@@ -4,55 +4,56 @@ metadata:
   creationTimestamp: null
   name: logan-app-operator
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - services
-  - endpoints
-  - persistentvolumeclaims
-  - events
-  - configmaps
-  - secrets
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  verbs:
-  - get
-- apiGroups:
-  - extensions
-  - apps
-  resources:
-  - deployments
-  - daemonsets
-  - replicasets
-  - statefulsets
-  verbs:
-  - '*'
-- apiGroups:
-  - monitoring.coreos.com
-  resources:
-  - servicemonitors
-  verbs:
-  - get
-  - create
-- apiGroups:
-  - extensions
-  - apps
-  resourceNames:
-  - logan-app-operator
-  - logan-app-operator-auto
-  - logan-app-operator-dev
-  resources:
-  - deployments/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - app.logancloud.com
-  resources:
-  - '*'
-  verbs:
-  - '*'
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - services
+      - services/finalizers
+      - endpoints
+      - persistentvolumeclaims
+      - events
+      - configmaps
+      - secrets
+    verbs:
+      - '*'
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - get
+  - apiGroups:
+      - extensions
+      - apps
+    resources:
+      - deployments
+      - daemonsets
+      - replicasets
+      - statefulsets
+    verbs:
+      - '*'
+  - apiGroups:
+      - monitoring.coreos.com
+    resources:
+      - servicemonitors
+    verbs:
+      - get
+      - create
+  - apiGroups:
+      - extensions
+      - apps
+    resourceNames:
+      - logan-app-operator
+      - logan-app-operator-auto
+      - logan-app-operator-dev
+    resources:
+      - deployments/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - app.logancloud.com
+    resources:
+      - '*'
+    verbs:
+      - '*'

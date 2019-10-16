@@ -13,7 +13,7 @@ import (
 	"strconv"
 )
 
-var _ = Describe("Testing Boot Revision", func() {
+var _ = Describe("Testing Boot Revision [Revision]", func() {
 	var bootKey types.NamespacedName
 	var javaBoot *bootv1.JavaBoot
 	var k8sClient util.K8SClient

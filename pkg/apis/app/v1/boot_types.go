@@ -64,6 +64,9 @@ type BootSpec struct {
 	// NodePort will expose the service on each node’s IP at a random port, default is ``
 	NodePort string `json:"nodePort,omitempty"`
 	// pvc is list of PersistentVolumeClaim to set in the app container.
+	// +optional
+	// +patchMergeKey=name
+	// +patchStrategy=merge
 	Pvc []PersistentVolumeClaimMount `json:"pvc,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 }
 

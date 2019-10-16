@@ -26,8 +26,8 @@ import (
 var log = logf.Log.WithName("logan_controller_nodejsboot")
 var bootType = "NodeJSBoot"
 
-// Add creates a new Boot Controller and adds it to the Manager.
-// The Manager will set fields on the Controller and Start it when the Manager is Started.
+// Add creates a new NodeJSBoot Controller and adds it to the Manager. The Manager will set fields on the Controller
+// and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
 }
@@ -87,8 +87,8 @@ type ReconcileNodeJSBoot struct {
 	recorder record.EventRecorder
 }
 
-// Reconcile reads that state of the cluster for a Boot object and makes changes based on the state read
-// and what is in the Boot.Spec
+// Reconcile reads that state of the cluster for a NodeJSBoot object and makes changes based on the state read
+// and what is in the NodeJSBoot.Spec
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
@@ -106,7 +106,7 @@ func (r *ReconcileNodeJSBoot) Reconcile(request reconcile.Request) (reconcile.Re
 		loganMetrics.UpdateReconcileTime(bootType, time.Now().Sub(reconcileStartTS))
 	}()
 
-	var handler *operator.BootHandler
+	var bootHandler *operator.BootHandler
 
 	// Fetch the Boot instance
 	nodejsBoot := &appv1.NodeJSBoot{}
@@ -124,10 +124,10 @@ func (r *ReconcileNodeJSBoot) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 
-	handler = InitHandler(nodejsBoot, r.scheme, r.client, logger, r.recorder)
+	bootHandler = InitHandler(nodejsBoot, r.scheme, r.client, logger, r.recorder)
 
 	//if !logan.MutationDefaulter {
-	changed := handler.DefaultValue()
+	changed := bootHandler.DefaultValue()
 
 	//Update the Boot's default Value
 	if changed {
@@ -137,27 +137,27 @@ func (r *ReconcileNodeJSBoot) Reconcile(request reconcile.Request) (reconcile.Re
 		if err != nil {
 			logger.Info("Failed to update Boot", "boot", nodejsBoot)
 			loganMetrics.UpdateMainStageErrors(bootType, loganMetrics.RECONCILE_UPDATE_BOOT_DEFAULTERS_STAGE, nodejsBoot.Name)
-			handler.EventFail(reason, nodejsBoot.Name, err)
+			bootHandler.EventFail(reason, nodejsBoot.Name, err)
 			return reconcile.Result{Requeue: true}, nil
 		}
-		handler.EventNormal(reason, nodejsBoot.Name)
+		bootHandler.EventNormal(reason, nodejsBoot.Name)
 		return reconcile.Result{Requeue: true}, nil
 	}
 	//}
 
 	// 1. Check the existence of components, if not exist, create new one.
-	result, requeue, err := handler.ReconcileCreate()
+	result, requeue, err := bootHandler.ReconcileCreate()
 	if requeue {
 		return result, err
 	}
 
 	// 2. Handle the update logic of components
-	result, requeue, err = handler.ReconcileUpdate()
+	result, requeue, err = bootHandler.ReconcileUpdate()
 	if requeue {
 		return result, err
 	}
 
-	result, requeue, updated, err := handler.ReconcileUpdateBootMeta()
+	result, requeue, updated, err := bootHandler.ReconcileUpdateBootMeta()
 
 	if updated {
 		reason := "Updating Boot Meta"
@@ -168,10 +168,10 @@ func (r *ReconcileNodeJSBoot) Reconcile(request reconcile.Request) (reconcile.Re
 			logger.Info("Failed to update Boot Metadata", "err", err.Error())
 			loganMetrics.UpdateReconcileErrors(bootType, loganMetrics.RECONCILE_UPDATE_BOOT_META_STAGE, loganMetrics.RECONCILE_UPDATE_BOOT_META_SUBSTAGE, nodejsBoot.Name)
 
-			handler.EventFail(reason, nodejsBoot.Name, err)
+			bootHandler.EventFail(reason, nodejsBoot.Name, err)
 			return reconcile.Result{Requeue: true}, nil
 		}
-		handler.EventNormal(reason, nodejsBoot.Name)
+		bootHandler.EventNormal(reason, nodejsBoot.Name)
 	}
 	if requeue {
 		return result, err

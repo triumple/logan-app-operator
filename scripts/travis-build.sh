@@ -8,6 +8,7 @@ set -u
 # print each command before executing it
 set -x
 
+export GO111MODULE=on
 go build -i -o $GOPATH/src/github.com/logancloud/logan-app-operator/build/_output/bin/logan-app-operator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} github.com/logancloud/logan-app-operator/cmd/manager
 
 IMG=logancloud/logan-app-operator:latest

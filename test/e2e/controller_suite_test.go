@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-var _ = Describe("Testing Boot", func() {
+var _ = Describe("Testing Boot[CONTROLLER]", func() {
 	var bootKey types.NamespacedName
 	var javaBoot *bootv1.JavaBoot
 
