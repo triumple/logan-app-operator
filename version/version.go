@@ -1,5 +1,8 @@
 package version
 
-var (
-	Version = "0.0.1"
+const (
+	// Version is the current operator version
+	Version = "0.6.0"
+	// InnerVersion is the current operator inner version
+	InnerVersion = "1"
 )
