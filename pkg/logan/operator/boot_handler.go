@@ -92,6 +92,14 @@ func (handler *BootHandler) NewDeployment() *appsv1.Deployment {
 		}
 	}
 
+	annotations := make(map[string]string)
+	if boot.Annotations != nil {
+		restartAnnotationValue, ok := boot.Annotations[keys.BootRestartedAtAnnotationKey]
+		if ok {
+			annotations[keys.BootRestartedAtAnnotationKey] = restartAnnotationValue
+		}
+	}
+
 	dep := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
@@ -110,7 +118,8 @@ func (handler *BootHandler) NewDeployment() *appsv1.Deployment {
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: podLabels,
+					Labels:      podLabels,
+					Annotations: annotations,
 				},
 				Spec: corev1.PodSpec{
 					Affinity: &corev1.Affinity{

@@ -144,6 +144,7 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 
 	updated := false
 	rebootUpdated := false
+	restartUpdated := false
 
 	reason := "Updating Deployment"
 	// 1. Check ownerReferences
@@ -280,13 +281,26 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 		rebootUpdated = true
 	}
 
+	// 11 Check RestartedAt
+	if bootRestartedAt, ok := boot.Annotations[keys.BootRestartedAtAnnotationKey]; ok {
+		if deploy.Spec.Template.Annotations == nil {
+			deploy.Spec.Template.Annotations = make(map[string]string)
+		}
+
+		deployRestartedAt, ok := deploy.Spec.Template.Annotations[keys.BootRestartedAtAnnotationKey]
+		if !ok || bootRestartedAt != deployRestartedAt {
+			deploy.Spec.Template.Annotations[keys.BootRestartedAtAnnotationKey] = bootRestartedAt
+			restartUpdated = true
+		}
+	}
+
 	if rebootUpdated {
 		updateDeploy := handler.NewDeployment()
 		deploy.Spec = updateDeploy.Spec
 		logger.Info("this update will cause rolling update", "Deploy", deploy.Name)
 	}
 
-	if updated || rebootUpdated {
+	if updated || rebootUpdated || restartUpdated {
 		err := c.Update(context.TODO(), deploy)
 		if err != nil {
 			logger.Info("Failed to update Deployment", "deploy", deploy.Name, "err", err.Error())
