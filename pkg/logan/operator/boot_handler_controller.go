@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/logancloud/logan-app-operator/pkg/logan"
 	loganMetrics "github.com/logancloud/logan-app-operator/pkg/logan/metrics"
+	"github.com/logancloud/logan-app-operator/pkg/logan/util"
 	"github.com/logancloud/logan-app-operator/pkg/logan/util/keys"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -270,14 +271,28 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 		}
 
 		if !VolumeMountVarsEq(deployVols, bootVols) {
-			logger.Info(reason, "type", "VolumeMounts", "Deploy", deploy.Name,
-				"old", deployVols, "new", bootVols, keys.BootDeployPvcsAnnotationKey, bootVolStr)
-			rebootUpdated = true
+			deleted, added, modified := util.DifferenceVol(deployVols, bootVols)
+			logger.Info("Boot VolumeMounts change.", "Deploy", deploy.Name,
+				"deleted", deleted, "added", added, "modified", modified)
+
+			volUpdated, err := handler.checkVolumeMountUpdate(deleted, added, modified)
+			if err != nil {
+				logger.Error(err, "Fail to reconcile VolumeMounts", "Deploy", deploy.Name,
+					"deleted", deleted, "added", added, "modified", modified)
+				return reconcile.Result{Requeue: true}, true, err
+			}
+
+			if volUpdated {
+				logger.Info(reason, "type", "VolumeMounts", "Deploy", deploy.Name,
+					"old", deployVols, "new", bootVols, keys.BootDeployPvcsAnnotationKey, bootVolStr)
+				rebootUpdated = true
+			}
 		}
 	} else if deployVols != nil {
+		// if we have this, is very surprised
 		logger.Info(reason, "type", "VolumeMounts", "Deploy", deploy.Name,
 			"old", deployVols, "new", nil)
-		rebootUpdated = true
+		// rebootUpdated = true
 	}
 
 	if rebootUpdated {
@@ -400,6 +415,51 @@ func (handler *BootHandler) reconcileUpdateService(svc *corev1.Service, deploy *
 	}
 
 	return reconcile.Result{}, false, nil
+}
+
+func (handler *BootHandler) checkVolumeMountUpdate(deleted, added, modified []corev1.VolumeMount) (bool, error) {
+	c := handler.Client
+	boot := handler.Boot
+
+	checkPvc := func(vols []corev1.VolumeMount) (bool, error) {
+		if vols != nil {
+			for _, vol := range vols {
+				pvc := &corev1.PersistentVolumeClaim{}
+				err := c.Get(context.TODO(), types.NamespacedName{Namespace: boot.Namespace, Name: vol.Name}, pvc)
+				if err != nil {
+					if errors.IsNotFound(err) {
+						continue
+					}
+					return false, err
+				}
+
+				if pvc.Labels != nil {
+					// is shared pvc
+					shared, found := pvc.Labels[keys.SharedKey]
+					if found {
+						if "true" == shared {
+							return true, nil
+						}
+					}
+
+					// is boot private pvc
+					podLabels := PodLabels(boot)
+					if reflect.DeepEqual(podLabels, pvc.Labels) {
+						return true, nil
+					}
+				}
+			}
+		}
+		return false, nil
+	}
+
+	allVols := make([]corev1.VolumeMount, 0)
+	allVols = append(allVols, deleted...)
+	allVols = append(allVols, added...)
+	allVols = append(allVols, modified...)
+
+	volUpdated, err := checkPvc(allVols)
+	return volUpdated, err
 }
 
 // reconcileUpdateOtherService handle update sidecar/nodePort of Service
