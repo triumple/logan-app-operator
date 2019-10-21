@@ -181,11 +181,10 @@ func mutationDefault(handler *operator.BootHandler, req types.Request, bootName 
 
 		//Update the Boot's default Value
 		if changed {
-			reason := "Updating Boot with Defaulters"
-			logger.Info(fmt.Sprintf("%s: [%s/%s]",
-				reason, req.AdmissionRequest.Namespace, req.AdmissionRequest.Name),
+			logger.Info(fmt.Sprintf("Updating Boot with Defaulters: [%s/%s]",
+				req.AdmissionRequest.Namespace, req.AdmissionRequest.Name),
 				"operation", req.AdmissionRequest.Operation)
-			handler.EventNormal(reason, bootName)
+			handler.RecordEvent(keys.UpdatedBootDefaulters, "Updated Boot with Defaulters", nil)
 		}
 	}
 }

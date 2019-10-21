@@ -9,6 +9,7 @@ import (
 	loganMetrics "github.com/logancloud/logan-app-operator/pkg/logan/metrics"
 	"github.com/logancloud/logan-app-operator/pkg/logan/operator"
 	"github.com/logancloud/logan-app-operator/pkg/logan/util"
+	"github.com/logancloud/logan-app-operator/pkg/logan/util/keys"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -131,16 +132,16 @@ func (r *ReconcileWebBoot) Reconcile(request reconcile.Request) (reconcile.Resul
 
 	//Update the Boot's default Value
 	if changed {
-		reason := "Updating Boot with Defaulters"
-		logger.Info(reason)
+		logger.Info("Updating Boot with Defaulters")
 		err = r.client.Update(context.TODO(), webBoot)
 		if err != nil {
-			logger.Info("Failed to update Boot", "boot", webBoot)
+			msg := "Failed to update Boot with Defaulters"
+			logger.Info(msg, "boot", webBoot)
 			loganMetrics.UpdateMainStageErrors(bootType, loganMetrics.RECONCILE_UPDATE_BOOT_DEFAULTERS_STAGE, webBoot.Name)
-			bootHandler.EventFail(reason, webBoot.Name, err)
+			bootHandler.RecordEvent(keys.FailedUpdateBootDefaulters, msg, err)
 			return reconcile.Result{Requeue: true}, nil
 		}
-		bootHandler.EventNormal(reason, webBoot.Name)
+		bootHandler.RecordEvent(keys.UpdatedBootDefaulters, "Updated Boot with Defaulters", nil)
 		return reconcile.Result{Requeue: true}, nil
 	}
 	//}
@@ -160,18 +161,18 @@ func (r *ReconcileWebBoot) Reconcile(request reconcile.Request) (reconcile.Resul
 	result, requeue, updated, err := bootHandler.ReconcileUpdateBootMeta()
 
 	if updated {
-		reason := "Updating Boot Meta"
-		logger.Info(reason, "new", webBoot.Annotations)
+		logger.Info("Updating Boot Meta", "new", webBoot.Annotations)
 		err := r.client.Update(context.TODO(), webBoot)
 		if err != nil {
 			// Other place will modify the status? So it will sometimes occur.
-			logger.Info("Failed to update Boot Metadata", "err", err.Error())
+			msg := "Failed to update Boot Meta"
+			logger.Info(msg, "err", err.Error())
 			loganMetrics.UpdateReconcileErrors(bootType, loganMetrics.RECONCILE_UPDATE_BOOT_META_STAGE, loganMetrics.RECONCILE_UPDATE_BOOT_META_SUBSTAGE, webBoot.Name)
 
-			bootHandler.EventFail(reason, webBoot.Name, err)
+			bootHandler.RecordEvent(keys.FailedUpdateBootMeta, msg, err)
 			return reconcile.Result{Requeue: true}, nil
 		}
-		bootHandler.EventNormal(reason, webBoot.Name)
+		bootHandler.RecordEvent(keys.UpdatedBootMeta, "Updated Boot Meta", nil)
 	}
 	if requeue {
 		return result, err
