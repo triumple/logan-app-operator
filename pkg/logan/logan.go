@@ -57,7 +57,7 @@ var MaxConcurrentReconciles int
 // MutationDefaulter is whether to modify in the webhook phase
 var MutationDefaulter bool
 
-// MutationDefaulter is the maximum number of revisions retained
+// MaxHistory is the maximum number of revisions retained
 var MaxHistory int
 
 // BizEnvs is what ENV needs to be filtered

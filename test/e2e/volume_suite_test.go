@@ -1,12 +1,14 @@
 package e2e
 
 import (
+	ghodssyaml "github.com/ghodss/yaml"
 	bootv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
 	"github.com/logancloud/logan-app-operator/pkg/logan/config"
 	operatorFramework "github.com/logancloud/logan-app-operator/test/framework"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -33,6 +35,74 @@ var _ = Describe("Testing Volume", func() {
 	AfterEach(func() {
 		// Clean namespace
 		operatorFramework.DeleteNamespace(bootKey.Namespace)
+	})
+
+	Describe("Testing PVC when operator config update [Serial]", func() {
+		var configYamlStr string
+		var configNN = types.NamespacedName{
+			Name:      "logan-app-operator-config",
+			Namespace: "logan",
+		}
+		BeforeEach(func() {
+			// backup config map: config.yaml
+			configYamlStr = operatorFramework.GetConfigStr(configNN)
+		})
+
+		AfterEach(func() {
+			// recover config map: config.yaml
+			data := make(map[string]string)
+			data["config.yaml"] = configYamlStr
+			var configMap = corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{Name: configNN.Name, Namespace: configNN.Namespace},
+				Data:       data,
+			}
+			operatorFramework.UpdateConfigmap(&configMap)
+		})
+
+		It("Testing PVC when operator config update [Serial]", func() {
+			(&(operatorFramework.E2E{
+				Build: func() {
+					operatorFramework.CreateBoot(phpBoot)
+				},
+				Check: func() {
+					deploy := operatorFramework.GetDeployment(bootKey)
+					for _, vol := range deploy.Spec.Template.Spec.Volumes {
+						if vol.Name == "private-data" {
+							Expect(vol.PersistentVolumeClaim.ClaimName).Should(Equal(bootKey.Name + "-nas"))
+						}
+					}
+				},
+				Update: func() {
+					c := operatorFramework.GetConfig(configNN)
+					operator := c["vol"]
+					(*operator).AppSpec.Container.VolumeMounts[0].MountPath = "/opt/abc"
+					c["vol"] = operator
+
+					updatedInitContainerContent, _ := ghodssyaml.Marshal(&c)
+					data := make(map[string]string)
+					data["config.yaml"] = string(updatedInitContainerContent)
+					var configMap = corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{Name: configNN.Name, Namespace: configNN.Namespace},
+						Data:       data,
+					}
+					operatorFramework.UpdateConfigmap(&configMap)
+
+					boot := operatorFramework.GetPhpBoot(bootKey)
+					r := int32(3)
+					boot.Spec.Replicas = &r
+					operatorFramework.UpdatePhpBoot(boot)
+				},
+				Recheck: func() {
+					deploy := operatorFramework.GetDeployment(bootKey)
+					Expect(*deploy.Spec.Replicas).Should(Equal(int32(3)))
+					for _, vol := range deploy.Spec.Template.Spec.Containers[0].VolumeMounts {
+						if vol.Name == "private-data" {
+							Expect(vol.MountPath).ShouldNot(Equal("/opt/abc"))
+						}
+					}
+				},
+			})).Run()
+		})
 	})
 
 	It("Test persistentVolumeClaim decode ", func() {

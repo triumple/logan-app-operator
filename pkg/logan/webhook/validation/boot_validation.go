@@ -37,8 +37,6 @@ import (
 )
 
 const (
-	sharedKey = "shared"
-
 	dns1123Label = "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
 )
 
@@ -442,7 +440,7 @@ func (vHandler *BootValidator) checkPvcOwner(boot *appv1.Boot, pvcMount appv1.Pe
 	}
 
 	if pvc.Labels != nil {
-		shared, found := pvc.Labels[sharedKey]
+		shared, found := pvc.Labels[keys.SharedKey]
 		if found {
 			if "true" == shared {
 				if pvcMount.ReadOnly == true {

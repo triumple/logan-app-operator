@@ -10,6 +10,7 @@ import (
 	"github.com/logancloud/logan-app-operator/pkg/controller"
 	"github.com/logancloud/logan-app-operator/pkg/logan"
 	logancfg "github.com/logancloud/logan-app-operator/pkg/logan/config"
+	"github.com/logancloud/logan-app-operator/version"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
@@ -46,8 +47,8 @@ func printVersion() {
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
 	log.Info(fmt.Sprintf("Version of operator-sdk: %v", sdkVersion.Version))
 
-	log.Info(fmt.Sprintf("Logan Operator Version: %s", logan.Version))
-	log.Info(fmt.Sprintf("Logan Operator Inner Version: %s", logan.InnerVersion))
+	log.Info(fmt.Sprintf("Logan Operator Version: %s", version.Version))
+	log.Info(fmt.Sprintf("Logan Operator Inner Version: %s", version.InnerVersion))
 	log.Info(fmt.Sprintf("Logan Operator Env: %s", logan.OperDev))
 	log.Info(fmt.Sprintf("Logan Operator Config: %s", configFile))
 	log.Info(fmt.Sprintf("Logan Operator MutationDefaulter: %t", logan.MutationDefaulter))

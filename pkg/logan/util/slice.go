@@ -85,3 +85,42 @@ func Difference2(origin []corev1.EnvVar, now []corev1.EnvVar) (diff1 []corev1.En
 
 	return
 }
+
+// DifferenceVol look like the Difference2 but for VolumeMount
+func DifferenceVol(origin, now []corev1.VolumeMount) (deleted, added, modified []corev1.VolumeMount) {
+	// Avoid the keys duplicate
+	cMap := make(map[string]string)
+
+	// Loop two times, first to find slice1 strings not in slice2,
+	// second loop to find slice2 strings not in slice1
+	for i := 0; i < 2; i++ {
+		for _, s1 := range origin {
+			found := false
+			for _, s2 := range now {
+				if s1.Name == s2.Name {
+					if s1.MountPath != s2.MountPath || s1.ReadOnly != s2.ReadOnly {
+						if i == 0 {
+							modified = append(modified, s2)
+						}
+						cMap[s1.Name] = ""
+					}
+					found = true
+					break
+				}
+			}
+			// String not found. We add it to return slice
+			if !found {
+				if i == 0 {
+					deleted = append(deleted, s1)
+				} else {
+					added = append(added, s1)
+				}
+			}
+		}
+		// Swap the slices, only if it was the first loop
+		if i == 0 {
+			origin, now = now, origin
+		}
+	}
+	return
+}
