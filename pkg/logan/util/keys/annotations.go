@@ -31,6 +31,8 @@ const (
 	BootDeployPvcsAnnotationKey = "app.logancloud.com/boot-deploy-pvcs"
 	// BootImagesAnnotationKey is the annotation key for storing previous images
 	BootImagesAnnotationKey = "app.logancloud.com/boot-images"
+	// BootRestartedAtAnnotationKey is the annotation key for recording restarted time
+	BootRestartedAtAnnotationKey = "app.logancloud.com/restartedAt"
 
 	// DeployAnnotationKey is the annotation key for storing boot's current Deployment name
 	DeployAnnotationKey = "app.logancloud.com/deploy"

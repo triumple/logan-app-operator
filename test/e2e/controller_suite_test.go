@@ -1143,4 +1143,216 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 			e2e.Run()
 		})
 	})
+
+	Describe("testing restart boot", func() {
+		It("testing restart by add restartedAt annotations", func() {
+			var bootRestartedAtAnnotationKey = "app.logancloud.com/restartedAt"
+			var bootRestartedAtAnnotationValue = "123"
+			(&(operatorFramework.E2E{
+				Build: func() {
+					operatorFramework.CreateBoot(javaBoot)
+				},
+				Check: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					_, ok := boot.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(false))
+
+					deploy := operatorFramework.GetDeployment(bootKey)
+					_, ok = deploy.Spec.Template.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(false))
+				},
+				Update: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					boot.Annotations[bootRestartedAtAnnotationKey] = bootRestartedAtAnnotationValue
+					operatorFramework.UpdateBoot(boot)
+				},
+				Recheck: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					bootRestartedAt, ok := boot.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(bootRestartedAt).Should(Equal(bootRestartedAtAnnotationValue))
+
+					deploy := operatorFramework.GetDeployment(bootKey)
+					deployRestartedAt, ok := deploy.Spec.Template.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(deployRestartedAt).Should(Equal(bootRestartedAtAnnotationValue))
+				},
+			})).Run()
+		})
+
+		It("testing restart by update restartedAt annotations", func() {
+			var bootRestartedAtAnnotationKey = "app.logancloud.com/restartedAt"
+			var bootRestartedAtAnnotationValue = "123"
+			var updateBootRestartedAtAnnotationValue = "456"
+			(&(operatorFramework.E2E{
+				Build: func() {
+					if javaBoot.Annotations == nil {
+						javaBoot.Annotations = make(map[string]string)
+					}
+					javaBoot.Annotations[bootRestartedAtAnnotationKey] = bootRestartedAtAnnotationValue
+					operatorFramework.CreateBoot(javaBoot)
+				},
+				Check: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					bootRestartedAt, ok := boot.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(bootRestartedAt).Should(Equal(bootRestartedAtAnnotationValue))
+
+					deploy := operatorFramework.GetDeployment(bootKey)
+					deployRestartedAt, ok := deploy.Spec.Template.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(deployRestartedAt).Should(Equal(bootRestartedAtAnnotationValue))
+				},
+				Update: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					boot.Annotations[bootRestartedAtAnnotationKey] = updateBootRestartedAtAnnotationValue
+					operatorFramework.UpdateBoot(boot)
+				},
+				Recheck: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					bootRestartedAt, ok := boot.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(bootRestartedAt).Should(Equal(updateBootRestartedAtAnnotationValue))
+
+					deploy := operatorFramework.GetDeployment(bootKey)
+					deployRestartedAt, ok := deploy.Spec.Template.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(deployRestartedAt).Should(Equal(updateBootRestartedAtAnnotationValue))
+				},
+			})).Run()
+		})
+
+		It("testing restart by update restartedAt annotations and replica", func() {
+			var bootRestartedAtAnnotationKey = "app.logancloud.com/restartedAt"
+			var bootRestartedAtAnnotationValue = "123"
+			var updateBootRestartedAtAnnotationValue = "456"
+			var replica = int32(3)
+			(&(operatorFramework.E2E{
+				Build: func() {
+					if javaBoot.Annotations == nil {
+						javaBoot.Annotations = make(map[string]string)
+					}
+					javaBoot.Annotations[bootRestartedAtAnnotationKey] = bootRestartedAtAnnotationValue
+					operatorFramework.CreateBoot(javaBoot)
+				},
+				Check: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					bootRestartedAt, ok := boot.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(bootRestartedAt).Should(Equal(bootRestartedAtAnnotationValue))
+
+					deploy := operatorFramework.GetDeployment(bootKey)
+					deployRestartedAt, ok := deploy.Spec.Template.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(deployRestartedAt).Should(Equal(bootRestartedAtAnnotationValue))
+				},
+				Update: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					boot.Spec.Replicas = &replica
+					boot.Annotations[bootRestartedAtAnnotationKey] = updateBootRestartedAtAnnotationValue
+					operatorFramework.UpdateBoot(boot)
+				},
+				Recheck: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					bootRestartedAt, ok := boot.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(bootRestartedAt).Should(Equal(updateBootRestartedAtAnnotationValue))
+					Expect(*boot.Spec.Replicas).Should(Equal(replica))
+
+					deploy := operatorFramework.GetDeployment(bootKey)
+					deployRestartedAt, ok := deploy.Spec.Template.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(deployRestartedAt).Should(Equal(updateBootRestartedAtAnnotationValue))
+					Expect(*deploy.Spec.Replicas).Should(Equal(replica))
+				},
+			})).Run()
+		})
+
+		It("testing restart by update restartedAt annotations and port", func() {
+			var bootRestartedAtAnnotationKey = "app.logancloud.com/restartedAt"
+			var bootRestartedAtAnnotationValue = "123"
+			var updateBootRestartedAtAnnotationValue = "456"
+			var port = int32(8090)
+			(&(operatorFramework.E2E{
+				Build: func() {
+					if javaBoot.Annotations == nil {
+						javaBoot.Annotations = make(map[string]string)
+					}
+					javaBoot.Annotations[bootRestartedAtAnnotationKey] = bootRestartedAtAnnotationValue
+					operatorFramework.CreateBoot(javaBoot)
+				},
+				Check: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					bootRestartedAt, ok := boot.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(bootRestartedAt).Should(Equal(bootRestartedAtAnnotationValue))
+
+					deploy := operatorFramework.GetDeployment(bootKey)
+					deployRestartedAt, ok := deploy.Spec.Template.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(deployRestartedAt).Should(Equal(bootRestartedAtAnnotationValue))
+				},
+				Update: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					boot.Spec.Port = port
+					boot.Annotations[bootRestartedAtAnnotationKey] = updateBootRestartedAtAnnotationValue
+					operatorFramework.UpdateBoot(boot)
+				},
+				Recheck: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					bootRestartedAt, ok := boot.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(bootRestartedAt).Should(Equal(updateBootRestartedAtAnnotationValue))
+					Expect(boot.Spec.Port).Should(Equal(port))
+
+					deploy := operatorFramework.GetDeployment(bootKey)
+					deployRestartedAt, ok := deploy.Spec.Template.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(deployRestartedAt).Should(Equal(updateBootRestartedAtAnnotationValue))
+					Expect(deploy.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort).Should(Equal(port))
+				},
+			})).Run()
+		})
+
+		It("testing no restart by remove restartedAt annotations", func() {
+			var bootRestartedAtAnnotationKey = "app.logancloud.com/restartedAt"
+			var bootRestartedAtAnnotationValue = "123"
+			(&(operatorFramework.E2E{
+				Build: func() {
+					if javaBoot.Annotations == nil {
+						javaBoot.Annotations = make(map[string]string)
+					}
+					javaBoot.Annotations[bootRestartedAtAnnotationKey] = bootRestartedAtAnnotationValue
+					operatorFramework.CreateBoot(javaBoot)
+				},
+				Check: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					bootRestartedAt, ok := boot.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(bootRestartedAt).Should(Equal(bootRestartedAtAnnotationValue))
+
+					deploy := operatorFramework.GetDeployment(bootKey)
+					deployRestartedAt, ok := deploy.Spec.Template.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(deployRestartedAt).Should(Equal(bootRestartedAtAnnotationValue))
+				},
+				Update: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					boot.Annotations = nil
+					operatorFramework.UpdateBoot(boot)
+				},
+				Recheck: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+					_, ok := boot.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(false))
+
+					deploy := operatorFramework.GetDeployment(bootKey)
+					deployRestartedAt, ok := deploy.Spec.Template.Annotations[bootRestartedAtAnnotationKey]
+					Expect(ok).Should(Equal(true))
+					Expect(deployRestartedAt).Should(Equal(bootRestartedAtAnnotationValue))
+				},
+			})).Run()
+		})
+	})
+
 })
