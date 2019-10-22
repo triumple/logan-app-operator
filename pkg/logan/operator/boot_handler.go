@@ -10,11 +10,13 @@ import (
 	"github.com/logancloud/logan-app-operator/pkg/logan/util/keys"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"strings"
 )
 
 const (
@@ -360,18 +362,36 @@ func (handler *BootHandler) createService(port int, name string, prometheusScrap
 	return svc
 }
 
-// EventNormal will record the normal event string
-func (handler *BootHandler) EventNormal(reason string, obj string) {
-	recorder := handler.Recorder
-	boot := handler.Boot
+func getEventType(reason string, err error) string {
+	if err == nil && !strings.Contains(reason, "Failed") {
+		return eventTypeNormal
+	}
 
-	recorder.Event(boot, eventTypeNormal, reason, fmt.Sprintf("Successful: obj=%s", obj))
+	// following failed type can auto fix by reconcile loop
+	if reason == keys.FailedUpdateBootDefaulters || reason == keys.FailedUpdateBootMeta ||
+		reason == keys.FailedGetDeployment || reason == keys.FailedGetService {
+		return eventTypeNormal
+	}
+
+	// following error type can auto fix by reconcile loop
+	if errors.IsConflict(err) || errors.IsAlreadyExists(err) ||
+		errors.IsServiceUnavailable(err) || errors.IsServerTimeout(err) ||
+		errors.IsInternalError(err) || errors.IsTimeout(err) {
+		return eventTypeNormal
+	}
+
+	return eventTypeWarning
 }
 
-// EventFail will record the fail event string
-func (handler *BootHandler) EventFail(reason string, obj string, err error) {
+// RecordEvent will record the event string by error type
+func (handler *BootHandler) RecordEvent(reason string, message string, err error) {
 	recorder := handler.Recorder
 	boot := handler.Boot
+	eventType := getEventType(reason, err)
 
-	recorder.Event(boot, eventTypeWarning, reason, fmt.Sprintf("Failed: obj=%s, err=%s", obj, err.Error()))
+	if err != nil {
+		message = message + fmt.Sprintf(", error: %s", err.Error())
+	}
+
+	recorder.Event(boot, eventType, reason, message)
 }
