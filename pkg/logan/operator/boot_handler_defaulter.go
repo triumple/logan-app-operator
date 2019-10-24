@@ -262,10 +262,13 @@ func (handler *BootHandler) DefaultPvcValue() bool {
 // Return true if should be updated, false if should not be updated
 func (handler *BootHandler) DefaultEnvValue() bool {
 	logger := handler.Logger
-	boot := handler.Boot
 	appConfigSpec := handler.Config.AppSpec
 	bootSpec := handler.OperatorSpec
 	bootMeta := handler.OperatorMeta
+
+	// use updated boot for DecodeEnvs
+	updatedBoot := handler.Boot.DeepCopy()
+	handler.OperatorSpec.DeepCopyInto(&updatedBoot.Spec)
 
 	//env:
 	// annotation-1: Boot Spec is modified，clear value of annotation's env and generation
@@ -319,7 +322,7 @@ func (handler *BootHandler) DefaultEnvValue() bool {
 			env := specEnv.DeepCopy()
 			mergeEnvs = append(mergeEnvs, *env)
 		}
-		DecodeEnvs(boot, mergeEnvs)
+		DecodeEnvs(updatedBoot, mergeEnvs)
 
 		added := appv1.BootSpec{
 			Env: mergeEnvs,
@@ -332,14 +335,14 @@ func (handler *BootHandler) DefaultEnvValue() bool {
 			logger.Error(err, "config merge error.", "type", "default")
 		}
 
-		DecodeEnvs(boot, bootSpec.Env)
+		DecodeEnvs(updatedBoot, bootSpec.Env)
 
 		changed = true
 
 		logger.Info("Defaulters", "init env changed", changed)
 	} else {
 		// In case user could change the env after created. we need to check the env value
-		changed = DecodeEnvs(boot, bootSpec.Env)
+		changed = DecodeEnvs(updatedBoot, bootSpec.Env)
 
 		logger.Info("Defaulters", "user env changed", changed)
 	}
