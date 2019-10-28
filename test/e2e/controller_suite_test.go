@@ -267,6 +267,42 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 				})).Run()
 			})
 
+			It("testing create boot with env PORT", func() {
+				envVar := corev1.EnvVar{
+					Name:  "APP",
+					Value: "${PORT}",
+				}
+				(&(operatorFramework.E2E{
+					Build: func() {
+						javaBoot.Spec.Port = int32(0)
+						javaBoot.Spec.Env = append(javaBoot.Spec.Env, envVar)
+						operatorFramework.CreateBoot(javaBoot)
+					},
+					Check: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+						isCustomEnvExist := false
+						for _, value := range boot.Spec.Env {
+							if value.Name == envVar.Name {
+								isCustomEnvExist = true
+								Expect(value.Value).Should(Equal("8080"))
+							}
+						}
+						Expect(isCustomEnvExist).Should(Equal(true))
+
+						deploy := operatorFramework.GetDeployment(bootKey)
+						isCustomEnvExist = false
+						for _, value := range deploy.Spec.Template.Spec.Containers[0].Env {
+							if value.Name == envVar.Name {
+								isCustomEnvExist = true
+								Expect(value.Value).Should(Equal("8080"))
+							}
+						}
+						Expect(isCustomEnvExist).Should(Equal(true))
+					},
+				})).Run()
+			})
+
 			It("testing create boot custom Replicas", func() {
 				(&(operatorFramework.E2E{
 					Build: func() {
