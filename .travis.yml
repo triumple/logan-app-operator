@@ -8,6 +8,10 @@ os:
 go:
   - "1.12.x"
 
+env:
+  - TEST_SUITE=units
+  - TEST_SUITE=integration
+
 services:
   - docker
 
@@ -25,7 +29,7 @@ before_install:
 install:
   - bash ./scripts/install.sh
 
-script: make travis-docker-build && make test-e2e && make travis-build
+script: bash test.sh $TEST_SUITE
 
 after_script:
   - docker logout

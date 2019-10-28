@@ -1,0 +1,1 @@
+make travis-docker-build && make test-e2e && make travis-build
