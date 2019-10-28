@@ -12,6 +12,13 @@ env:
   - TEST_SUITE=units
   - TEST_SUITE=integration
   - TEST_SUITE=test
+  - TEST_SUITE=test1
+  - TEST_SUITE=test2
+  - TEST_SUITE=test3
+  - TEST_SUITE=test4
+  - TEST_SUITE=test5
+  - TEST_SUITE=test6
+  - TEST_SUITE=test7
 
 services:
   - docker
