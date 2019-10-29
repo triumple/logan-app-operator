@@ -11,6 +11,8 @@ go:
 env:
   - TEST_SUITE=units
   - TEST_SUITE=integration
+  - TEST_SUITE=1
+  - TEST_SUITE=2
 
 services:
   - docker
