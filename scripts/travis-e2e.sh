@@ -47,41 +47,44 @@ function runTest()
     res="0"
     export GO111MODULE=on
 
-    # run revision test case
-    ginkgo -p --focus="\[Revision\]" -r test
-    sub_res=`echo $?`
-    if [ $sub_res != "0" ]; then
-        res=$sub_res
+    if [ $1 == "units" ]; then
+        # run revision test case
+        ginkgo -p --focus="\[Revision\]" -r test
+        sub_res=`echo $?`
+        if [ $sub_res != "0" ]; then
+            res=$sub_res
+        fi
+
+        # run serial test case
+        ginkgo --focus="\[Serial\]" -r test
+        sub_res=`echo $?`
+        if [ $sub_res != "0" ]; then
+            res=$sub_res
+        fi
+
+        # run CRD test case
+        ginkgo -p --focus="\[CRD\]" -r test
+        sub_res=`echo $?`
+        if [ $sub_res != "0" ]; then
+            res=$sub_res
+        fi
+
+        # run CONTROLLER test case
+        ginkgo -p --focus="\[CONTROLLER\]" -r test
+        sub_res=`echo $?`
+        if [ $sub_res != "0" ]; then
+            res=$sub_res
+        fi
     fi
 
-    # run serial test case
-    ginkgo --focus="\[Serial\]" -r test
-    sub_res=`echo $?`
-    if [ $sub_res != "0" ]; then
-        res=$sub_res
+    if [ $1 == "integration" ]; then
+        # run normal test case
+        ginkgo --skip="\[Serial\]|\[Slow\]|\[Revision\]|\[CRD\]|\[CONTROLLER\]" -r test
+        sub_res=`echo $?`
+        if [ $sub_res != "0" ]; then
+            res=$sub_res
+        fi
     fi
-
-    # run CRD test case
-    ginkgo -p --focus="\[CRD\]" -r test
-    sub_res=`echo $?`
-    if [ $sub_res != "0" ]; then
-        res=$sub_res
-    fi
-
-    # run CONTROLLER test case
-    ginkgo -p --focus="\[CONTROLLER\]" -r test
-    sub_res=`echo $?`
-    if [ $sub_res != "0" ]; then
-        res=$sub_res
-    fi
-
-    # run normal test case
-    ginkgo --skip="\[Serial\]|\[Slow\]|\[Revision\]|\[CRD\]|\[CONTROLLER\]" -r test
-    sub_res=`echo $?`
-    if [ $sub_res != "0" ]; then
-        res=$sub_res
-    fi
-
 
     # set WAIT_TIME, and run slow test case
     set +u

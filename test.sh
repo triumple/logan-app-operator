@@ -1,1 +1,1 @@
-make travis-docker-build && make test-e2e && make travis-build
+make travis-docker-build && bash ./scripts/travis-e2e.sh $1 && make travis-build
