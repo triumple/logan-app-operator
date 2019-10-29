@@ -103,6 +103,6 @@ function runTest()
     set -e
     exit $res
 }
-runTest
+runTest $1
 
 #"${SCRIPT_DIR}"/delete-minikube.sh
