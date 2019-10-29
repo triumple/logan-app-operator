@@ -68,7 +68,9 @@ function runTest()
         if [ $sub_res != "0" ]; then
             res=$sub_res
         fi
+    fi
 
+    if [ $1 == "e2e" ]; then
         # run CONTROLLER test case
         ginkgo -p --focus="\[CONTROLLER\]" -r test
         sub_res=`echo $?`

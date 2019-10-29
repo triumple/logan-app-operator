@@ -11,16 +11,7 @@ go:
 env:
   - TEST_SUITE=units
   - TEST_SUITE=integration
-  - TEST_SUITE=1
-  - TEST_SUITE=2
-  - TEST_SUITE=3
-  - TEST_SUITE=4
-  - TEST_SUITE=5
-  - TEST_SUITE=6
-  - TEST_SUITE=7
-  - TEST_SUITE=8
-  - TEST_SUITE=9
-  - TEST_SUITE=10
+  - TEST_SUITE=e2e
 
 services:
   - docker
