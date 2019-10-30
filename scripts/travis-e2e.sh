@@ -96,10 +96,12 @@ function runTest()
         export WAIT_TIME=5
     fi
     set -u
-    ginkgo -p --focus="\[Slow\]" -r test
-    sub_res=`echo $?`
-    if [ $sub_res != "0" ]; then
-        res=$sub_res
+    if [ $1 == "e2e" ]; then
+        ginkgo -p --focus="\[Slow\]" -r test
+        sub_res=`echo $?`
+        if [ $sub_res != "0" ]; then
+            res=$sub_res
+        fi
     fi
 
     set -e
