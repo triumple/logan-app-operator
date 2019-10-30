@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-var _ = Describe("Testing Boot[CONTROLLER]", func() {
+var _ = Describe("Testing Boot", func() {
 	var bootKey types.NamespacedName
 	var javaBoot *bootv1.JavaBoot
 
@@ -837,7 +837,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 		})
 	})
 
-	Describe("can not update deployment by deployment", func() {
+	Describe("can not update deployment by deployment[CONTROLLER]", func() {
 		It("can not update deployment replicas", func() {
 			replicas := int32(1)
 			e2e := &operatorFramework.E2E{
@@ -1080,7 +1080,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 		})
 	})
 
-	Describe("test delete boot deployment and service", func() {
+	Describe("test delete boot deployment and service[CONTROLLER]", func() {
 		It("testing delete boot", func() {
 			e2e := &operatorFramework.E2E{
 				Build: func() {
@@ -1180,7 +1180,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 		})
 	})
 
-	Describe("testing restart boot", func() {
+	Describe("testing restart boot[CONTROLLER]", func() {
 		It("testing restart by add restartedAt annotations", func() {
 			var bootRestartedAtAnnotationKey = "app.logancloud.com/restartedAt"
 			var bootRestartedAtAnnotationValue = "123"
