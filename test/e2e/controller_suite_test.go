@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-var _ = Describe("Testing Boot[Slow]", func() {
+var _ = Describe("Testing Boot[CONTROLLER]", func() {
 	var bootKey types.NamespacedName
 	var javaBoot *bootv1.JavaBoot
 
@@ -32,7 +32,7 @@ var _ = Describe("Testing Boot[Slow]", func() {
 		operatorFramework.DeleteNamespace(bootKey.Namespace)
 	})
 
-	Describe("testing create boot service and deployment", func() {
+	Describe("testing create boot service and deployment[Slow]", func() {
 		Context("test create boot default", func() {
 			It("testing create boot default", func() {
 				operatorFramework.CreateBoot(javaBoot)
@@ -393,7 +393,7 @@ var _ = Describe("Testing Boot[Slow]", func() {
 		})
 	})
 
-	Describe("testing update boot", func() {
+	Describe("testing update boot[Slow]", func() {
 		It("testing update replicas", func() {
 
 			(&(operatorFramework.E2E{
