@@ -27,7 +27,7 @@ var _ = Describe("Testing nodePort Boot", func() {
 		operatorFramework.DeleteNamespace(bootKey.Namespace)
 	})
 
-	Describe("testing update nodePort boot", func() {
+	Describe("testing update nodePort boot [Slow]", func() {
 		It("testing update nodePort from true to false", func() {
 			nodePortBootKey := types.NamespacedName{
 				Name:      bootKey.Name + "-external",
