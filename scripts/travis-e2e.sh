@@ -70,16 +70,14 @@ function runTest()
         fi
     fi
 
-    if [ $1 == "e2e" ]; then
+    if [ $1 == "integration" ]; then
         # run CONTROLLER test case
         ginkgo -p --focus="\[CONTROLLER\]" -r test
         sub_res=`echo $?`
         if [ $sub_res != "0" ]; then
             res=$sub_res
         fi
-    fi
 
-    if [ $1 == "integration" ]; then
         # run normal test case
         ginkgo --skip="\[Serial\]|\[Slow\]|\[Revision\]|\[CRD\]|\[CONTROLLER\]" -r test
         sub_res=`echo $?`
