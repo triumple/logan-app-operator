@@ -31,7 +31,7 @@ var _ = Describe("Testing Webhook", func() {
 		operatorFramework.DeleteNamespace(bootKey.Namespace)
 	})
 
-	Context("test create the same boot name", func() {
+	Context("test create the same boot name [Slow]", func() {
 		It("testing create same boot with same namespace and same kind", func() {
 			(&(operatorFramework.E2E{
 				Build: func() {
