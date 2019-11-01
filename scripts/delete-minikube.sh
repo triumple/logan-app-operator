@@ -8,7 +8,12 @@ set -u
 # print each command before executing it
 set -x
 
+sudoCmd=""
+if [ "$(id -u)" != "0" ]; then
+    sudoCmd="sudo"
+fi
+
 export KUBECONFIG=$HOME/.kube/config
 
 minikube version
-sudo minikube delete
+${sudoCmd} minikube delete
