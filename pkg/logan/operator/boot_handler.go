@@ -219,7 +219,7 @@ func (handler *BootHandler) NewAppContainer() *corev1.Container {
 		Resources:       boot.Spec.Resources,
 	}
 
-	// If Spec's health is empty string, disable the health check.
+	// If Spec's health is empty string, disable the health check and readiness.
 	if boot.Spec.Health != nil && *boot.Spec.Health != "" {
 		liveness, readiness := handler.GetHealthProbe()
 		appContainer.LivenessProbe = liveness
@@ -279,11 +279,16 @@ func (handler *BootHandler) GetHealthProbe() (*corev1.Probe, *corev1.Probe) {
 		TimeoutSeconds:      5,
 	}
 
+	readinessPath := *boot.Spec.Health
+	if boot.Spec.Readiness != nil && *boot.Spec.Readiness != "" {
+		readinessPath = *boot.Spec.Readiness
+	}
+
 	readinessProbe := &corev1.Probe{
 		FailureThreshold: failureThreshold,
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
-				Path:   *boot.Spec.Health,
+				Path:   readinessPath,
 				Port:   healthPort,
 				Scheme: corev1.URISchemeHTTP,
 			},

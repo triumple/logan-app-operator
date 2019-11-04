@@ -42,6 +42,9 @@ func (handler *BootHandler) DefaultValue() bool {
 	}
 
 	//health
+	// Note:
+	// Don't process 'readiness', most of the time it's the same as health.
+	// We will never set readiness on Operator's configmaps
 	if bootSpec.Health == nil && appConfigSpec.Health != "" {
 		logger.Info("Defaulters", "type", "health", "spec", bootSpec.Health, "default", appConfigSpec.Health)
 		overrideHealth := appConfigSpec.Health

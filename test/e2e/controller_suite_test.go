@@ -719,6 +719,52 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 			})).Run()
 		})
 
+		It("testing update health with Readiness", func() {
+			(&(operatorFramework.E2E{
+				Build: func() {
+					health := "/health"
+					javaBoot.Spec.Health = &health
+					readiness := "/readiness"
+					javaBoot.Spec.Readiness = &readiness
+					operatorFramework.CreateBoot(javaBoot)
+				},
+				Check: func() {
+					deploy := operatorFramework.GetDeployment(bootKey)
+					Expect(deploy.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.Path).Should(Equal(*javaBoot.Spec.Health))
+					Expect(deploy.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.Path).Should(Equal(*javaBoot.Spec.Readiness))
+
+				},
+				UpdateAndCheck: func() {
+					boot := operatorFramework.GetBoot(bootKey)
+
+					health2 := "/health2"
+					boot.Spec.Health = &health2
+
+					readiness2 := "/readiness2"
+					boot.Spec.Readiness = &readiness2
+					operatorFramework.UpdateBoot(boot)
+
+					//recheck
+					updateDeploy := operatorFramework.GetDeployment(bootKey)
+
+					Expect(updateDeploy.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.Path).Should(Equal(health2))
+					Expect(updateDeploy.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.Path).Should(Equal(readiness2))
+
+					boot = operatorFramework.GetBoot(bootKey)
+
+					readiness3 := "/readiness3"
+					boot.Spec.Readiness = &readiness3
+					operatorFramework.UpdateBoot(boot)
+
+					updateDeploy = operatorFramework.GetDeployment(bootKey)
+
+					Expect(updateDeploy.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.Path).Should(Equal(health2))
+					Expect(updateDeploy.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.Path).Should(Equal(readiness3))
+
+				},
+			})).Run()
+		})
+
 		It("testing update prometheusScrape", func() {
 			(&(operatorFramework.E2E{
 				Build: func() {
@@ -1028,6 +1074,32 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 					deploy := operatorFramework.GetDeployment(bootKey)
 					deploy.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.Path = "/health2"
 					deploy.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.Path = "/health2"
+					operatorFramework.UpdateDeployment(deploy)
+				},
+			}
+			e2e.Recheck = e2e.Check
+			e2e.Run()
+		})
+
+		It("can not update health with readiness", func() {
+			e2e := &operatorFramework.E2E{
+				Build: func() {
+					health := "/health"
+					javaBoot.Spec.Health = &health
+					readiness := "/readiness"
+					javaBoot.Spec.Readiness = &readiness
+					operatorFramework.CreateBoot(javaBoot)
+				},
+				Check: func() {
+					deploy := operatorFramework.GetDeployment(bootKey)
+					Expect(deploy.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.Path).Should(Equal(*javaBoot.Spec.Health))
+					Expect(deploy.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.Path).Should(Equal(*javaBoot.Spec.Readiness))
+
+				},
+				Update: func() {
+					deploy := operatorFramework.GetDeployment(bootKey)
+					deploy.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.Path = "/health2"
+					deploy.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.Path = "/readiness2"
 					operatorFramework.UpdateDeployment(deploy)
 				},
 			}
