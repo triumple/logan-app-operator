@@ -1,5 +1,14 @@
 # logan-app-operator Release Notes
 
+## Version 0.6.0 - 10/31/2019
+
+* Boot supports history revision
+* Upgrade operator-sdk v0.10.1, use go modules
+* Support restart deployment by annotation
+* Optimize event output info
+* Bugfix: operator’s vol config update should not restart deployment
+* Bugfix: env ${PORT} replace error 
+
 ## Version 0.5.0 - 9/25/2019
 
 * Boot support pvc 
