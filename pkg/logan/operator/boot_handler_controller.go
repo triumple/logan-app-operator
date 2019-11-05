@@ -211,31 +211,70 @@ func (handler *BootHandler) reconcileUpdateDeploy(deploy *appsv1.Deployment) (re
 		rebootUpdated = true
 	}
 
-	// 7 Check health: check fist container(boot container)
-	probe := deploy.Spec.Template.Spec.Containers[0].LivenessProbe
+	// 7 Check liveness and readiness : check fist container(boot container)
+	// 7.1 Check liveness
+	livenessProbe := deploy.Spec.Template.Spec.Containers[0].LivenessProbe
 	bootHealth := *boot.Spec.Health
 	if bootHealth == "" {
-		if probe != nil {
+		if livenessProbe != nil {
 			// Remove the 2 existing probes.
-			deployHealth := probe.HTTPGet.Path
+			deployHealth := livenessProbe.HTTPGet.Path
 			logger.Info(reason, "type", "health", "deploy", deploy.Name,
 				"old", deployHealth, "new", "")
 
 			rebootUpdated = true
 		}
 	} else {
-		if probe == nil {
+		if livenessProbe == nil {
 			// 1. If probe is nil, add Liveness and Readiness
 			logger.Info(reason, "type", "health", "deploy", deploy.Name,
 				"old", "empty", "new", bootHealth)
 
 			rebootUpdated = true
 		} else {
-			deployHealth := probe.HTTPGet.Path
-			// 2. If probe is not nil, we only need to update the health path
+			deployHealth := livenessProbe.HTTPGet.Path
+			// 2. If livenessProbe is not nil, we only need to update the health path
 			if deployHealth != bootHealth {
 				logger.Info(reason, "type", "health", "deploy", deploy.Name,
 					"old", deployHealth, "new", bootHealth)
+
+				rebootUpdated = true
+			}
+		}
+	}
+
+	// 7.2 Check readiness
+	readinessProbe := deploy.Spec.Template.Spec.Containers[0].ReadinessProbe
+	readinessPath := *boot.Spec.Health
+
+	// if boot.Spec.Health is empty, ignore the Readiness
+	if boot.Spec.Readiness != nil && *boot.Spec.Readiness != "" &&
+		boot.Spec.Health != nil && *boot.Spec.Health != "" {
+		readinessPath = *boot.Spec.Readiness
+	}
+
+	if readinessPath == "" {
+		if readinessProbe != nil {
+			// Remove the 2 existing probes.
+			deployHealth := readinessProbe.HTTPGet.Path
+			logger.Info(reason, "type", "readiness", "deploy", deploy.Name,
+				"old", deployHealth, "new", "")
+
+			rebootUpdated = true
+		}
+	} else {
+		if readinessProbe == nil {
+			// 1. If probe is nil, add  Readiness
+			logger.Info(reason, "type", "readiness", "deploy", deploy.Name,
+				"old", "empty", "new", readinessPath)
+
+			rebootUpdated = true
+		} else {
+			deployHealth := readinessProbe.HTTPGet.Path
+			// 2. If readinessProbe is not nil, we only need to update the readiness path
+			if deployHealth != readinessPath {
+				logger.Info(reason, "type", "readiness", "deploy", deploy.Name,
+					"old", deployHealth, "new", readinessPath)
 
 				rebootUpdated = true
 			}

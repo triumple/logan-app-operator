@@ -37,7 +37,7 @@ fmt:
 
 # Run go vet against code
 vet:
-	go vet ./pkg/... ./cmd/... ./test/...
+	export GO111MODULE=on && go vet ./pkg/... ./cmd/... ./test/...
 
 # Run generate k8s
 gen-k8s:
@@ -48,7 +48,7 @@ build: docker-build docker-push
 
 # Build the docker image
 docker-build:
-	operator-sdk build ${IMG}
+	export GO111MODULE=on && operator-sdk build ${IMG}
 
 travis-docker-build:
 	bash ./scripts/travis-build.sh ${IMG}

@@ -118,6 +118,11 @@ func (in *BootSpec) DeepCopyInto(out *BootSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Readiness != nil {
+		in, out := &in.Readiness, &out.Readiness
+		*out = new(string)
+		**out = **in
+	}
 	in.Resources.DeepCopyInto(&out.Resources)
 	if in.NodeSelector != nil {
 		in, out := &in.NodeSelector, &out.NodeSelector
