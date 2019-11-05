@@ -2,6 +2,7 @@ package util
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	"reflect"
 )
 
 // Difference returns the difference of 2 []string slice
@@ -54,7 +55,7 @@ func Difference2(origin []corev1.EnvVar, now []corev1.EnvVar) (diff1 []corev1.En
 			found := false
 			for _, s2 := range now {
 				if s1.Name == s2.Name {
-					if s1.Value != s2.Value {
+					if !reflect.DeepEqual(s1, s2) {
 						if i == 0 {
 							modified = append(modified, s2)
 						}

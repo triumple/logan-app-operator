@@ -12,6 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"reflect"
 	"strings"
 )
 
@@ -642,6 +643,328 @@ var _ = Describe("Testing Webhook", func() {
 					Expect(err).Should(HaveOccurred())
 				},
 			})).Run()
+		})
+	})
+
+	Describe("testing validating webhook with env and secret", func() {
+		var secret *corev1.Secret
+		BeforeEach(func() {
+			secret = operatorFramework.SampleSecret(bootKey)
+			operatorFramework.CreateSecret(secret)
+		})
+
+		Context("test validating webhook with env and secret is OK", func() {
+			It("create boot validating webhook with env and secret is OK", func() {
+				envVar := corev1.EnvVar{
+					Name: "ENVA",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: bootKey.Name,
+							},
+							Key: "url",
+						},
+					},
+				}
+
+				(&(operatorFramework.E2E{
+					Build: func() {
+						javaBoot.Spec.Env = append(javaBoot.Spec.Env, envVar)
+						operatorFramework.CreateBoot(javaBoot)
+					},
+					Check: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+						deploy := operatorFramework.GetDeployment(bootKey)
+						for _, env := range boot.Spec.Env {
+							if env.Name == envVar.Name {
+								Expect(reflect.DeepEqual(env, envVar)).Should(Equal(true))
+							}
+
+							for _, j := range deploy.Spec.Template.Spec.Containers[0].Env {
+								if strings.EqualFold(env.Name, j.Name) {
+									Expect(env).Should(Equal(j))
+								}
+							}
+						}
+					},
+					Update: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						for _, env := range boot.Spec.Env {
+							if env.Name == envVar.Name {
+								env.ValueFrom.SecretKeyRef.Key = "password"
+							}
+						}
+						operatorFramework.UpdateBoot(boot)
+					},
+					Recheck: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+						deploy := operatorFramework.GetDeployment(bootKey)
+						for _, env := range boot.Spec.Env {
+							if env.Name == envVar.Name {
+								Expect(env.ValueFrom.SecretKeyRef.Key).Should(Equal("password"))
+							}
+
+							for _, j := range deploy.Spec.Template.Spec.Containers[0].Env {
+								if strings.EqualFold(env.Name, j.Name) {
+									Expect(env).Should(Equal(j))
+								}
+							}
+						}
+					},
+				})).Run()
+			})
+
+			It("update boot validating webhook with env use value is OK", func() {
+				envVar := corev1.EnvVar{
+					Name: "ENVA",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: bootKey.Name,
+							},
+							Key: "url",
+						},
+					},
+				}
+
+				(&(operatorFramework.E2E{
+					Build: func() {
+						javaBoot.Spec.Env = append(javaBoot.Spec.Env, envVar)
+						operatorFramework.CreateBoot(javaBoot)
+					},
+					Check: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+						deploy := operatorFramework.GetDeployment(bootKey)
+						for _, env := range boot.Spec.Env {
+							if env.Name == envVar.Name {
+								Expect(reflect.DeepEqual(env, envVar)).Should(Equal(true))
+							}
+
+							for _, j := range deploy.Spec.Template.Spec.Containers[0].Env {
+								if strings.EqualFold(env.Name, j.Name) {
+									Expect(env).Should(Equal(j))
+								}
+							}
+						}
+					},
+					Update: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						updateEnv := make([]corev1.EnvVar, 0)
+						for _, env := range boot.Spec.Env {
+							if env.Name == envVar.Name {
+								env.ValueFrom = nil
+								env.Value = "enva"
+							}
+
+							updateEnv = append(updateEnv, env)
+						}
+						boot.Spec.Env = updateEnv
+						operatorFramework.UpdateBoot(boot)
+					},
+					Recheck: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+						deploy := operatorFramework.GetDeployment(bootKey)
+						for _, env := range boot.Spec.Env {
+							if env.Name == envVar.Name {
+								Expect(env.Value).Should(Equal("enva"))
+							}
+							for _, j := range deploy.Spec.Template.Spec.Containers[0].Env {
+								if strings.EqualFold(env.Name, j.Name) {
+									Expect(env).Should(Equal(j))
+								}
+							}
+						}
+					},
+				})).Run()
+			})
+
+			It("update boot validating webhook with env use valueFrom is OK", func() {
+				envVar := corev1.EnvVar{
+					Name:  "ENVA",
+					Value: "ENVA",
+				}
+
+				(&(operatorFramework.E2E{
+					Build: func() {
+						javaBoot.Spec.Env = append(javaBoot.Spec.Env, envVar)
+						operatorFramework.CreateBoot(javaBoot)
+					},
+					Check: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+						deploy := operatorFramework.GetDeployment(bootKey)
+						for _, env := range boot.Spec.Env {
+							if env.Name == envVar.Name {
+								Expect(reflect.DeepEqual(env, envVar)).Should(Equal(true))
+							}
+
+							for _, j := range deploy.Spec.Template.Spec.Containers[0].Env {
+								if strings.EqualFold(env.Name, j.Name) {
+									Expect(env).Should(Equal(j))
+								}
+							}
+						}
+					},
+					Update: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						updateEnv := make([]corev1.EnvVar, 0)
+						for _, env := range boot.Spec.Env {
+							if env.Name == envVar.Name {
+								env.ValueFrom = &corev1.EnvVarSource{
+									SecretKeyRef: &corev1.SecretKeySelector{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: bootKey.Name,
+										},
+										Key: "url",
+									},
+								}
+								env.Value = ""
+							}
+
+							updateEnv = append(updateEnv, env)
+						}
+						boot.Spec.Env = updateEnv
+						operatorFramework.UpdateBoot(boot)
+					},
+					Recheck: func() {
+						boot := operatorFramework.GetBoot(bootKey)
+						Expect(boot.Name).Should(Equal(bootKey.Name))
+						deploy := operatorFramework.GetDeployment(bootKey)
+						for _, env := range boot.Spec.Env {
+							if env.Name == envVar.Name {
+								Expect(env.ValueFrom.SecretKeyRef.Key).Should(Equal("url"))
+							}
+							for _, j := range deploy.Spec.Template.Spec.Containers[0].Env {
+								if strings.EqualFold(env.Name, j.Name) {
+									Expect(env).Should(Equal(j))
+								}
+							}
+						}
+					},
+				})).Run()
+			})
+		})
+
+		Context("test validating webhook with env and secret is Error", func() {
+			It("env set both value and value from", func() {
+				envVar := corev1.EnvVar{
+					Name:  "ENVA",
+					Value: "val",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: bootKey.Name,
+							},
+							Key: "url",
+						},
+					},
+				}
+
+				(&(operatorFramework.E2E{
+					Build: func() {
+						javaBoot.Spec.Env = append(javaBoot.Spec.Env, envVar)
+						err := operatorFramework.CreateBootWithError(javaBoot)
+						Expect(err).Should(HaveOccurred())
+					},
+				})).Run()
+			})
+
+			It("env set value from with Secret and Configmap ", func() {
+				envVar := corev1.EnvVar{
+					Name: "ENVA",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: bootKey.Name,
+							},
+							Key: "url",
+						},
+						ConfigMapKeyRef: &corev1.ConfigMapKeySelector{},
+					},
+				}
+
+				(&(operatorFramework.E2E{
+					Build: func() {
+						javaBoot.Spec.Env = append(javaBoot.Spec.Env, envVar)
+						err := operatorFramework.CreateBootWithError(javaBoot)
+						Expect(err).Should(HaveOccurred())
+					},
+				})).Run()
+			})
+
+			It("env set value from with Secret Not Found ", func() {
+				envVar := corev1.EnvVar{
+					Name: "ENVA",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "ENVA",
+							},
+							Key: "url",
+						},
+						ConfigMapKeyRef: &corev1.ConfigMapKeySelector{},
+					},
+				}
+
+				(&(operatorFramework.E2E{
+					Build: func() {
+						javaBoot.Spec.Env = append(javaBoot.Spec.Env, envVar)
+						err := operatorFramework.CreateBootWithError(javaBoot)
+						Expect(err).Should(HaveOccurred())
+					},
+				})).Run()
+			})
+
+			It("env set value from with Secret key not found ", func() {
+				envVar := corev1.EnvVar{
+					Name: "ENVA",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: bootKey.Name,
+							},
+							Key: "url_url",
+						},
+						ConfigMapKeyRef: &corev1.ConfigMapKeySelector{},
+					},
+				}
+
+				(&(operatorFramework.E2E{
+					Build: func() {
+						javaBoot.Spec.Env = append(javaBoot.Spec.Env, envVar)
+						err := operatorFramework.CreateBootWithError(javaBoot)
+						Expect(err).Should(HaveOccurred())
+					},
+				})).Run()
+			})
+
+			It("env set value from with Secret has not permission", func() {
+				envVar := corev1.EnvVar{
+					Name: "ENVA",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: bootKey.Name,
+							},
+							Key: "url",
+						},
+						ConfigMapKeyRef: &corev1.ConfigMapKeySelector{},
+					},
+				}
+
+				(&(operatorFramework.E2E{
+					Build: func() {
+						javaBoot.Spec.Env = append(javaBoot.Spec.Env, envVar)
+						javaBoot.Name = "new_boot"
+						err := operatorFramework.CreateBootWithError(javaBoot)
+						Expect(err).Should(HaveOccurred())
+					},
+				})).Run()
+			})
 		})
 	})
 })
