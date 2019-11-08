@@ -9,6 +9,7 @@ import (
 	"github.com/logancloud/logan-app-operator/pkg/logan/config"
 	"github.com/logancloud/logan-app-operator/pkg/logan/util/keys"
 	corev1 "k8s.io/api/core/v1"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -215,7 +216,7 @@ func EnvVarsEq(env1, env2 []corev1.EnvVar) bool {
 	for i := range env1 {
 		aEnv := env1[i]
 		bEnv := env2[i]
-		if aEnv != bEnv {
+		if !reflect.DeepEqual(aEnv, bEnv) {
 			return false
 		}
 	}
@@ -253,7 +254,7 @@ func PvcVarsEq(pvc1, pvc2 []appv1.PersistentVolumeClaimMount) bool {
 	for i := range pvc1 {
 		aPvc := pvc1[i]
 		bPvc := pvc2[i]
-		if aPvc != bPvc {
+		if !reflect.DeepEqual(aPvc, bPvc) {
 			return false
 		}
 	}

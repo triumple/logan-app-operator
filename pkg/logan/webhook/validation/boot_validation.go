@@ -6,6 +6,7 @@ import (
 	"github.com/logancloud/logan-app-operator/pkg/logan"
 	"github.com/logancloud/logan-app-operator/pkg/logan/util/keys"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/tools/record"
 
 	appv1 "github.com/logancloud/logan-app-operator/pkg/apis/app/v1"
@@ -471,6 +472,17 @@ func (vHandler *BootValidator) CheckEnvKeys(boot *v1.Boot, operation admssionv1b
 		return "", true
 	}
 
+	specField := field.NewPath("spec")
+	errLst := util.ValidateEnv(boot.Spec.Env, specField.Child("env"))
+	if len(errLst) > 0 {
+		return fmt.Sprintf("Boot's Env validation fails: %s", errLst), false
+	}
+
+	msg, ret := vHandler.checkSecret(boot)
+	if !ret {
+		return msg, ret
+	}
+
 	//Creating: should not contains the key in global settings.
 	if operation == admssionv1beta1.Create {
 		for _, cfgEnv := range configSpec.Env {
@@ -478,11 +490,26 @@ func (vHandler *BootValidator) CheckEnvKeys(boot *v1.Boot, operation admssionv1b
 			// Decode the ${APP}, ${ENV} context
 			cfgEnvValue, _ := operator.Decode(boot, cfgEnv.Value)
 
+			tmpCfgEnv := corev1.EnvVar{
+				Name:      cfgEnvName,
+				Value:     cfgEnvValue,
+				ValueFrom: cfgEnv.ValueFrom,
+			}
+
 			for _, env := range boot.Spec.Env {
 				if env.Name == cfgEnvName {
-					if env.Value != cfgEnvValue {
+
+					envVal, _ := operator.Decode(boot, env.Value)
+
+					bootEnv := corev1.EnvVar{
+						Name:      env.Name,
+						Value:     envVal,
+						ValueFrom: env.ValueFrom,
+					}
+
+					if !reflect.DeepEqual(bootEnv, tmpCfgEnv) {
 						return fmt.Sprintf("Boot's added Env [%s=%s] not allowed with settings [%s=%s]",
-							env.Name, env.Value, cfgEnvName, cfgEnvValue), false
+							env.Name, bootEnv, cfgEnvName, tmpCfgEnv), false
 					}
 				}
 			}
@@ -493,6 +520,44 @@ func (vHandler *BootValidator) CheckEnvKeys(boot *v1.Boot, operation admssionv1b
 
 	if operation == admssionv1beta1.Update {
 		return checkEnvUpdate(configSpec, boot)
+	}
+
+	return "", true
+}
+
+func (vHandler *BootValidator) checkSecret(boot *appv1.Boot) (string, bool) {
+	c := vHandler.client
+	for _, env := range boot.Spec.Env {
+		if env.ValueFrom != nil && env.ValueFrom.SecretKeyRef != nil {
+			name := env.ValueFrom.SecretKeyRef.Name
+			key := env.ValueFrom.SecretKeyRef.Key
+
+			secret := &corev1.Secret{}
+
+			namespaceName := k8stypes.NamespacedName{
+				Namespace: boot.Namespace,
+				Name:      name,
+			}
+
+			err := c.Get(context.TODO(), namespaceName, secret)
+			if errors.IsNotFound(err) {
+				return fmt.Sprintf("Can not found secret: %s", name), false
+			}
+
+			_, ok := secret.Data[key]
+			if !ok {
+				return fmt.Sprintf("Can not found key:%s in secret: %s", key, name), false
+			}
+
+			if secret.Annotations == nil {
+				return fmt.Sprintf("Boot %s's permission for secret %s isn't granted", boot.Name, name), false
+			}
+
+			_, ok = secret.Annotations[keys.BootSecretAnnotaionKeyPrefix+boot.Name]
+			if !ok {
+				return fmt.Sprintf("Boot %s's permission for secret %s isn't granted", boot.Name, name), false
+			}
+		}
 	}
 
 	return "", true
@@ -523,6 +588,12 @@ func checkEnvUpdate(configSpec *config.AppSpec, boot *v1.Boot) (string, bool) {
 		// Decode the ${APP}, ${ENV} context
 		cfgEnvValue, _ := operator.Decode(boot, cfgEnv.Value)
 
+		tmpCfgEnv := corev1.EnvVar{
+			Name:      cfgEnvName,
+			Value:     cfgEnv.Value,
+			ValueFrom: cfgEnv.ValueFrom,
+		}
+
 		// 1. Manual Delete key of Env: If key exists in global settings, valid is false.
 		for _, env := range deleted {
 			if env.Name == cfgEnvName {
@@ -534,7 +605,15 @@ func checkEnvUpdate(configSpec *config.AppSpec, boot *v1.Boot) (string, bool) {
 		// 2. Manual Add key of Env: If key exists in global settings, and value not equal, valid is false.
 		for _, env := range added {
 			if env.Name == cfgEnvName {
-				if env.Value != cfgEnvValue {
+				envVal, _ := operator.Decode(boot, env.Value)
+
+				bootEnv := corev1.EnvVar{
+					Name:      env.Name,
+					Value:     envVal,
+					ValueFrom: env.ValueFrom,
+				}
+
+				if !reflect.DeepEqual(tmpCfgEnv, bootEnv) {
 					return fmt.Sprintf("Boot's added Env [%s=%s] not allowed with settings [%s=%s]",
 						env.Name, env.Value, cfgEnvName, cfgEnvValue), false
 				}
@@ -544,7 +623,14 @@ func checkEnvUpdate(configSpec *config.AppSpec, boot *v1.Boot) (string, bool) {
 		// 3. Manual Modify value of Env: If key exists in global settings, and value not equal, valid is false.
 		for _, env := range modified {
 			if env.Name == cfgEnvName {
-				if env.Value != cfgEnvValue {
+				envVal, _ := operator.Decode(boot, env.Value)
+
+				bootEnv := corev1.EnvVar{
+					Name:      env.Name,
+					Value:     envVal,
+					ValueFrom: env.ValueFrom,
+				}
+				if !reflect.DeepEqual(tmpCfgEnv, bootEnv) {
 					return fmt.Sprintf("Boot's edit Env [%s=%s] not allowed with settings [%s=%s]",
 						env.Name, env.Value, cfgEnvName, cfgEnvValue), false
 				}
