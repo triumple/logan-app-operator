@@ -646,7 +646,7 @@ var _ = Describe("Testing CRD [CRD]", func() {
 			})).Run()
 		})
 
-		It("testing create ok boot port 0", func() {
+		It("testing create ok boot port 0[Slow]", func() {
 			(&(operatorFramework.E2E{
 				Build: func() {
 					javaBoot.Spec.Port = 0

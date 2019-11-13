@@ -8,6 +8,11 @@ os:
 go:
   - "1.12.x"
 
+env:
+  - TEST_SUITE=testsuite-1
+  - TEST_SUITE=testsuite-2
+  - TEST_SUITE=testsuite-3
+
 services:
   - docker
 

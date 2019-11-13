@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-var _ = Describe("Testing Boot[CONTROLLER]", func() {
+var _ = Describe("Testing Boot", func() {
 	var bootKey types.NamespacedName
 	var javaBoot *bootv1.JavaBoot
 
@@ -32,7 +32,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 		operatorFramework.DeleteNamespace(bootKey.Namespace)
 	})
 
-	Describe("testing create boot service and deployment", func() {
+	Describe("testing create boot service and deployment[CONTROLLER-1]", func() {
 		Context("test create boot default", func() {
 			It("testing create boot default", func() {
 				operatorFramework.CreateBoot(javaBoot)
@@ -47,7 +47,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 				operatorFramework.DeleteService(svr)
 			})
 
-			It("testing create boot after deployments create", func() {
+			It("testing create boot after deployments create[Slow]", func() {
 				// get deploy data
 				operatorFramework.CreateBoot(javaBoot)
 				deploy := operatorFramework.GetDeployment(bootKey)
@@ -72,7 +72,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 				Expect(deployByBoot.ObjectMeta.OwnerReferences[0].UID).Should(Equal(boot.ObjectMeta.UID))
 			})
 
-			It("testing create deployments duplicated", func() {
+			It("testing create deployments duplicated[Slow]", func() {
 				// get deploy data
 				operatorFramework.CreateBoot(javaBoot)
 				deploy := operatorFramework.GetDeployment(bootKey)
@@ -393,7 +393,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 		})
 	})
 
-	Describe("testing update boot", func() {
+	Describe("testing update boot[CONTROLLER-1]", func() {
 		It("testing update replicas", func() {
 
 			(&(operatorFramework.E2E{
@@ -417,7 +417,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 		})
 
 		Context("test update image version", func() {
-			It("testing update version", func() {
+			It("testing update version[Slow]", func() {
 				(&(operatorFramework.E2E{
 					Build: func() {
 						operatorFramework.CreateBoot(javaBoot)
@@ -439,7 +439,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 				})).Run()
 			})
 
-			It("testing update image", func() {
+			It("testing update image[Slow]", func() {
 				(&(operatorFramework.E2E{
 					Build: func() {
 						operatorFramework.CreateBoot(javaBoot)
@@ -464,7 +464,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 			})
 		})
 
-		It("testing update port", func() {
+		It("testing update port[Slow]", func() {
 			(&(operatorFramework.E2E{
 				Build: func() {
 					operatorFramework.CreateBoot(javaBoot)
@@ -494,7 +494,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 		})
 
 		Context("testing update resources", func() {
-			It("testing scale up cpu and memory", func() {
+			It("testing scale up cpu and memory[Slow]", func() {
 				resources := &corev1.ResourceRequirements{
 					Limits:   map[corev1.ResourceName]resource.Quantity{},
 					Requests: map[corev1.ResourceName]resource.Quantity{},
@@ -547,7 +547,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 
 			})
 
-			It("testing scale down cpu and memory", func() {
+			It("testing scale down cpu and memory[Slow]", func() {
 				resources := &corev1.ResourceRequirements{
 					Limits:   map[corev1.ResourceName]resource.Quantity{},
 					Requests: map[corev1.ResourceName]resource.Quantity{},
@@ -603,7 +603,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 				})).Run()
 			})
 
-			It("testing  cpu and memory Limits lager than Requests", func() {
+			It("testing  cpu and memory Limits lager than Requests[Slow]", func() {
 				resources := &corev1.ResourceRequirements{
 					Limits:   map[corev1.ResourceName]resource.Quantity{},
 					Requests: map[corev1.ResourceName]resource.Quantity{},
@@ -883,7 +883,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 		})
 	})
 
-	Describe("can not update deployment by deployment", func() {
+	Describe("can not update deployment by deployment[CONTROLLER-2]", func() {
 		It("can not update deployment replicas", func() {
 			replicas := int32(1)
 			e2e := &operatorFramework.E2E{
@@ -1152,7 +1152,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 		})
 	})
 
-	Describe("test delete boot deployment and service", func() {
+	Describe("test delete boot deployment and service[CONTROLLER-2]", func() {
 		It("testing delete boot", func() {
 			e2e := &operatorFramework.E2E{
 				Build: func() {
@@ -1199,7 +1199,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 			e2e.Run()
 		})
 
-		It("testing delete boot when service created independent", func() {
+		It("testing delete boot when service created independent[Slow]", func() {
 			// get service data
 			operatorFramework.CreateBoot(javaBoot)
 			service := operatorFramework.GetService(bootKey)
@@ -1252,7 +1252,7 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 		})
 	})
 
-	Describe("testing restart boot", func() {
+	Describe("testing restart boot[CONTROLLER-2]", func() {
 		It("testing restart by add restartedAt annotations", func() {
 			var bootRestartedAtAnnotationKey = "app.logancloud.com/restartedAt"
 			var bootRestartedAtAnnotationValue = "123"
@@ -1462,5 +1462,4 @@ var _ = Describe("Testing Boot[CONTROLLER]", func() {
 			})).Run()
 		})
 	})
-
 })

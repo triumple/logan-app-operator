@@ -131,7 +131,7 @@ var _ = Describe("Testing Webhook", func() {
 	})
 
 	Describe("testing validating webhook", func() {
-		It("check env with create operation", func() {
+		It("check env with create operation[Slow]", func() {
 			(&(operatorFramework.E2E{
 				Build: func() {
 					env := []corev1.EnvVar{

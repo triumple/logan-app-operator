@@ -121,7 +121,7 @@ var _ = Describe("Testing Volume", func() {
 		})).Run()
 	})
 
-	It("Test update no pvc boot with pvc", func() {
+	It("Test update no pvc boot with pvc [Slow]", func() {
 		pvcName := operatorFramework.GetPvcName(bootKey, false)
 		(&(operatorFramework.E2E{
 			Build: func() {

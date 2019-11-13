@@ -101,60 +101,71 @@ function runTest()
     if [ "${WAIT_TIME}x" == "x" ]; then
         export WAIT_TIME=1
     fi
-    set -u
 
-    # run revision test case
-    ginkgo -p --focus="\[Revision\]" -r test
-    sub_res=`echo $?`
-    if [ $sub_res != "0" ]; then
-        res=$sub_res
+    # Corresponding to env TEST_SUITE=testsuite-1 in .travis.yml, or run all testcase on local host
+    if [[ ${TEST_SUITE} == "testsuite-1" || "${1}x" == "localx" ]]; then
+        # run revision test case
+        ginkgo -p --focus="\[Revision\]" -skip="\[Slow\]|\[Serial\]" -r test
+        sub_res=`echo $?`
+        if [ $sub_res != "0" ]; then
+            res=$sub_res
+        fi
+
+        # run CRD test case
+        ginkgo -p --focus="\[CRD\]" -skip="\[Slow\]|\[Serial\]" -r test
+        sub_res=`echo $?`
+        if [ $sub_res != "0" ]; then
+            res=$sub_res
+        fi
     fi
 
-    # run serial test case
-    ginkgo --focus="\[Serial\]" -r test
-    sub_res=`echo $?`
-    if [ $sub_res != "0" ]; then
-        res=$sub_res
+    # Corresponding to env TEST_SUITE=testsuite-2 in .travis.yml, or run all testcase on local host
+    if [[ ${TEST_SUITE} == "testsuite-2" || "${1}x" == "localx" ]]; then
+        # run CONTROLLER-1 test case
+        ginkgo -p --focus="\[CONTROLLER-1\]" -skip="\[Slow\]|\[Serial\]" -r test
+        sub_res=`echo $?`
+        if [ $sub_res != "0" ]; then
+            res=$sub_res
+        fi
+
+        # run normal test case
+        ginkgo --skip="\[Serial\]|\[Slow\]|\[Revision\]|\[CRD\]|\[CONTROLLER-1\]|\[CONTROLLER-2\]" -r test
+        sub_res=`echo $?`
+        if [ $sub_res != "0" ]; then
+            res=$sub_res
+        fi
     fi
 
-    # run CRD test case
-    ginkgo -p --focus="\[CRD\]" -r test
-    sub_res=`echo $?`
-    if [ $sub_res != "0" ]; then
-        res=$sub_res
+    # Corresponding to env TEST_SUITE=testsuite-3 in .travis.yml, or run all testcase on local host
+    if [[ ${TEST_SUITE} == "testsuite-3" || "${1}x" == "localx" ]]; then
+        # run CONTROLLER-2 test case
+        ginkgo -p --focus="\[CONTROLLER-2\]" -skip="\[Slow\]|\[Serial\]" -r test
+        sub_res=`echo $?`
+        if [ $sub_res != "0" ]; then
+            res=$sub_res
+        fi
+
+        # run serial test case
+        ginkgo --focus="\[Serial\]" -r test
+        sub_res=`echo $?`
+        if [ $sub_res != "0" ]; then
+            res=$sub_res
+        fi
+
+        # set WAIT_TIME, and run slow test case
+        if [ "${SLOW_WAIT_TIME}x" != "x" ]; then
+            export WAIT_TIME=${SLOW_WAIT_TIME}
+        else
+            export WAIT_TIME=5
+        fi
+
+        ginkgo -p --focus="\[Slow\]" -r test
+        sub_res=`echo $?`
+        if [ $sub_res != "0" ]; then
+            res=$sub_res
+        fi
     fi
 
-    # run CONTROLLER test case
-    ginkgo -p --focus="\[CONTROLLER\]" -r test
-    sub_res=`echo $?`
-    if [ $sub_res != "0" ]; then
-        res=$sub_res
-    fi
-
-    # run normal test case
-    ginkgo --skip="\[Serial\]|\[Slow\]|\[Revision\]|\[CRD\]|\[CONTROLLER\]" -r test
-    sub_res=`echo $?`
-    if [ $sub_res != "0" ]; then
-        res=$sub_res
-    fi
-
-
-    # set WAIT_TIME, and run slow test case
-    set +u
-    if [ "${SLOW_WAIT_TIME}x" != "x" ]; then
-        export WAIT_TIME=${SLOW_WAIT_TIME}
-    else
-        export WAIT_TIME=5
-    fi
-    set -u
-
-    ginkgo -p --focus="\[Slow\]" -r test
-    sub_res=`echo $?`
-    if [ $sub_res != "0" ]; then
-        res=$sub_res
-    fi
-
-    set +u
     if [ "${1}x" != "localx" ]; then
         set -e
     fi
