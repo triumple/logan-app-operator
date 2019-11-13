@@ -63,6 +63,9 @@ travis-build:
 test-e2e:
 	bash ./scripts/travis-e2e.sh
 
+test-e2e-local: docker-build
+	bash ./scripts/travis-e2e.sh local
+
 # Init Operator
 initdeploy: initcm initrole initcrd
 	oc create -f deploy/operator-test.yaml -f deploy/operator-dev.yaml -n logan -f deploy/operator-auto.yaml -n logan

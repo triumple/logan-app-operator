@@ -8,25 +8,43 @@ set -u
 # print each command before executing it
 set -x
 
-
+env=""
 # check skip test
 set +u
     if [ "${SKIP_TEST}x" != "x" ]; then
         exit 0
     fi
+
+    if [ "${1}x" == "localx" ]; then
+        set +e
+        rm -rf /etc/kubernetes
+        env=${1}
+        set -e
+    fi
 set -u
 
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 
-"${SCRIPT_DIR}"/create-minikube.sh
+"${SCRIPT_DIR}"/create-minikube.sh $env
 
 #init project logan
 kubectl create namespace logan
 oc project logan
 
 # e2e images
-export REPO="logancloud/logan-app-operator"
-docker tag ${REPO}:latest "${REPO}:latest-e2e"
+if [ $(uname) == "Darwin" ]; then
+    docker run --name socat_registry -d --rm -it --network=host alpine ash -c "apk add socat && socat TCP-LISTEN:5000,reuseaddr,fork TCP:$(sudo minikube ip):5000"
+    until docker ps -fname=socat_registry -fstatus=running | if [ $(wc -l)==2 ]; then true; else return false; fi; do sleep 1;echo "waiting for socat_registry to be available"; docker ps -fname=socat_registry -fstatus=running; done
+
+    docker tag logancloud/logan-app-operator:latest localhost:5000/logancloud/logan-app-operator:latest-e2e
+    until docker push localhost:5000/logancloud/logan-app-operator:latest-e2e; do sleep 1; echo "waiting for push image successfully"; done
+
+    sed -i "" 's/image: logancloud\/logan-app-operator:latest-e2e/image: localhost:5000\/logancloud\/logan-app-operator:latest-e2e/g' test/resources/operator-e2e.yaml
+    sed -i "" 's/image: logancloud\/logan-app-operator:latest-e2e/image: localhost:5000\/logancloud\/logan-app-operator:latest-e2e/g' test/resources/operator-e2e-dev.yaml
+else
+    export REPO="logancloud/logan-app-operator"
+    docker tag ${REPO}:latest "${REPO}:latest-e2e"
+fi
 
 #init operator
 make initdeploy
@@ -38,6 +56,13 @@ oc replace -f test/resources/operator-e2e-dev.yaml
 oc scale deploy logan-app-operator-dev --replicas=1
 until kubectl -n logan get pods -lname=logan-app-operator-dev -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for logan-app-operator-dev to be available"; kubectl get pods --all-namespaces; done
 
+if [ $(uname) == "Darwin" ]; then
+    docker stop socat_registry
+
+    sed -i "" 's/image: localhost:5000\/logancloud\/logan-app-operator:latest-e2e/image: logancloud\/logan-app-operator:latest-e2e/g' test/resources/operator-e2e.yaml
+    sed -i "" 's/image: localhost:5000\/logancloud\/logan-app-operator:latest-e2e/image: logancloud\/logan-app-operator:latest-e2e/g' test/resources/operator-e2e-dev.yaml
+fi
+
 oc replace configmap --filename test/resources/config.yaml
 
 #run test
@@ -46,6 +71,12 @@ function runTest()
     set +e
     res="0"
     export GO111MODULE=on
+
+    set +u
+    if [ "${WAIT_TIME}x" == "x" ]; then
+        export WAIT_TIME=1
+    fi
+    set -u
 
     # run revision test case
     ginkgo -p --focus="\[Revision\]" -r test
@@ -91,15 +122,27 @@ function runTest()
         export WAIT_TIME=5
     fi
     set -u
+
     ginkgo -p --focus="\[Slow\]" -r test
     sub_res=`echo $?`
     if [ $sub_res != "0" ]; then
         res=$sub_res
     fi
 
-    set -e
-    exit $res
-}
-runTest
+    set +u
+    if [ "${1}x" != "localx" ]; then
+        set -e
+    fi
+    set -u
 
-#"${SCRIPT_DIR}"/delete-minikube.sh
+    if [ $res != "0" ]; then
+        echo "ERROR: run e2e test case failed"
+    fi
+
+    return $res
+}
+runTest $env
+
+if [ $env == "local" ]; then
+    "${SCRIPT_DIR}"/delete-minikube.sh
+fi
