@@ -8,6 +8,12 @@ set -u
 # print each command before executing it
 set -x
 
+sudoCmd=""
+if [ "$(id -u)" != "0" ]; then
+    sudoCmd="sudo"
+fi
+
+profile=""
 env=""
 # check skip test
 set +u
@@ -15,9 +21,10 @@ set +u
         exit 0
     fi
 
+    # use profile to label the minikube used for e2e local testing
     if [ "${1}x" == "localx" ]; then
         set +e
-        rm -rf /etc/kubernetes
+        profile="--profile e2e-local"
         env=${1}
         set -e
     fi
@@ -25,23 +32,39 @@ set -u
 
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 
-"${SCRIPT_DIR}"/create-minikube.sh $env
+if [ "${env}x" == "localx" ]; then
+    # for local host e2e testing, check whether the minikube for profile e2e-local is runing, if yes, reuse it; else create it
+    if [ $(${sudoCmd} minikube status ${profile} | grep -E Running\|Correctly\ Configured | wc -l) -ne 4 ]; then
+        rm -rf /etc/kubernetes
+        "${SCRIPT_DIR}"/create-minikube.sh $env
+    fi
+else
+    # for travis, always create minikube
+    "${SCRIPT_DIR}"/create-minikube.sh $env
+fi
 
+# delete project logan if existed
+kubectl delete namespace logan --ignore-not-found=true
 #init project logan
 kubectl create namespace logan
 oc project logan
 
 # e2e images
 if [ $(uname) == "Darwin" ]; then
-    docker run --name socat_registry -d --rm -it --network=host alpine ash -c "apk add socat && socat TCP-LISTEN:5000,reuseaddr,fork TCP:$(sudo minikube ip):5000"
+    # images registry for mac virtualbox, for details: https://minikube.sigs.k8s.io/docs/tasks/registry/insecure/
+    if [ $(docker ps -fname=socat_registry -fstatus=running | wc -l) -ne 2 ]; then
+        docker run --name socat_registry -d --rm -it --network=host alpine ash -c "apk add socat && socat TCP-LISTEN:5000,reuseaddr,fork TCP:$(${sudoCmd} minikube ip ${profile}):5000"
+    fi
     until docker ps -fname=socat_registry -fstatus=running | if [ $(wc -l)==2 ]; then true; else return false; fi; do sleep 1;echo "waiting for socat_registry to be available"; docker ps -fname=socat_registry -fstatus=running; done
 
     docker tag logancloud/logan-app-operator:latest localhost:5000/logancloud/logan-app-operator:latest-e2e
     until docker push localhost:5000/logancloud/logan-app-operator:latest-e2e; do sleep 1; echo "waiting for push image successfully"; done
 
+    # use local image
     sed -i "" 's/image: logancloud\/logan-app-operator:latest-e2e/image: localhost:5000\/logancloud\/logan-app-operator:latest-e2e/g' test/resources/operator-e2e.yaml
     sed -i "" 's/image: logancloud\/logan-app-operator:latest-e2e/image: localhost:5000\/logancloud\/logan-app-operator:latest-e2e/g' test/resources/operator-e2e-dev.yaml
 else
+    # for travis or linux localhost
     export REPO="logancloud/logan-app-operator"
     docker tag ${REPO}:latest "${REPO}:latest-e2e"
 fi
@@ -57,8 +80,10 @@ oc scale deploy logan-app-operator-dev --replicas=1
 until kubectl -n logan get pods -lname=logan-app-operator-dev -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for logan-app-operator-dev to be available"; kubectl get pods --all-namespaces; done
 
 if [ $(uname) == "Darwin" ]; then
+    # stop local registry for mac virtualbox
     docker stop socat_registry
 
+    # recover operator-e2e config
     sed -i "" 's/image: localhost:5000\/logancloud\/logan-app-operator:latest-e2e/image: logancloud\/logan-app-operator:latest-e2e/g' test/resources/operator-e2e.yaml
     sed -i "" 's/image: localhost:5000\/logancloud\/logan-app-operator:latest-e2e/image: logancloud\/logan-app-operator:latest-e2e/g' test/resources/operator-e2e-dev.yaml
 fi
@@ -143,6 +168,6 @@ function runTest()
 }
 runTest $env
 
-if [ $env == "local" ]; then
-    "${SCRIPT_DIR}"/delete-minikube.sh
-fi
+#if [ $env == "local" ]; then
+#   "${SCRIPT_DIR}"/delete-minikube.sh
+#fi
