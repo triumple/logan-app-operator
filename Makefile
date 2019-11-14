@@ -37,7 +37,7 @@ fmt:
 
 # Run go vet against code
 vet:
-	export GO111MODULE=on && go vet ./pkg/... ./cmd/... ./test/...
+	go vet ./pkg/... ./cmd/... ./test/...
 
 # Run generate k8s
 gen-k8s:
@@ -48,7 +48,7 @@ build: docker-build docker-push
 
 # Build the docker image
 docker-build:
-	export GO111MODULE=on && operator-sdk build ${IMG}
+	operator-sdk build ${IMG}
 
 travis-docker-build:
 	bash ./scripts/travis-build.sh ${IMG}
@@ -76,18 +76,18 @@ initcm:
 	oc create configmap logan-app-operator-config-dev --from-file=configs/config.yaml
 
 initrole:
-	oc create -f deploy/role.yaml
-	oc create -f deploy/role_binding.yaml
-	oc create -f deploy/role_operator.yaml
-	oc create -f deploy/service_account.yaml
+	oc apply -f deploy/role.yaml
+	oc apply -f deploy/role_binding.yaml
+	oc apply -f deploy/role_operator.yaml
+	oc apply -f deploy/service_account.yaml
 
 initcrd:
-	oc create -f deploy/crds/app_v1_javaboot_crd.yaml
-	oc create -f deploy/crds/app_v1_phpboot_crd.yaml
-	oc create -f deploy/crds/app_v1_pythonboot_crd.yaml
-	oc create -f deploy/crds/app_v1_nodejsboot_crd.yaml
-	oc create -f deploy/crds/app_v1_webboot_crd.yaml
-	oc create -f deploy/crds/app_v1_bootrevision_crd.yaml
+	oc apply -f deploy/crds/app_v1_javaboot_crd.yaml
+	oc apply -f deploy/crds/app_v1_phpboot_crd.yaml
+	oc apply -f deploy/crds/app_v1_pythonboot_crd.yaml
+	oc apply -f deploy/crds/app_v1_nodejsboot_crd.yaml
+	oc apply -f deploy/crds/app_v1_webboot_crd.yaml
+	oc apply -f deploy/crds/app_v1_bootrevision_crd.yaml
 
 # Redeploy Operator
 redeploy: recm rerole recrd

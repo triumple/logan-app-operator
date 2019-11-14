@@ -8,6 +8,12 @@ set -u
 # print each command before executing it
 set -x
 
+sudoCmd=""
+if [ "$(id -u)" != "0" ]; then
+    sudoCmd="sudo"
+fi
+
+profile=""
 env=""
 # check skip test
 set +u
@@ -17,7 +23,7 @@ set +u
 
     if [ "${1}x" == "localx" ]; then
         set +e
-        rm -rf /etc/kubernetes
+        profile="--profile e2e-local"
         env=${1}
         set -e
     fi
@@ -25,15 +31,26 @@ set -u
 
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 
-"${SCRIPT_DIR}"/create-minikube.sh $env
+if [ $(${sudoCmd} minikube status ${profile} | grep -E Running\|Correctly\ Configured | wc -l) -ne 4 ]; then
+    set +u
+    if [ "${1}x" == "localx" ]; then
+        rm -rf /etc/kubernetes
+    fi
+    set -u
+    "${SCRIPT_DIR}"/create-minikube.sh $env
+fi
 
+# delete project logan if existed
+kubectl delete namespace logan --ignore-not-found=true
 #init project logan
 kubectl create namespace logan
 oc project logan
 
 # e2e images
 if [ $(uname) == "Darwin" ]; then
-    docker run --name socat_registry -d --rm -it --network=host alpine ash -c "apk add socat && socat TCP-LISTEN:5000,reuseaddr,fork TCP:$(sudo minikube ip):5000"
+    if [ $(docker ps -fname=socat_registry -fstatus=running | wc -l) -ne 2 ]; then
+        docker run --name socat_registry -d --rm -it --network=host alpine ash -c "apk add socat && socat TCP-LISTEN:5000,reuseaddr,fork TCP:$(${sudoCmd} minikube ip ${profile}):5000"
+    fi
     until docker ps -fname=socat_registry -fstatus=running | if [ $(wc -l)==2 ]; then true; else return false; fi; do sleep 1;echo "waiting for socat_registry to be available"; docker ps -fname=socat_registry -fstatus=running; done
 
     docker tag logancloud/logan-app-operator:latest localhost:5000/logancloud/logan-app-operator:latest-e2e
@@ -143,6 +160,6 @@ function runTest()
 }
 runTest $env
 
-if [ $env == "local" ]; then
-    "${SCRIPT_DIR}"/delete-minikube.sh
-fi
+#if [ $env == "local" ]; then
+#   "${SCRIPT_DIR}"/delete-minikube.sh
+#fi

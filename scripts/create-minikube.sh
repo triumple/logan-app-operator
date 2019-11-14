@@ -76,11 +76,11 @@ fi
 minikube config set WantUpdateNotification false
 minikube config set WantReportErrorPrompt false
 minikube config set WantNoneDriverWarning false
-minikube config set vm-driver none
 
 minikube version
 
 registry=""
+profile=""
 # check skip test
 set +u
     if [ $(uname) == "Darwin" ]; then
@@ -91,13 +91,20 @@ set +u
         fi
 
         minikube config set vm-driver virtualbox
+    elif [ $(uname) == "Linux" ]; then
+        minikube config set vm-driver none
+    fi
+
+    if [ "${1}x" == "localx" ]; then
+        profile="--profile e2e-local"
     fi
 set -u
 
-${sudoCmd} minikube start --kubernetes-version=$KUBERNETES_VERSION --extra-config=apiserver.authorization-mode=RBAC ${registry}
+
+${sudoCmd} minikube start --kubernetes-version=$KUBERNETES_VERSION --extra-config=apiserver.authorization-mode=RBAC ${registry} ${profile}
 
 if [ $(uname) == "Darwin" ]; then
-    ${sudoCmd} minikube addons enable registry
+    ${sudoCmd} minikube addons enable registry ${profile}
 fi
 
 set +u
@@ -108,7 +115,7 @@ else
 fi
 set -u
 
-${sudoCmd} minikube update-context
+${sudoCmd} minikube update-context ${profile}
 
 # waiting for node(s) to be ready
 JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1; done
