@@ -31,14 +31,15 @@ set -u
 
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 
-#if [ $(${sudoCmd} minikube status ${profile} | grep -E Running\|Correctly\ Configured | wc -l) -ne 4 ]; then
+if [ $(${sudoCmd} minikube status ${profile} | grep -E Running\|Correctly\ Configured | wc -l) -ne 4 ]; then
     set +u
     if [ "${1}x" == "localx" ]; then
         rm -rf /etc/kubernetes
     fi
     set -u
+    ${sudoCmd} chown -R travis: /home/travis/.minikube/
     "${SCRIPT_DIR}"/create-minikube.sh $env
-#fi
+fi
 
 # delete project logan if existed
 kubectl delete namespace logan --ignore-not-found=true
